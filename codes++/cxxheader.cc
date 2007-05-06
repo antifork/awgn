@@ -333,7 +333,7 @@ main(int argc, char *argv[]) {
     argv += optind;
 
     if (__classname == NULL)
-        throw std::runtime_error("-c/-s class/struct name missing!");
+        freefunction::throw_nocatch("-c/-s class/struct name missing!");
 
     Body generator;
 
