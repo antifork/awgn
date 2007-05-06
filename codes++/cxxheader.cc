@@ -34,7 +34,7 @@ const char usage[]=
       "\n Idioms:\n"
       "   -n name -n name ... named-constructor idiom\n"
       "   -a name -a name ... named-parameter idiom\n"
-      "   -k 'name,type' -k.. public overloader non-virtuals call\n"
+      "   -k 'name,type' -k.. public overloaded non-virtuals call\n"
       "                       protect non-overloaded virtual idiom\n"
       "   -o                  virtual-friend-function idiom (printOn)\n"            
       "   -3                  big-three guideline\n"
