@@ -71,7 +71,7 @@ std::list<std::string> npi_list;
 namespace freefunction {
 
     __attribute__((noreturn))
-        void throw_nocatch(const std::string &txt) throw() {
+        void throw_uncatchable(const std::string &txt) throw() {
             std::string e(txt);
             if (errno)
                 throw std::runtime_error(e.append(": ").append(strerror(errno)));
@@ -318,7 +318,7 @@ main(int argc, char *argv[]) {
             case 'N': { 
                           char * name = strchr(optarg,',');
                           if ( name == NULL )
-                              freefunction::throw_nocatch("invalid template non-type format: 'type , name'");
+                              freefunction::throw_uncatchable("invalid template non-type format: 'type , name'");
                           *name++ = '\0';        
                           template_list.push_back(generic(optarg,name));
                       } break;
@@ -333,7 +333,7 @@ main(int argc, char *argv[]) {
     argv += optind;
 
     if (__classname == NULL)
-        freefunction::throw_nocatch("-c/-s class/struct name missing!");
+        freefunction::throw_uncatchable("-c/-s class/struct name missing!");
 
     Body generator;
 
