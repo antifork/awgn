@@ -34,6 +34,8 @@ const char usage[]=
       "\n Idioms:\n"
       "   -n name -n name ... named-constructor idiom\n"
       "   -a name -a name ... named-parameter idiom\n"
+      "   -k 'name,type' -k.. public overloader non-virtuals call\n"
+      "                       protect non-overloaded virtual idiom\n"
       "   -o                  virtual-friend-function idiom (printOn)\n"            
       "   -3                  big-three guideline\n"
       "   -h                  print this help.\n";
@@ -63,10 +65,17 @@ struct generic {
     generic(const std::string &t, const std::string &n) : type(t), name(n) { } 
 };
 
+struct method {
+    std::string name;
+    std::string arg;
+    method(const std::string &n, const std::string &a) : name(n), arg(a) { }
+};
+
 std::list<base>        derivation_list;
 std::list<generic>     template_list;
 std::list<std::string> nci_list;
 std::list<std::string> npi_list;
+std::list<method>      ponv_pnov_list; // Public Overl. Non-Virt. Call Protected Non-Overl. Virt.
 
 namespace freefunction {
 
@@ -79,6 +88,20 @@ namespace freefunction {
                 throw std::runtime_error(e);
         }
 
+    std::string symb(const std::string &v)
+    {
+        std::string ret(v);
+
+        std::string::iterator it = ret.begin();
+        std::string::iterator it_end = ret.end();
+
+        replace(it, it_end, ' ', '_'); 
+        replace(it, it_end, '*', 'P'); 
+        replace(it, it_end, '&', 'R'); 
+        replace(it, it_end, ':', '$'); 
+
+        return ret;
+    }
 
     const std::string copyctor(const std::string &n)
     {
@@ -166,6 +189,7 @@ namespace freefunction {
         return r;
     }
 
+
     const std::string named_ctor_idiom(const std::string &name) 
     {
         std::string r;
@@ -180,6 +204,7 @@ namespace freefunction {
 
         return r;
     } 
+
 
     const std::string named_param_idiom(const std::string &name) 
     {
@@ -196,6 +221,38 @@ namespace freefunction {
         return r;
     } 
 
+    const std::string ponv_idiom(const std::string &name) 
+    {
+        std::string r;
+        std::list<method>::iterator it = ponv_pnov_list.begin();
+        std::list<method>::iterator it_end = ponv_pnov_list.end();
+
+        r.append("\n");
+        for(; it != it_end; ++it) {
+            r.append("        void ").append(it->name).append("(").append(it->arg);
+            r.append(" x) { ").append(it->name).append("_").append(freefunction::symb(it->arg));
+            r.append("(x); }\n");
+        }
+
+        return r;
+    } 
+
+
+    const std::string pnov_idiom(const std::string &name) 
+    {
+        std::string r;
+        std::list<method>::iterator it = ponv_pnov_list.begin();
+        std::list<method>::iterator it_end = ponv_pnov_list.end();
+
+        r.append("\n");
+        for(; it != it_end; ++it) {
+            r.append("        virtual void ").append(it->name).append("_").append(freefunction::symb(it->arg));
+            r.append("(").append(it->arg).append(" x)=0;\n"); 
+        }
+
+        return r;
+    } 
+
 
     const std::string printOn_idiom(const std::string &name) {
 
@@ -207,6 +264,8 @@ namespace freefunction {
         r.append("        }\n");  
         return r;
     }    
+
+    
 }
 
 
@@ -277,6 +336,9 @@ class Body : public Header {
                 std::cout << 
                     "    virtual void printOn(std::ostream& o) const { o << __PRETTY_FUNCTION__ << std::endl; }\n";
 
+            if ( !ponv_pnov_list.empty() )
+                std::cout << freefunction::pnov_idiom(__classname) << std::endl;
+
             // PUBLIC: --------------------------------------------------------
             //
             if (__public)
@@ -295,6 +357,9 @@ class Body : public Header {
             if (__printOn)
                 std::cout << freefunction::printOn_idiom(__classname) << std::endl;
 
+            if ( !ponv_pnov_list.empty() ) // Public Overl. Non-Virt. Call Protected Non-Overl. Virt. 
+                std::cout << freefunction::ponv_idiom(__classname) << std::endl;
+
             std::cout << "};\n\n";          
         }        
 };
@@ -304,7 +369,7 @@ main(int argc, char *argv[]) {
 
     int i;
 
-    while ((i = getopt(argc, argv, ":N:V:W:p:r:v:n:c:s:a:3oh")) != EOF)
+    while ((i = getopt(argc, argv, ":N:V:W:p:r:v:n:c:s:k:a:3oh")) != EOF)
         switch (i) {
             case '3': __bigthree  = 1; __public = 1; __private = 1; break; 
             case 's': __classname = optarg; __keyword = "struct"; break;   
@@ -324,9 +389,17 @@ main(int argc, char *argv[]) {
                           template_list.push_back(generic(optarg,name));
                       } break;
 
+            case 'k': __protected = 1;
+                      { 
+                          char * type = strchr(optarg,',');
+                          if ( type == NULL )
+                              freefunction::throw_uncatchable("invalid template non-type format: 'name , type'");
+                          *type++ = '\0';        
+                          ponv_pnov_list.push_back(method(optarg,type));
+                      } break;
+
             case 'V': template_list.push_back(generic("typename", optarg)); break;
             case 'W': template_list.push_back(generic("template <typename> class", optarg)); break; 
-
             case 'h': fprintf(stderr,usage,__progname); exit(0);
         }
 
