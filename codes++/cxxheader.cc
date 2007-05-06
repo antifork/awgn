@@ -253,7 +253,8 @@ class Body : public Header {
                 std::cout << freefunction::derivate();
 
             std::cout << " {\n";
-            if (__keyword == "class" || ( __keyword == "struct" && __bigthree) )
+
+            if (__private)
                 std::cout << "\n    private:\n";
 
             // the big three
@@ -305,9 +306,9 @@ main(int argc, char *argv[]) {
 
     while ((i = getopt(argc, argv, ":N:V:W:p:r:v:n:c:s:a:3oh")) != EOF)
         switch (i) {
-            case '3': __bigthree  = 1; __public = 1; break; 
+            case '3': __bigthree  = 1; __public = 1; __private = 1; break; 
             case 's': __classname = optarg; __keyword = "struct"; break;   
-            case 'c': __classname = optarg; __keyword = "class" ; __explicit = 1; __public = 1; break;
+            case 'c': __classname = optarg; __keyword = "class" ; __explicit = 1; __public = 1; __private = 1; break;
 
             case 'p': derivation_list.push_back(base(optarg,"public"));    break;
             case 'r': derivation_list.push_back(base(optarg,"protected")); break;
