@@ -22,7 +22,7 @@ namespace generic {
 
     template <typename T>
         struct Type2type {
-            typedef T type_t;
+            typedef T type;
         };
 
     class  NullType  { };

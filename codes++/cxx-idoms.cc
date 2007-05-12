@@ -13,6 +13,7 @@
 #include <cctype> 
 #include <string>
 #include <list>
+#include <set>
 
 #include <getopt.h>
 #include <errno.h>
@@ -23,24 +24,24 @@ const char usage[]=
      "\n Class:\n"
       "   -c class            class  name\n"
       "   -s struct           struct name\n"
-      "\n Polymorphism:\n"                                            
+      "\n Inheritance:\n"                                            
       "   -p name -p name ... public    derivation\n"
       "   -r name -p name ... protected derivation\n"
       "   -v name -p name ... private   derivation\n"
       "\n Template:\n"
-      "   -N elem -N elem ... template non-type\n"
-      "   -T name ...         template parameter\n"
-      "   -V name ...         template template parameter\n"
+      "   -n elem -n elem ... template non-type\n"
+      "   -t name ...         template parameter\n"
+      "   -w name ...         template template parameter\n"
       "\n Idioms:\n"
-      "   -n elem -n elem ... named-constructor idiom\n"
-      "   -a elem -a elem ... named-parameter idiom\n"
-      "   -k elem -k elem ... public overloaded non-virtuals call\n"
+      "   -A elem -A elem ... named-constructor idiom\n"
+      "   -B elem -B elem ... named-parameter idiom\n"
+      "   -C elem -C elem ... public overloaded non-virtuals call\n"
       "                       protect non-overloaded virtual idiom\n"
-      "   -o                  virtual-friend-function idiom (printOn)\n"            
+      "   -O                  virtual-friend-function idiom (printOn)\n"            
       "   -3                  big-three guideline\n"
       "   -h                  print this help.\n"
-      "\n Element: id,<type>,<default> examples: \n\n"
-      "   'test' 'home,int' 'point,char *, NULL'\n";
+      "\n Element: id,<type>,<default> examples: \n"
+      "   'test' 'home,int' 'point,char *, NULL'\n\n";
 
 
 // basic element
@@ -48,7 +49,7 @@ const char usage[]=
 
 class Element {
 
-    friend class Entity;
+    friend class Class;
 
     std::string __id;
     std::string __type;
@@ -101,9 +102,76 @@ class Element {
 
 
 
-// base policy     ::::::::::::::::::::::::::::::::::::::::::::
+// Base Class    ::::::::::::::::::::::::::::::::::::::::::::
 //
-struct BasePolicy {
+struct BaseClass {
+
+    std::string __name;
+
+    bool __private ;
+    bool __protected ;
+    bool __public ;
+
+    bool __template;
+    bool __derivation;
+    bool __include;
+
+    // idioms
+    //
+
+    bool __bigthree ;
+    bool __printOn ;
+    bool __explicit ;
+    bool __ponvpnov;
+    bool __nci ;
+    bool __npi ;
+
+    BaseClass(const std::string &n="") : __name(n),
+    __private(false), __protected(false), __public(false),
+    __template(false), __derivation(false),__bigthree(false), __printOn(false), __explicit(false), 
+    __ponvpnov(false),__nci(false), __npi(false) {} 
+
+    BaseClass& _private()     { __private = true; return *this; }
+    BaseClass& _protected()   { __protected = true; return *this; }
+    BaseClass& _public()      { __public = true; return *this; }
+    BaseClass& _template()    { __template = true; return *this; }
+    BaseClass& _derivation()  { __derivation = true; return *this; }
+    BaseClass& _include()     { __include = true; return *this; }
+    BaseClass& _bigthree()    { __bigthree = true; return *this; }
+    BaseClass& _nci()         { __nci = true; return *this; }
+    BaseClass& _npi()         { __npi = true; return *this; }
+    BaseClass& _printOn()     { __printOn = true; return *this; }
+    BaseClass& _explicit()    { __explicit = true; return *this; }
+    BaseClass& _ponvpnov()    { __ponvpnov = true; return *this; }
+ 
+};
+
+// include policy  ::::::::::::::::::::::::::::::::::::::::::::
+
+struct IncludePolicy: public virtual BaseClass {
+    std::set<std::string> includes;
+
+    void push(const std::string &s) {
+        includes.insert(s);
+    }
+
+    const std::string action() {
+        std::string r;
+        std::set<std::string>::iterator it = includes.begin();
+        std::set<std::string>::iterator it_end = includes.end();
+        
+        for (; it != it_end; ++it) {
+            r.append("#include <").append(*it).append(">\n");
+        }        
+        return r;
+    } 
+
+};
+
+// template policy ::::::::::::::::::::::::::::::::::::::::::::
+//
+
+struct TemplatePolicy : public virtual BaseClass {
 
     std::list<Element>  list;        
 
@@ -111,14 +179,7 @@ struct BasePolicy {
         list.push_back(e);                
     }
 
-};
-
-// template policy ::::::::::::::::::::::::::::::::::::::::::::
-//
-
-struct TemplatePolicy : public BasePolicy {
-
-    const std::string action()
+   const std::string action()
     {
         std::string r;
 
@@ -149,9 +210,14 @@ struct TemplatePolicy : public BasePolicy {
 // derivation policy :::::::::::::::::::::::::::::::::::::::::::: 
 //
 
-struct DerivationPolicy : public BasePolicy {
+struct DerivationPolicy : public virtual BaseClass {
 
-    const std::string action()
+    std::list<Element>  list;        
+     void push(const Element &e) {
+        list.push_back(e);                
+    }
+
+   const std::string action()
     {
         std::string r;
 
@@ -171,7 +237,6 @@ struct DerivationPolicy : public BasePolicy {
             r.append(" , ");
         }
 
-
         return r;
     }
 
@@ -181,9 +246,14 @@ struct DerivationPolicy : public BasePolicy {
 // NamedConstructorIdiom policy :::::::::::::::::::::::::::::::::::::::::::: 
 //
 
-struct NamedConstructorIdiom : public BasePolicy {
+struct NamedConstructorIdiom : public virtual BaseClass {
 
-    const std::string action(const std::string &name) 
+    std::list<Element>  list;        
+      void push(const Element &e) {
+        list.push_back(e);                
+    }
+
+  const std::string action() 
     {
         std::string r;
         std::list<Element>::iterator it = list.begin();
@@ -191,8 +261,8 @@ struct NamedConstructorIdiom : public BasePolicy {
 
         r.append("\n");
         for(; it != it_end; ++it) {
-            r.append("        static ").append(name).append(" ").append((*it).get_id());
-            r.append("() { return ").append(name).append("(); }\n");
+            r.append("        static ").append(__name).append(" ").append((*it).get_id());
+            r.append("() { return ").append(__name).append("(); }\n");
         }
 
         return r;
@@ -204,9 +274,14 @@ struct NamedConstructorIdiom : public BasePolicy {
 // NamedParameterIdiom policy :::::::::::::::::::::::::::::::::::::::::::: 
 //
 
-struct NamedParameterIdiom : public BasePolicy {
+struct NamedParameterIdiom : public virtual BaseClass {
 
-    const std::string action(const std::string &name) 
+    std::list<Element>  list;        
+     void push(const Element &e) {
+        list.push_back(e);                
+    }
+
+   const std::string action() 
     {
         std::string r;
         std::list<Element>::iterator it = list.begin();
@@ -214,7 +289,7 @@ struct NamedParameterIdiom : public BasePolicy {
     
         r.append("\n");
         for(; it != it_end; ++it) {
-            r.append("        ").append(name).append("& ").append((*it).get_id());
+            r.append("        ").append(__name).append("& ").append((*it).get_id());
             r.append("() { ").append((*it).get_id()).append("_ = ");
             r.append((*it).get_default()).append("; return *this; }\n");
         }
@@ -222,7 +297,7 @@ struct NamedParameterIdiom : public BasePolicy {
         return r;
     } 
 
-   const std::string action_private(const std::string &name) 
+   const std::string action_private() 
     {
         std::string r;
         std::list<Element>::iterator it = list.begin();
@@ -242,13 +317,13 @@ struct NamedParameterIdiom : public BasePolicy {
 // PrintOnIdiom policy :::::::::::::::::::::::::::::::::::::::::::: 
 //
 
-struct PrintOnIdiom {
+struct PrintOnIdiom :  public virtual BaseClass {
 
-    const std::string action(const std::string &name) {
+    const std::string action() {
 
         std::string r;
         r.append("\n        friend std::ostream& operator<< (std::ostream& o, const ");
-        r.append(name).append("& b) { \n");
+        r.append(__name).append("& b) { \n");
         r.append("            b.printOn(o);\n");
         r.append("            return o;\n");
         r.append("        }\n");  
@@ -261,9 +336,14 @@ struct PrintOnIdiom {
 // PonvPnovIdiom policy :::::::::::::::::::::::::::::::::::::::::::: 
 //
 
-struct PonvPnovIdiom : public BasePolicy {
+struct PonvPnovIdiom : public virtual BaseClass {
 
-    const std::string action() 
+    std::list<Element>  list;        
+    void push(const Element &e) {
+        list.push_back(e);                
+    }
+
+   const std::string action() 
     {
         std::string r;
         std::list<Element>::iterator it = list.begin();
@@ -297,40 +377,18 @@ struct PonvPnovIdiom : public BasePolicy {
 };
 
 
-//
 // ENTITY Class :::::::::::::::::::::::::::::::::::::::::::: 
 //
 
 
-class Entity : public PrintOnIdiom, public TemplatePolicy, public DerivationPolicy,
+class Class : public IncludePolicy, public PrintOnIdiom, public TemplatePolicy, public DerivationPolicy,
 public NamedConstructorIdiom, public NamedParameterIdiom, public PonvPnovIdiom {
 
     private:
+
         static std::string __NAME;
 
-    private:
-
         std::ostream *out;
-        std::string __name;
-
-        bool __private ;
-        bool __protected ;
-        bool __public ;
-        bool __template;
-        bool __derivation;
-
-        // idioms
-        //
-
-        bool __bigthree ;
-        bool __printOn ;
-        bool __explicit ;
-        bool __ponvpnov;
-        bool __nci ;
-        bool __npi ;
-
-        Entity(Entity &);
-        Entity &operator=(const Entity &);
 
         void guardName(const std::string &n) {
             __NAME.append("__").append(n);
@@ -369,8 +427,17 @@ public NamedConstructorIdiom, public NamedParameterIdiom, public PonvPnovIdiom {
             r.append("/* virtual */ ~").append(__name).append(" () { }");
             return r;
         }
-    
+ 
+ 
+        Class(Class &);
+        Class &operator=(const Class &);
+   
     public:
+
+        explicit Class (const std::string &n = "") 
+            : BaseClass(n) {
+                guardName(n);
+            } 
 
         static std::string openGuard() {
             std::string ret; 
@@ -384,53 +451,32 @@ public NamedConstructorIdiom, public NamedParameterIdiom, public PonvPnovIdiom {
             return ret;
         }
 
-        explicit Entity (const std::string &n = "") 
-            : __name(n), __private(false), __protected(false), __public(false),
-            __template(false), __derivation(false),__bigthree(false), __printOn(false), __explicit(false), 
-            __ponvpnov(false),__nci(false), __npi(false) { 
+        /* virtual */ ~Class () { }
 
-                guardName(n);
-            } 
-
-        Entity& _name(const std::string &n) { 
-            __name = n;
-            guardName(n);
-            return *this;
-        }
-
-        Entity& _private()     { __private = true; return *this; }
-        Entity& _protected()   { __protected = true; return *this; }
-        Entity& _public()      { __public = true; return *this; }
-        Entity& _template()    { __template = true; return *this; }
-        Entity& _derivation()  { __derivation = true; return *this; }
-        Entity& _bigthree()    { __bigthree = true; return *this; }
-        Entity& _nci()         { __nci = true; return *this; }
-        Entity& _npi()         { __npi = true; return *this; }
-        Entity& _printOn()     { __printOn = true; return *this; }
-        Entity& _explicit()    { __explicit = true; return *this; }
-        Entity& _ponvpnov()    { __ponvpnov = true; return *this; }
-        
-        /* virtual */ ~Entity () { }
-
-        friend std::ostream& operator<< (std::ostream& o, Entity & b);  
+        friend std::ostream& operator<< (std::ostream& o, Class & b);  
 
 };
 
 
-std::string Entity::__NAME;
+std::string Class::__NAME;
 
-std::list<Entity *> theEntities;
+std::list<Class *> theEntities;
 
 
 //////////////////////////////////////////////////////////
 //
-//  Dump Entity
+//  Dump Class
 //
 //////////////////////////////////////////////////////////
 
-std::ostream & operator<<(std::ostream& out, Entity & ent) {
+std::ostream & operator<<(std::ostream& out, Class & ent) {
 
     ent.out = &out;
+
+    // includes
+    //
+    if (ent.__include)
+        out << ent.IncludePolicy::action() << std::endl;
 
     // template
     //
@@ -461,7 +507,7 @@ std::ostream & operator<<(std::ostream& out, Entity & ent) {
     //
 
     if (ent.__npi) 
-        out << "        " << ent.NamedParameterIdiom::action_private(ent.__name) << std::endl;
+        out << "        " << ent.NamedParameterIdiom::action_private() << std::endl;
 
     // the big three
     //
@@ -500,13 +546,13 @@ std::ostream & operator<<(std::ostream& out, Entity & ent) {
     if (!ent.__nci)
         out << "        " << ent.ctor() << std::endl;
     else
-        out << ent.NamedConstructorIdiom::action(ent.__name) << std::endl;
+        out << ent.NamedConstructorIdiom::action() << std::endl;
 
     // named parameter idiom
     //
 
     if (ent.__npi) 
-        out << "        " << ent.NamedParameterIdiom::action(ent.__name) << std::endl;
+        out << "        " << ent.NamedParameterIdiom::action() << std::endl;
 
     // descructor
     //
@@ -517,7 +563,7 @@ std::ostream & operator<<(std::ostream& out, Entity & ent) {
     //
 
     if (ent.__printOn)
-        out << ent.PrintOnIdiom::action(ent.__name) << std::endl;
+        out << ent.PrintOnIdiom::action() << std::endl;
 
     // Public Overl. Non-Virt. Call Protected Non-Overl. Virt.
     //
@@ -531,7 +577,7 @@ std::ostream & operator<<(std::ostream& out, Entity & ent) {
 }
 
 
-Entity *notnull(Entity *e) {
+Class *notnull(Class *e) {
 
     if ( e == NULL )
         throw std::runtime_error("unknown class/structure name: -c/-s option must come first!");
@@ -547,28 +593,37 @@ main(int argc, char *argv[]) {
 
     for (;argc>1;  optind = 0  ) {
 
-        Entity *x = NULL;
+        Class *x = NULL;
 
-        while ((i = getopt(argc, argv, "+N:T:V:p:r:v:n:c:s:k:a:3oh")) != EOF) {
+        while ((i = getopt(argc, argv, "+p:r:v:n:t:w:c:s:A:B:C:3Oh")) != EOF) {
 
           switch(i) {
-            case 'c': x = new Entity(optarg); x->_explicit()._public()._private();  break;
-            case 's': x = new Entity(optarg); break;   
+            case 'c': x = new Class(optarg); x->_explicit()._public()._private();  break;
+            case 's': x = new Class(optarg); break;   
+
+            case 'n': notnull(x)->TemplatePolicy::push(Element::elementOpt(optarg)); 
+                      x->_template(); break;     
+            case 't': notnull(x)->TemplatePolicy::push(Element::elementOpt(optarg,"typename")); 
+                      x->_template(); break;     
+            case 'w': notnull(x)->TemplatePolicy::push(Element::elementOpt(optarg,"template <typename> class")); 
+                      x->_template(); break; 
+            case 'p': notnull(x)->DerivationPolicy::push(Element::elementOpt(optarg,"public"));    
+                      x->_derivation() ;break;
+            case 'r': notnull(x)->DerivationPolicy::push(Element::elementOpt(optarg,"protected")); 
+                      x->_derivation(); break;
+            case 'v': notnull(x)->DerivationPolicy::push(Element::elementOpt(optarg,"private"));   
+                      x->_derivation(); break;
+
+            // Idioms
+            //
+
+            case 'A': notnull(x)->NamedConstructorIdiom::push(Element::elementOpt(optarg)); x->_nci(); break;
+            case 'B': notnull(x)->NamedParameterIdiom::push(Element::elementOpt(optarg));   x->_npi(); break; 
+            case 'C': notnull(x)->PonvPnovIdiom::push(Element::elementOpt(optarg)); 
+                      x->_ponvpnov()._protected(); break;
+
+            case 'O': notnull(x)->IncludePolicy::push("iostream"); x->_printOn()._protected()._include() ; break;
             case '3': notnull(x)->_bigthree()._public()._private(); break; 
-            case 'o': notnull(x)->_printOn()._protected() ; break;
-
-            case 'N': notnull(x)->_template().TemplatePolicy::push(Element::elementOpt(optarg)); break;     
-            case 'T': notnull(x)->_template().TemplatePolicy::push(Element::elementOpt(optarg,"typename")); break;     
-            case 'V': notnull(x)->_template().TemplatePolicy::push(Element::elementOpt(optarg,"template <typename> class")); break; 
-
-            case 'p': notnull(x)->_derivation().DerivationPolicy::push(Element::elementOpt(optarg,"public"));    break;
-            case 'r': notnull(x)->_derivation().DerivationPolicy::push(Element::elementOpt(optarg,"protected")); break;
-            case 'v': notnull(x)->_derivation().DerivationPolicy::push(Element::elementOpt(optarg,"private"));   break;
-
-            case 'n': notnull(x)->_nci().NamedConstructorIdiom::push(Element::elementOpt(optarg)); break;
-            case 'a': notnull(x)->_npi().NamedParameterIdiom::push(Element::elementOpt(optarg)); break; 
-
-            case 'k': notnull(x)->_ponvpnov()._protected().PonvPnovIdiom::push(Element::elementOpt(optarg)); break;
 
             case 'h': fprintf(stderr,usage,__progname); exit(0);
             case '?': throw std::runtime_error("unknown option");
@@ -585,18 +640,18 @@ main(int argc, char *argv[]) {
 
     }
 
-    std::list<Entity *>::iterator it = theEntities.begin();
-    std::list<Entity *>::iterator it_end = theEntities.end();
+    std::list<Class *>::iterator it = theEntities.begin();
+    std::list<Class *>::iterator it_end = theEntities.end();
 
     if (theEntities.empty())
         return 0;
 
-    std::cout << Entity::openGuard();
+    std::cout << Class::openGuard();
 
     for(; it != it_end ; ++it)
         std::cout << *(*it);
 
-    std::cout << Entity::closeGuard();
+    std::cout << Class::closeGuard();
 
     return 0;
 }
