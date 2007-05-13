@@ -12,6 +12,7 @@
 #include <stdexcept>
 #include <cctype> 
 #include <string>
+#include <vector>
 #include <list>
 #include <set>
 
@@ -37,8 +38,11 @@ const char usage[]=
       "   -B elem -B elem ... named-parameter idiom\n"
       "   -C elem -C elem ... public overloaded non-virtuals call\n"
       "                       protect non-overloaded virtual idiom\n"
+      "   -P                  proxy idiom\n"
+      "   -L                  operator[]: lvalue-rvalue idiom\n"
+      "   -N                  non-derivable idiom\n"
       "   -O                  virtual-friend-function idiom (printOn)\n"            
-      "   -3                  big-three guideline\n"
+      "   -3                  big-three guideline (non copyable)\n"
       "   -h                  print this help.\n"
       "\n Element: id,<type>,<default> examples: \n"
       "   'test' 'home,int' 'point,char *, NULL'\n\n";
@@ -71,15 +75,15 @@ class Element {
 
     public:
 
-    static Element elementOpt(std::string option, const std::string &t, const std::string &d="") {
+    static Element opt(std::string option, const std::string &t, const std::string &d="") {
         std::string::size_type l = option.find(",");
         if (l != std::string::npos )
-           option = option.substr(0,l); 
+            option = option.substr(0,l); 
 
         return Element(option,t,d); 
     }
 
-    static Element elementOpt(std::string option) {
+    static Element opt(std::string option) {
 
         std::string::size_type l = option.find(",");
         if ( l == std::string::npos )
@@ -93,61 +97,159 @@ class Element {
         std::string def = type.substr(r+1);
         return Element(option.substr(0,l), type.substr(0,r), def);
     }
-    
-    const std::string &get_id() const { return __id; }
-    const std::string &get_type() const { return __type; }
-    const std::string &get_symbol() const { return __symbol; }
-    const std::string &get_default() const { return __default; }
+
+    const std::string &_id() const { return __id; }
+    const std::string &_type() const { return __type; }
+    const std::string &_symbol() const { return __symbol; }
+    const std::string &_default() const { return __default; }
 };
 
+
+enum Section {
+    _private_,
+    _protected_,
+    _public_
+};
+
+
+class Member {
+
+    Member(const Member &);
+    Member &operator=(const Member &);
+
+    protected:
+        std::string _type;
+        std::string _id;
+
+        Section     _locate;
+        bool        _statica;
+        bool        _const;
+
+    public:
+        Member(const std::string &t, const std::string &i) 
+            : _type(t), _id(i), _locate(_private_), 
+            _statica(false), _const(false) {}
+
+        virtual ~Member() {}
+
+        Member &statica()     { _statica = true; return *this; }
+        Member &constante()   { _const = true; return *this; }
+
+        Member &scope(const Section &s) { _locate = s; return *this; }
+        Section where() const { return _locate; }
+
+        virtual std::string dump() {
+            std::string r;
+            r.append("        ").append(_statica ? "static " : "");
+            r.append(_const ? "const " : "" ).append(_type).append(" ").append(_id).append(";");  
+            return r;
+        }
+};
+
+
+class MemberFunction : public Member {
+
+    bool _pure;
+    bool _virtuale;
+    bool _signatureOnly;
+
+    std::string _args;
+    std::string _body;
+    public:
+
+    MemberFunction& pure()          { _pure = true; _virtuale = true; return *this; }
+    MemberFunction& virtuale()      { _virtuale = true; return *this; }
+    MemberFunction& signatureOnly() { _signatureOnly = true; return *this; }
+
+    MemberFunction(const std::string &t, const std::string &i, const std::string &a, const std::string &b = "{}") :
+        Member(t,i), _pure(false), _virtuale(false), _signatureOnly(false), _args(a), _body(b) {}
+
+    virtual std::string dump() {
+        std::string r;
+        r.append("        ");
+        r.append( (_virtuale||_pure) ? "virtual " : (_statica ? "static " : ""));
+        r.append(  _const ? "const " :"");
+        r.append(Member::_type).append(Member::_type.empty() ? "" : " ");
+        r.append(Member::_id).append("(").append(_args).append(")");
+        r.append( _signatureOnly ? ";" : ( _pure ? "=0;" : std::string(" ") + _body));
+        return r;
+    }   
+
+    using Member::where;
+    using Member::scope;
+    using Member::statica;
+    using Member::constante;
+
+};
 
 
 // Base Class    ::::::::::::::::::::::::::::::::::::::::::::
 //
 struct BaseClass {
 
+    std::list<Member *> scopeList;
+
     std::string __name;
-
-    bool __private ;
-    bool __protected ;
-    bool __public ;
-
-    bool __template;
-    bool __derivation;
-    bool __include;
 
     // idioms
     //
 
-    bool __bigthree ;
-    bool __printOn ;
-    bool __explicit ;
-    bool __ponvpnov;
-    bool __nci ;
-    bool __npi ;
+    BaseClass(const std::string &n="") : __name(n) { } 
 
-    BaseClass(const std::string &n="") : __name(n),
-    __private(false), __protected(false), __public(false),
-    __template(false), __derivation(false),__bigthree(false), __printOn(false), __explicit(false), 
-    __ponvpnov(false),__nci(false), __npi(false) {} 
+    void pushMember(Member *ptr) {
+        scopeList.push_back(ptr);
+    }
 
-    BaseClass& _private()     { __private = true; return *this; }
-    BaseClass& _protected()   { __protected = true; return *this; }
-    BaseClass& _public()      { __public = true; return *this; }
-    BaseClass& _template()    { __template = true; return *this; }
-    BaseClass& _derivation()  { __derivation = true; return *this; }
-    BaseClass& _include()     { __include = true; return *this; }
-    BaseClass& _bigthree()    { __bigthree = true; return *this; }
-    BaseClass& _nci()         { __nci = true; return *this; }
-    BaseClass& _npi()         { __npi = true; return *this; }
-    BaseClass& _printOn()     { __printOn = true; return *this; }
-    BaseClass& _explicit()    { __explicit = true; return *this; }
-    BaseClass& _ponvpnov()    { __ponvpnov = true; return *this; }
- 
+    std::string dumpScope(const Section &s) {
+        std::string ret;
+        std::list<Member *>::iterator it = scopeList.begin();        
+        std::list<Member *>::iterator it_end = scopeList.end();        
+        for(; it != it_end; ++it) {
+            if ((*it)->where() != s )
+                continue;
+
+            ret.append((*it)->dump()).append("\n");
+        }
+        return ret;
+    }
+
+    bool hasSection(const Section &s) {
+        std::list<Member *>::iterator it = scopeList.begin();      
+        std::list<Member *>::iterator it_end = scopeList.end();          
+        for (; it != it_end; ++it) {
+            if ( (*it)->where() == s)
+                return true;        
+        }
+        return false;
+    }
 };
 
-// include policy  ::::::::::::::::::::::::::::::::::::::::::::
 
+// extra policy  ::::::::::::::::::::::::::::::::::::::::::::
+//
+struct ExtraPolicy: public virtual BaseClass {
+    std::set<std::string> blocks;
+
+    void push(const std::string &s) {
+        blocks.insert(s);
+    }
+
+    const std::string action() {
+        std::string r;
+        std::set<std::string>::iterator it = blocks.begin();
+        std::set<std::string>::iterator it_end = blocks.end();
+
+        for (; it != it_end; ++it) {
+            r.append(*it).append("\n");
+        }        
+        return r;
+    } 
+
+};
+
+
+// include policy  ::::::::::::::::::::::::::::::::::::::::::::
+//
 struct IncludePolicy: public virtual BaseClass {
     std::set<std::string> includes;
 
@@ -159,7 +261,7 @@ struct IncludePolicy: public virtual BaseClass {
         std::string r;
         std::set<std::string>::iterator it = includes.begin();
         std::set<std::string>::iterator it_end = includes.end();
-        
+
         for (; it != it_end; ++it) {
             r.append("#include <").append(*it).append(">\n");
         }        
@@ -168,9 +270,9 @@ struct IncludePolicy: public virtual BaseClass {
 
 };
 
+
 // template policy ::::::::::::::::::::::::::::::::::::::::::::
 //
-
 struct TemplatePolicy : public virtual BaseClass {
 
     std::list<Element>  list;        
@@ -179,32 +281,68 @@ struct TemplatePolicy : public virtual BaseClass {
         list.push_back(e);                
     }
 
-   const std::string action()
+    const std::string action()
     {
         std::string r;
 
         std::list<Element>::iterator it =   list.begin();
         std::list<Element>::iterator it_end = list.end();
 
+        if (it == it_end)
+            return r;
+
         r.append("template < ");
 
         for(;;) {
-
-            r.append(it->get_type()).append(" ").append(it->get_id());
-            if (!it->get_default().empty())
-                r.append(" = ").append(it->get_default());
+            r.append(it->_type()).append(" ").append(it->_id());
+            if (!it->_default().empty())
+                r.append(" = ").append(it->_default());
 
             if (++it == it_end)
                 break;
 
             r.append(" , ");
         }
-
-        r.append(" >");
+        r.append(" >\n");
         return r;
     }
 
 };
+
+
+// init policy :::::::::::::::::::::::::::::::::::::::::::: 
+//
+struct InitPolicy : public virtual BaseClass {
+
+    std::list<Element>  list;        
+    void push(const Element &e) {
+        list.push_back(e);                
+    }
+
+    const std::string action()
+    {
+        std::string r;
+
+        std::list<Element>::iterator it = list.begin();
+        std::list<Element>::iterator it_end = list.end();
+
+        if ( it == it_end )
+            return r;
+
+        r.append(" : ");
+        for(;;) {
+
+            r.append(it->_id()).append("(").append(it->_default()).append(")");
+            ++it;
+
+            if (it == it_end)
+                break;
+            r.append(" , ");
+        }
+        return r;
+    }
+
+};          
 
 
 // derivation policy :::::::::::::::::::::::::::::::::::::::::::: 
@@ -213,30 +351,30 @@ struct TemplatePolicy : public virtual BaseClass {
 struct DerivationPolicy : public virtual BaseClass {
 
     std::list<Element>  list;        
-     void push(const Element &e) {
+    void push(const Element &e) {
         list.push_back(e);                
     }
 
-   const std::string action()
+    const std::string action()
     {
         std::string r;
 
         std::list<Element>::iterator it = list.begin();
         std::list<Element>::iterator it_end = list.end();
 
+        if ( it == it_end )
+            return r;
+
         r.append(" : ");
 
         for(;;) {
-
-            r.append((*it).get_type()).append(" ").append((*it).get_id());
+            r.append(it->_type()).append(" ").append(it->_id());
             ++it;
 
             if (it == it_end)
                 break;
-
             r.append(" , ");
         }
-
         return r;
     }
 
@@ -248,25 +386,20 @@ struct DerivationPolicy : public virtual BaseClass {
 
 struct NamedConstructorIdiom : public virtual BaseClass {
 
-    std::list<Element>  list;        
-      void push(const Element &e) {
-        list.push_back(e);                
+    void push(const Element &e) {
+
+        // public:
+        //
+
+        MemberFunction *p = new MemberFunction(
+                std::string(__name),
+                e._id(),
+                "", 
+                std::string("{ return ").append(__name).append("(); }"));
+
+        p->statica().scope(_public_);
+        pushMember(p); 
     }
-
-  const std::string action() 
-    {
-        std::string r;
-        std::list<Element>::iterator it = list.begin();
-        std::list<Element>::iterator it_end = list.end();
-
-        r.append("\n");
-        for(; it != it_end; ++it) {
-            r.append("        static ").append(__name).append(" ").append((*it).get_id());
-            r.append("() { return ").append(__name).append("(); }\n");
-        }
-
-        return r;
-    } 
 
 };
 
@@ -276,58 +409,28 @@ struct NamedConstructorIdiom : public virtual BaseClass {
 
 struct NamedParameterIdiom : public virtual BaseClass {
 
-    std::list<Element>  list;        
-     void push(const Element &e) {
-        list.push_back(e);                
-    }
+    void push(const Element &e) {
 
-   const std::string action() 
-    {
-        std::string r;
-        std::list<Element>::iterator it = list.begin();
-        std::list<Element>::iterator it_end = list.end();
-    
-        r.append("\n");
-        for(; it != it_end; ++it) {
-            r.append("        ").append(__name).append("& ").append((*it).get_id());
-            r.append("() { ").append((*it).get_id()).append("_ = ");
-            r.append((*it).get_default()).append("; return *this; }\n");
-        }
-    
-        return r;
-    } 
+        // private:
+        //
 
-   const std::string action_private() 
-    {
-        std::string r;
-        std::list<Element>::iterator it = list.begin();
-        std::list<Element>::iterator it_end = list.end();
+        std::string r(e._id());
+        r.append("_");
+        Member * p = new Member(e._type(), r ); 
+        p->scope(_private_);
+        pushMember(p);          // bool id_ ; 
 
-        r.append("\n");
-        for(; it != it_end; ++it) {
-            r.append("        ").append((*it).get_type()).append(" ").append((*it).get_id()).append("_ ;\n");
-        }
+        // public:
+        //
 
-        return r;
-    } 
-
-};
-
-
-// PrintOnIdiom policy :::::::::::::::::::::::::::::::::::::::::::: 
-//
-
-struct PrintOnIdiom :  public virtual BaseClass {
-
-    const std::string action() {
-
-        std::string r;
-        r.append("\n        friend std::ostream& operator<< (std::ostream& o, const ");
-        r.append(__name).append("& b) { \n");
-        r.append("            b.printOn(o);\n");
-        r.append("            return o;\n");
-        r.append("        }\n");  
-        return r;
+        MemberFunction * q = new MemberFunction(
+                                std::string(__name)+"& ", 
+                                e._id(), 
+                                "", 
+                                "{ " + e._id() + "_= " + e._default() + "; return *this; }");
+        q->scope(_public_);
+        pushMember(q);
+                
     }
 
 };
@@ -338,118 +441,106 @@ struct PrintOnIdiom :  public virtual BaseClass {
 
 struct PonvPnovIdiom : public virtual BaseClass {
 
-    std::list<Element>  list;        
     void push(const Element &e) {
-        list.push_back(e);                
+
+        // protected:
+        //
+
+        std::string r(e._id());
+        r.append("_");
+
+        MemberFunction * p = new MemberFunction(
+                "void",
+                std::string(e._id()).append("_").append(e._symbol()), 
+                std::string(e._type()).append(" x")); 
+
+        p->scope(_protected_); 
+        p->pure();
+        pushMember(p);          
+
+        // public:
+        //
+
+        MemberFunction * q = new MemberFunction(
+                                "void",
+                                e._id(), 
+                                std::string(e._type())+" x", 
+                                "{ " + e._id() + "_" + e._symbol() + "(x); }");
+        q->scope(_public_);
+        pushMember(q);
+ 
+
     }
-
-   const std::string action() 
-    {
-        std::string r;
-        std::list<Element>::iterator it = list.begin();
-        std::list<Element>::iterator it_end = list.end();
-
-        r.append("\n");
-        for(; it != it_end; ++it) {
-            r.append("        void ").append(it->get_id()).append("(").append(it->get_type());
-            r.append(" x) { ").append(it->get_id()).append("_").append(it->get_symbol());
-            r.append("(x); }\n");
-        }
-
-        return r;
-    } 
-
-    const std::string action_protect() 
-    {
-        std::string r;
-        std::list<Element>::iterator it = list.begin();
-        std::list<Element>::iterator it_end = list.end();
-
-        r.append("\n");
-        for(; it != it_end; ++it) {
-            r.append("        virtual void ").append(it->get_id()).append("_").append(it->get_symbol());
-            r.append("(").append(it->get_type()).append(" x)=0;\n"); 
-        }
-
-        return r;
-    } 
-
+ 
 };
 
+// ::::::::::::::::::::::::::::::::::::::::::::::::::
+// :::::::::::::::::: CLASS ::::::::::::::::::::::::: 
+// ::::::::::::::::::::::::::::::::::::::::::::::::::
 
-// ENTITY Class :::::::::::::::::::::::::::::::::::::::::::: 
-//
-
-
-class Class : public IncludePolicy, public PrintOnIdiom, public TemplatePolicy, public DerivationPolicy,
-public NamedConstructorIdiom, public NamedParameterIdiom, public PonvPnovIdiom {
+class Class : 
+    public IncludePolicy, public ExtraPolicy, public InitPolicy, 
+    public TemplatePolicy, public DerivationPolicy, public NamedConstructorIdiom, 
+    public NamedParameterIdiom, public PonvPnovIdiom {
 
     private:
 
-        static std::string __NAME;
-
         std::ostream *out;
+        bool struc;
+
+        static std::string __NAME;
+        static std::list<Class *> theClasses; 
 
         void guardName(const std::string &n) {
             __NAME.append("__").append(n);
             std::transform(__NAME.begin(), __NAME.end(), __NAME.begin(), (int(*)(int)) toupper);
         }
-        
-     
-        std::string copyctor()
-        {
-             std::string r;
-             r.append(__name).append("(").append(__name).append(" &);");
-             return r;
-        }
-    
-        std::string opequal()
-        {
-            std::string r;
-            r.append(__name).append(" &operator=(const ").append(__name).append(" &);");
-            return r;
-        }
-    
-        std::string ctor(bool expl = true )
-        {
-            std::string r;
-    
-            if (__explicit && expl)
-                r.append("explicit ");
-    
-            r.append(__name).append(" () { }");
-            return r;
-        }
-    
-        std::string dtor()
-        {
-            std::string r;
-            r.append("/* virtual */ ~").append(__name).append(" () { }");
-            return r;
-        }
- 
- 
+
         Class(Class &);
         Class &operator=(const Class &);
-   
+
     public:
 
-        explicit Class (const std::string &n = "") 
-            : BaseClass(n) {
-                guardName(n);
-            } 
+        explicit Class (const std::string &n, bool s = false ) 
+            : BaseClass(n), struc(s) { } 
 
         static std::string openGuard() {
-            std::string ret; 
-            ret.append("#ifndef ").append(__NAME).append("\n#define ").append(__NAME).append("\n\n");
+            std::string ret;
+            __NAME.append("__HH"); 
+            ret.append("#ifndef ").append(__NAME).append("\n#define ").append(__NAME).append("\n");
             return ret;
         }
-     
+
         static std::string closeGuard() {
             std::string ret;
             ret.append("#endif /* ").append(__NAME).append(" */\n"); 
             return ret;
         }
+
+        static void pushClass(Class *c, bool guard = true) {
+              theClasses.push_back(c);
+              if(guard) {
+                 __NAME.append("__").append(c->__name);
+                 std::transform(__NAME.begin(), __NAME.end(), __NAME.begin(), (int(*)(int)) toupper); 
+              }
+        }
+
+        static void dumpClasses() {
+
+            std::list<Class *>::iterator it = theClasses.begin();
+            std::list<Class *>::iterator it_end = theClasses.end();
+        
+            if (theClasses.empty())
+                return;
+        
+            std::cout << openGuard();
+        
+            for(; it != it_end ; ++it)
+                std::cout << *(*it);
+        
+            std::cout << closeGuard();
+        }
+
 
         /* virtual */ ~Class () { }
 
@@ -459,8 +550,7 @@ public NamedConstructorIdiom, public NamedParameterIdiom, public PonvPnovIdiom {
 
 
 std::string Class::__NAME;
-
-std::list<Class *> theEntities;
+std::list<Class *> Class::theClasses;
 
 
 //////////////////////////////////////////////////////////
@@ -475,114 +565,59 @@ std::ostream & operator<<(std::ostream& out, Class & ent) {
 
     // includes
     //
-    if (ent.__include)
-        out << ent.IncludePolicy::action() << std::endl;
+    out << ent.IncludePolicy::action();
+
+    // extra policy
+    //
+    out << ent.ExtraPolicy::action();
 
     // template
     //
-
-    if (ent.__template)
-        out << ent.TemplatePolicy::action() << std::endl;
+    out << ent.TemplatePolicy::action();
 
     // class//struct
     //
-
-    out << ( ent.__explicit ? "class" : "struct" ) << " " << ent.__name;
+    out << ( ent.struc ? "struct" : "class" ) << " " << ent.__name;
 
     // derivation policy...
     //
-
-    if ( ent.__derivation)
-                out << ent.DerivationPolicy::action();
+    out << ent.DerivationPolicy::action();
 
     out << " {\n";
 
-    // private: -----------------------------------------------------
+    // private: 
     //
-
-    if (ent.__private)
+    if ( ent.hasSection(_private_) ) {
         out << "\n    private:\n";
-
-    // named parameter idiom: private element list...
-    //
-
-    if (ent.__npi) 
-        out << "        " << ent.NamedParameterIdiom::action_private() << std::endl;
-
-    // the big three
-    //
-    if (ent.__bigthree) {
-        out << "        " << ent.copyctor() << std::endl;    
-        out << "        " << ent.opequal () << std::endl;    
+        out << ent.dumpScope(_private_);
     }
 
-    // named constructor idiom
+    // protected: 
     //
-
-    if ( ent.__nci )  
-        out << "        " << ent.ctor(false) << std::endl; 
-
-    // protected: -----------------------------------------------------
-    //
-
-    if ( ent.__protected )
+    if ( ent.hasSection(_protected_) ) {
         out << "\n    protected:\n";
+        out << ent.dumpScope(_protected_);
 
+    }
 
-    if ( ent.__printOn) 
-        out << "    virtual void printOn(std::ostream& o) "
-               "const { o << __PRETTY_FUNCTION__ << std::endl; }\n";
-
-    if ( ent.__ponvpnov)
-        out << ent.PonvPnovIdiom::action_protect() << std::endl;
-
-
-    // public: --------------------------------------------------------
+    // public: 
     //
-    
-    if (ent.__public)
+    if ( ent.hasSection(_public_) ) {
         out << "\n    public:\n";
+        out << ent.dumpScope(_public_);
+    }
 
-    if (!ent.__nci)
-        out << "        " << ent.ctor() << std::endl;
-    else
-        out << ent.NamedConstructorIdiom::action() << std::endl;
-
-    // named parameter idiom
-    //
-
-    if (ent.__npi) 
-        out << "        " << ent.NamedParameterIdiom::action() << std::endl;
-
-    // descructor
-    //
-
-    out << "        " << ent.dtor() << std::endl;
-
-    // printOn idiom..
-    //
-
-    if (ent.__printOn)
-        out << ent.PrintOnIdiom::action() << std::endl;
-
-    // Public Overl. Non-Virt. Call Protected Non-Overl. Virt.
-    //
-    if (ent.__ponvpnov)
-        out << ent.PonvPnovIdiom::action() << std::endl;
-
-    out << "\n};\n\n";   
-
+    out << "\n};\n";   
 
     return out;
 }
 
 
+
 Class *notnull(Class *e) {
-
     if ( e == NULL )
-        throw std::runtime_error("unknown class/structure name: -c/-s option must come first!");
+         throw std::runtime_error("unknown class/structure name: -c/-s option must come first!");
     return e;
-
 };
 
 
@@ -594,41 +629,182 @@ main(int argc, char *argv[]) {
     for (;argc>1;  optind = 0  ) {
 
         Class *x = NULL;
+        MemberFunction *ctor = NULL;
+        MemberFunction *dtor = NULL;
 
-        while ((i = getopt(argc, argv, "+p:r:v:n:t:w:c:s:A:B:C:3Oh")) != EOF) {
+        while ((i = getopt(argc, argv, "+p:r:v:n:t:w:c:s:A:B:C:LP3ONh")) != EOF) {
 
-          switch(i) {
-            case 'c': x = new Class(optarg); x->_explicit()._public()._private();  break;
-            case 's': x = new Class(optarg); break;   
+            switch(i) {
+            case 'c': {
+                 x = new Class(optarg);
+                 ctor = new MemberFunction("",optarg,"");
+                 ctor->scope(_public_);
+                 x->pushMember(ctor);
 
-            case 'n': notnull(x)->TemplatePolicy::push(Element::elementOpt(optarg)); 
-                      x->_template(); break;     
-            case 't': notnull(x)->TemplatePolicy::push(Element::elementOpt(optarg,"typename")); 
-                      x->_template(); break;     
-            case 'w': notnull(x)->TemplatePolicy::push(Element::elementOpt(optarg,"template <typename> class")); 
-                      x->_template(); break; 
-            case 'p': notnull(x)->DerivationPolicy::push(Element::elementOpt(optarg,"public"));    
-                      x->_derivation() ;break;
-            case 'r': notnull(x)->DerivationPolicy::push(Element::elementOpt(optarg,"protected")); 
-                      x->_derivation(); break;
-            case 'v': notnull(x)->DerivationPolicy::push(Element::elementOpt(optarg,"private"));   
-                      x->_derivation(); break;
+                 dtor = new MemberFunction("",std::string("~").append(optarg),"");
+                 dtor->scope(_public_);
+                 x->pushMember(dtor);
+                 break;
+             }
+             case 's': {
+                   x = new Class(optarg, true /* is structure? */ );
+                   ctor = new MemberFunction("",optarg,"");
+                   ctor->scope(_public_);
+                   x->pushMember(ctor);
+
+                   dtor = new MemberFunction("",std::string("~").append(optarg),"");
+                   dtor->scope(_public_);
+                   x->pushMember(dtor);
+                   break;
+            }
+
+            case 'n': notnull(x)->TemplatePolicy::push(Element::opt(optarg)); 
+                      break;     
+            case 't': notnull(x)->TemplatePolicy::push(Element::opt(optarg,"typename")); 
+                      break;     
+            case 'w': notnull(x)->TemplatePolicy::push(Element::opt(optarg,"template <typename> class")); 
+                      break; 
+
+            case 'p': notnull(x)->DerivationPolicy::push(Element::opt(optarg,"public"));    
+                      break;
+            case 'r': notnull(x)->DerivationPolicy::push(Element::opt(optarg,"protected")); 
+                      break;
+            case 'v': notnull(x)->DerivationPolicy::push(Element::opt(optarg,"private"));   
+                      break;
 
             // Idioms
             //
 
-            case 'A': notnull(x)->NamedConstructorIdiom::push(Element::elementOpt(optarg)); x->_nci(); break;
-            case 'B': notnull(x)->NamedParameterIdiom::push(Element::elementOpt(optarg));   x->_npi(); break; 
-            case 'C': notnull(x)->PonvPnovIdiom::push(Element::elementOpt(optarg)); 
-                      x->_ponvpnov()._protected(); break;
+            case 'A': { 
+                 notnull(x)->NamedConstructorIdiom::push(Element::opt(optarg)); 
+                 ctor->scope(_private_);
+                 break;
+            }
 
-            case 'O': notnull(x)->IncludePolicy::push("iostream"); x->_printOn()._protected()._include() ; break;
-            case '3': notnull(x)->_bigthree()._public()._private(); break; 
+            case 'B': {
+                  notnull(x)->NamedParameterIdiom::push(Element::opt(optarg));   
+                  break;
+            }
+
+            case 'C': {
+                 notnull(x)->PonvPnovIdiom::push(Element::opt(optarg)); 
+                 break;
+            }
+
+            case 'N': { 
+
+                 notnull(x)->DerivationPolicy::push(Element::opt(std::string("ForceLeaf<")+x->__name+">","private virtual"));
+
+                 Class *y = new Class("Type2type", true);
+                 y->TemplatePolicy::push(Element::opt("T","class"));
+                 Member *typed = new Member("typedef T","type");
+                 typed->scope(_public_);
+                 y->pushMember(typed);
+                 Class::pushClass(y, false);
+
+                 y = new Class("ForceLeaf");
+                 y->TemplatePolicy::push(Element::opt("T", "typename"));
+                 Member *friends = new Member("friend class", "Type2type<T>::type");
+                 friends->scope(_private_);
+                 y->pushMember(friends);
+                 MemberFunction *ctor = new MemberFunction("","ForceLeaf","");
+                 ctor->scope(_private_);
+                 y->pushMember(ctor);          
+                 Class::pushClass(y, false /* do not append to guardian */);
+
+                 break; 
+            }
+
+            case 'P': {
+
+                Class  *y = new Class("Proxy");
+                Member *m = new Member("T &", "value_");          
+                y->TemplatePolicy::push(Element::opt("T","typename"));
+                m->scope(_private_);
+                y->pushMember(m);
+
+                // copy constructor
+                MemberFunction *f = new MemberFunction("", "Proxy","const T &r",": value_(r) {}");
+                f->scope(_public_);
+                y->pushMember(f);
+
+                // operator=
+
+                f = new MemberFunction("Proxy &","operator=","const T &r", "{ value_ = r; return *this; }");
+                f->scope(_public_);
+                y->pushMember(f);
+
+                // operator<<
+
+                f = new MemberFunction("std::ostream&", 
+                                       "operator<<", 
+                                       "std::ostream& o, const Proxy& p", 
+                                       "{ o << p.value_; return o; }");
+                f->scope(_public_);
+                y->pushMember(f);
+
+                Class::pushClass(y, false /* do not append to guardian */);
+                break;
+            }     
+
+            case 'L': {
+
+                Class  *y = new Class("ElementRef");
+                y->TemplatePolicy::push(Element::opt("T","typename"));
+
+                MemberFunction *f = new MemberFunction("operator", "T","");
+                f->scope(_public_);
+                y->pushMember(f);
+
+                f = new MemberFunction("ElementRef &","operator=","const T &r");
+                f->scope(_public_);
+                y->pushMember(f);
+
+                Class::pushClass(y, false /* do not append to guardian */);
+                break;
+            }          
+
+            case 'O': {  // printOn idiom... 
+
+                notnull(x)->IncludePolicy::push("iostream"); 
+                MemberFunction *f = new MemberFunction(
+                                        "void", "printOn",
+                                        "std::ostream & o", "{ o << __PRETTY_FUNCTION__ << std::endl; }");
+                f->virtuale();
+                f->scope(_protected_);
+                x->pushMember(f);
+
+                f = new MemberFunction( "friend std::ostream &", 
+                                        "operator<<",
+                                        std::string("std::ostream& o, const ") + x->__name + "& b", 
+                                        "{ b.printOn(o); return o; }" );
+                f->scope(_public_);
+                x->pushMember(f);
+
+                break;
+            }
+
+            case '3': { 
+
+                 MemberFunction *copyctor = new MemberFunction("",x->__name,x->__name + " &");
+                 copyctor->signatureOnly().scope(_private_);
+                 x->pushMember(copyctor);
+
+                 MemberFunction *opequal = new MemberFunction(
+                                                x->__name+"&", 
+                                                "operator=", 
+                                                std::string("const ") + x->__name + "&" );
+
+                 opequal->signatureOnly().scope(_private_);
+                 x->pushMember(opequal);
+                 break;
+            }
 
             case 'h': fprintf(stderr,usage,__progname); exit(0);
-            case '?': throw std::runtime_error("unknown option");
+            case '?': 
+            default : 
+                      throw std::runtime_error("unknown option");
 
-                                 
             }
 
         }
@@ -636,22 +812,11 @@ main(int argc, char *argv[]) {
         argc -= (optind-1);
         argv += (optind-1);
 
-        theEntities.push_back(x);
+        Class::pushClass(x);
 
     }
-
-    std::list<Class *>::iterator it = theEntities.begin();
-    std::list<Class *>::iterator it_end = theEntities.end();
-
-    if (theEntities.empty())
-        return 0;
-
-    std::cout << Class::openGuard();
-
-    for(; it != it_end ; ++it)
-        std::cout << *(*it);
-
-    std::cout << Class::closeGuard();
+    
+    Class::dumpClasses();
 
     return 0;
 }
