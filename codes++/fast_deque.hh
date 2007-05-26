@@ -57,7 +57,7 @@ namespace extra {
             fast_deque& operator=(const fast_deque&);
 
         public:
-            fast_deque(int s) : _size(s), _head(0), _tail(0), _arena(new ptr_T[s]) { }
+            fast_deque(int s) : _size(s), _head(0), _tail(0), _arena(new ptr_T[s+1]) { }
 
             ~fast_deque() {  delete[] _arena; }
 
