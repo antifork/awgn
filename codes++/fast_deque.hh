@@ -1,12 +1,3 @@
-/*
- * ----------------------------------------------------------------------------
- * "THE BEER-WARE LICENSE" (Revision 42):
- * <bonelli@antifork.org> wrote this file. As long as you retain this notice you
- * can do whatever you want with this stuff. If we meet some day, and you think
- * this stuff is worth it, you can buy me a beer in return. Nicola Bonelli
- * ----------------------------------------------------------------------------
- */
-
 #ifndef FAST_DEQUE_HH
 #define FAST_DEQUE_HH
 
@@ -40,12 +31,14 @@ namespace extra {
         class fast_deque<T *> {
 
         private:
+            typedef T * ptr_T;
+
             size_t _size;
 
             volatile int _head;
             volatile int _tail;
 
-            T ** _arena;
+            ptr_T * _arena;
 
             int next(int p) {
                 return ( p == (int)_size ? 0 : p+1 );
@@ -55,15 +48,9 @@ namespace extra {
             fast_deque& operator=(const fast_deque&);
 
         public:
-            fast_deque(int s) : _size(s), _head(0), _tail(0), _arena(NULL) { 
-                _arena = (T **) ::malloc( (_size+1) * sizeof(T *));
-                if (_arena == NULL)
-                    throw std::runtime_error("malloc");
-            }
+            fast_deque(int s) : _size(s), _head(0), _tail(0), _arena(new ptr_T[s]) { }
 
-            ~fast_deque() {  
-                ::free(_arena);
-            }
+            ~fast_deque() {  delete[] _arena; }
 
             int push_front(T *ptr) {
                 int nh = next(_head);
@@ -98,7 +85,8 @@ namespace extra {
                 std::cout << " size:"  << _size   << 
                              " depth:" << depth() << 
                              " head:"  << _head   << 
-                             " tail:"  << _tail   << std::endl; }
+                             " tail:"  << _tail   << std::endl; 
+            }
         };
 }
 
