@@ -1,0 +1,196 @@
+>
+>   Added three options to wget-1.8.2.
+>
+>       --set-chunk=BYTE         set the chunk's size when --limit-rate is set. (default 1024)
+>       --set-rcvbuf=BYTE        force SO_RCVBUF to BYTE.
+>       --auto-shape             set the best value for chunk and rcvbuf when --limit-rate is set.
+>
+>
+>   Bonelli Nicola <bonelli@blackhats.it>
+>
+diff -Naur wget-1.8.2.orig/src/connect.c wget-1.8.2/src/connect.c
+--- wget-1.8.2.orig/src/connect.c	Sat May 18 05:05:14 2002
++++ wget-1.8.2/src/connect.c	Mon Jul 15 16:34:11 2002
+@@ -84,12 +84,14 @@
+   connection_host_name = host;
+ }
+ 
++
+ /* Connect to a remote host whose address has been resolved. */
+ int
+ connect_to_one (const unsigned char *addr, unsigned short port, int silent)
+ {
+   struct sockaddr_in sock_name;
+   int sock, save_errno;
++  int n=0, si = sizeof(int);
+ 
+   /* Set port and protocol */
+   sock_name.sin_family = AF_INET;
+@@ -107,6 +109,7 @@
+ 	logprintf (LOG_VERBOSE, _("Connecting to %s:%hu... "),
+ 		   pretty_addr, port);
+     }
++ 
+ 
+   /* Make an internet socket, stream type.  */
+   sock = socket (AF_INET, SOCK_STREAM, 0);
+@@ -125,7 +128,24 @@
+ 	}
+     }
+ 
++   getsockopt (sock, SOL_SOCKET, SO_RCVBUF, &n, &si );
++ 
++   if (opt.rcvbuf || ( opt.autoshape && opt.limit_rate )) 
++      {
++        if ( opt.rcvbuf )
++           setsockopt (sock, SOL_SOCKET, SO_RCVBUF, &opt.rcvbuf, sizeof(int));
++        else
++	   {
++	   if ( opt.limit_rate < n )
++	      setsockopt (sock, SOL_SOCKET, SO_RCVBUF, &opt.limit_rate, sizeof(int));
++           }
++
++        getsockopt (sock, SOL_SOCKET, SO_RCVBUF, &n, &si );
++   	printf(  "\nso_rcvbuf set to %d bytes.\n",n);
++      }
++   
+   /* Connect the socket to the remote host.  */
++  
+   if (connect (sock, (struct sockaddr *)&sock_name, sizeof (sock_name)) < 0)
+     {
+       close (sock);
+diff -Naur wget-1.8.2.orig/src/init.c wget-1.8.2/src/init.c
+--- wget-1.8.2.orig/src/init.c	Sat May 18 05:05:19 2002
++++ wget-1.8.2/src/init.c	Mon Jul 15 15:59:58 2002
+@@ -113,6 +113,7 @@
+   { "accept",		&opt.accepts,		cmd_vector },
+   { "addhostdir",	&opt.add_hostdir,	cmd_boolean },
+   { "alwaysrest",	&opt.always_rest,	cmd_boolean }, /* deprecated */
++  { "autoshape",        &opt.autoshape,         cmd_boolean },
+   { "background",	&opt.background,	cmd_boolean },
+   { "backupconverted",	&opt.backup_converted,	cmd_boolean },
+   { "backups",		&opt.backups,		cmd_number },
+@@ -185,6 +186,8 @@
+   { "savecookies",	&opt.cookies_output,	cmd_file },
+   { "saveheaders",	&opt.save_headers,	cmd_boolean },
+   { "serverresponse",	&opt.server_response,	cmd_boolean },
++  { "setchunk",         &opt.chunk,             cmd_bytes },
++  { "setrcvbuf",        &opt.rcvbuf,            cmd_bytes },  
+   { "spanhosts",	&opt.spanhost,		cmd_boolean },
+   { "spider",		&opt.spider,		cmd_boolean },
+ #ifdef HAVE_SSL
+@@ -266,6 +269,9 @@
+   opt.dot_bytes = 1024;
+   opt.dot_spacing = 10;
+   opt.dots_in_line = 50;
++
++  opt.chunk = 1024;
++
+ }
+ 
+ /* Return the user's home directory (strdup-ed), or NULL if none is
+diff -Naur wget-1.8.2.orig/src/main.c wget-1.8.2/src/main.c
+--- wget-1.8.2.orig/src/main.c	Sat May 18 05:05:19 2002
++++ wget-1.8.2/src/main.c	Mon Jul 15 15:46:07 2002
+@@ -180,6 +180,9 @@
+   -Y,  --proxy=on/off           turn proxy on or off.\n\
+   -Q,  --quota=NUMBER           set retrieval quota to NUMBER.\n\
+        --limit-rate=RATE        limit download rate to RATE.\n\
++       --set-chunk=BYTE	        set the chunk's size when --limit-rate is set. (default 1024)\n\
++       --set-rcvbuf=BYTE        force SO_RCVBUF to BYTE.\n\
++       --auto-shape             set the best value for chunk and rcvbuf when --limit-rate is set.\n\
+ \n"), stdout);
+   fputs (_("\
+ Directories:\n\
+@@ -288,6 +291,7 @@
+     { "timestamping", no_argument, NULL, 'N' },
+     { "verbose", no_argument, NULL, 'v' },
+     { "version", no_argument, NULL, 'V' },
++    { "auto-shape", no_argument, NULL, 168 },
+ 
+     /* Options accepting an argument: */
+     { "accept", required_argument, NULL, 'A' },
+@@ -315,6 +319,10 @@
+     { "input-file", required_argument, NULL, 'i' },
+     { "level", required_argument, NULL, 'l' },
+     { "limit-rate", required_argument, NULL, 164 },
++
++    { "set-chunk",  required_argument, NULL, 167 },
++    { "set-rcvbuf",  required_argument, NULL, 169 },
++
+     { "load-cookies", required_argument, NULL, 161 },
+     { "no", required_argument, NULL, 'n' },
+     { "output-document", required_argument, NULL, 'O' },
+@@ -559,6 +567,15 @@
+ 	  setval ("egdfile", optarg);
+ 	  break;
+ #endif /* HAVE_SSL */
++	case 167:
++          setval ("setchunk", optarg);
++	  break;
++        case 168:
++	  setval ("autoshape", "on");
++          break;
++        case 169:
++          setval ("setrcvbuf", optarg);
++          break;
+ 	case 'A':
+ 	  setval ("accept", optarg);
+ 	  break;
+diff -Naur wget-1.8.2.orig/src/options.h wget-1.8.2/src/options.h
+--- wget-1.8.2.orig/src/options.h	Sat May 18 05:05:20 2002
++++ wget-1.8.2/src/options.h	Mon Jul 15 15:43:35 2002
+@@ -176,6 +176,11 @@
+   int   cookies;
+   char *cookies_input;
+   char *cookies_output;
++
++
++  int chunk;			/* chunk's size */ 
++  int rcvbuf;			/* rcvbuf given */ 
++  int autoshape;		/* autoshape option */
+ };
+ 
+ #ifndef OPTIONS_DEFINED_HERE
+diff -Naur wget-1.8.2.orig/src/retr.c wget-1.8.2/src/retr.c
+--- wget-1.8.2.orig/src/retr.c	Sat May 18 05:05:21 2002
++++ wget-1.8.2/src/retr.c	Mon Jul 15 16:42:01 2002
+@@ -138,20 +138,25 @@
+ 	      struct rbuf *rbuf, int use_expected, long *elapsed)
+ {
+   int res = 0;
+-  static char c[8192];
++  static char *c;
+   void *progress = NULL;
+   struct wget_timer *timer = wtimer_allocate ();
+   long dltime = 0, last_dltime = 0;
+ 
+   *len = restval;
+ 
++  if ( opt.limit_rate && (opt.limit_rate < opt.chunk) )
++	opt.chunk = opt.limit_rate;
++
++  if ( c == NULL ) c = (char *)malloc (opt.chunk);
++
+   if (opt.verbose)
+     progress = progress_create (restval, expected);
+ 
+   if (rbuf && RBUF_FD (rbuf) == fd)
+     {
+       int sz = 0;
+-      while ((res = rbuf_flush (rbuf, c, sizeof (c))) != 0)
++      while ((res = rbuf_flush (rbuf, c, opt.chunk )) != 0)
+ 	{
+ 	  fwrite (c, sizeof (char), res, fp);
+ 	  *len += res;
+@@ -180,8 +185,8 @@
+   while (!use_expected || (*len < expected))
+     {
+       int amount_to_read = (use_expected
+-			    ? MIN (expected - *len, sizeof (c))
+-			    : sizeof (c));
++			    ? MIN (expected - *len, opt.chunk )
++			    : opt.chunk );
+ #ifdef HAVE_SSL
+       if (rbuf->ssl!=NULL)
+ 	res = ssl_iread (rbuf->ssl, c, amount_to_read);
