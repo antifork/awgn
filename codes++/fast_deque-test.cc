@@ -10,7 +10,7 @@
 #include <pthread.h>
 #include "fast_deque.hh"
 
-extra::fast_deque<int *> deck(100);    
+extra::fast_deque<int> deck(100);    
 
 void *thread_a(void *x)
 {
@@ -19,14 +19,16 @@ void *thread_a(void *x)
         try {
             std::cout << "push: " << i << " " << deck.push_front((int *)i) << std::endl; 
         } catch(...) {
+            std::cout << "BANG!\n";
             i--;
         }
 
         i++;
-        usleep(1000);
+        usleep(10000);
 
     }
-    
+
+    exit(0);    
     return NULL;
 }
 
@@ -38,11 +40,11 @@ void *thread_b(void *x)
         try {
             std::cout << "pop: " << (k=(int)deck.pop_back()) << std::endl; 
         } catch(...) {
-
+            std::cout << "EMPTY!\n";
         }
 
+        usleep(100);
         deck.dump();
-        usleep(2000);
     }
 
     return NULL;

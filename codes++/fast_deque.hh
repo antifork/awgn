@@ -64,7 +64,7 @@ namespace extra {
             int push_front(T *ptr) {
                 int nh = next(_head);
                 if (nh == _tail)
-                    throw std::runtime_error(NULL);
+                    throw std::out_of_range(NULL);
 
                 _arena[_head] = ptr;
                 wmb();
@@ -74,7 +74,7 @@ namespace extra {
 
             T * pop_back() {
                 if (_head == _tail)
-                    throw std::runtime_error(NULL);
+                    throw std::out_of_range(NULL);
 
                 T *ret = _arena[_tail];
                 rmb();
