@@ -25,13 +25,16 @@
 
 #endif
 
+#define likely(x)   __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
+
 #include <iostream> 
 #include <stdexcept>
 
 namespace extra {
 
-/* note: this lockless version of stack/deque can only be used
-         by a single producer and a single consumer. 
+/* note: this is a lockless version of stack/deque that can 
+         only be used by a single producer and a single consumer. 
          Multiple consumers or producers are not allowed.
  */ 
         
@@ -50,7 +53,7 @@ namespace extra {
             ptr_T * _arena;
 
             int next(int p) {
-                return ( p == (int)_size ? 0 : p+1 );
+                return ( unlikely(p == (int)_size) ? 0 : p+1 );
             }
 
             fast_deque(fast_deque &);
@@ -63,8 +66,9 @@ namespace extra {
 
             int push_front(T *ptr) {
                 int nh = next(_head);
-                if (nh == _tail)
-                    throw std::out_of_range(NULL);
+
+                if (unlikely(nh == _tail))
+                    return -1;
 
                 _arena[_head] = ptr;
                 wmb();
@@ -72,15 +76,15 @@ namespace extra {
                 return _head = nh;
             }
 
-            T * pop_back() {
-                if (_head == _tail)
-                    throw std::out_of_range(NULL);
+            int pop_back(T * &ret) {
+                if (unlikely(_head == _tail))
+                    return -1;
 
-                T *ret = _arena[_tail];
+                ret = _arena[_tail];
                 rmb();
-
                 _tail = next(_tail);
-                return ret;
+
+                return 0;
             }
 
             int size() const { return _size; }
