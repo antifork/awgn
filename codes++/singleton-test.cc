@@ -13,7 +13,7 @@
 // #include <boost/thread.hpp>  uncommment to use lock of boost (atomicity::Boost)
 #include "singleton.hh"
 
-class animal : public generic::singleton<animal,memory::Static, atomicity::None > {
+class animal : public generic::singleton<animal,memory::Static, atomicity::GNU_CXX > {
     public:
         animal()  { std::cout << __PRETTY_FUNCTION__ << std::endl; }
         ~animal() { std::cout << __PRETTY_FUNCTION__ << std::endl; }

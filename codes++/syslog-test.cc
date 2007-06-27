@@ -12,8 +12,10 @@ int main(int argc, char **argv)
     
     {
         posix::syslog mylog;
-        mylog.setpriority(LOG_LOCAL0|LOG_INFO);
+        mylog.setlevel(LOG_INFO);
         mylog << "hello world!" << std::endl;
+        mylog(LOG_WARNING) << "hello world (2)!" << std::endl;
+        mylog << "hello world (3)!" << std::endl;
     }
    
     yourlog << "done." << std::endl;

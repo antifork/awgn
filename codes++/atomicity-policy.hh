@@ -14,10 +14,6 @@
 
 #if   __GNUC__ >= 4
 #include <tr1/memory>
-#elif __GNUC__ == 3
-#warning "atomicity::GNU_CXX4 is not available with g++-3.x"
-#elif __GNUC__ == 2
-#warning "atomicity::GNU_CXX4 is not available with g++-2.9x"
 #endif
 
 namespace atomicity {
@@ -28,17 +24,28 @@ namespace atomicity {
     };
 
     struct Boost {
+
 #ifdef BOOST_HAS_THREADS
         typedef boost::mutex mutex;
         typedef boost::mutex::scoped_lock scoped_lock;
 #endif
+
     };
 
-    struct GNU_CXX4 {
-#if   __GNUC__ == 4
+    struct GNU_CXX {
+
+#if   __GNUC__ == 4 && ( __GNUC_MINOR__ == 0 || __GNUC_MINOR__ == 1) 
         typedef __gnu_cxx::mutex_type mutex;
         typedef __gnu_cxx::lock scoped_lock;
+#elif __GNUC__ == 4 && __GNUC_MINOR__ == 2 
+        typedef __gnu_cxx::__mutex mutex;
+        typedef __gnu_cxx::__scoped_lock scoped_lock;
+#else
+#error "This g++ does not support atomicity::GNU_CXX policy"
+        typedef generic::NullType mutex;
+        typedef generic::NullType scoped_lock;
 #endif
+
     };
 
 }

@@ -25,9 +25,16 @@ namespace posix {
 
             std::stringstream buffer;
 
-            int &priority() {
-                static int _priority;
-                return _priority; 
+            int  _priority;
+
+            int &_facility() {
+                static int fac;
+                return fac; 
+            }
+
+            int &_level() {
+                static int lev;
+                return lev; 
             }
 
             syslog (const syslog &);
@@ -70,21 +77,33 @@ namespace posix {
 
             // priority:    facility|level
 
-            syslog(const char *ident, int option = LOG_CONS, int facility = LOG_USER ) throw() { 
-                priority() = facility|LOG_NOTICE;
+            syslog(const char *ident, int opt = LOG_CONS, int fac = LOG_USER, int lev = LOG_NOTICE ) throw() :
+                _priority(0) {
+
+                _facility() = fac;
+                _level()    = lev;
+
                 if (ident) 
-                    ::openlog(ident,option,facility);		
+                    ::openlog(ident,opt,_facility());		
             } 
             
-            syslog() { }
+            syslog() : _priority(0) { }
 
             ~syslog() throw() {
-                if (!buffer.str().empty())
-                    ::syslog(priority(), buffer.str().c_str());
+                if (!buffer.str().empty()) {
+                    ::syslog( priority() , buffer.str().c_str());
+                }
             }
 
-            syslog &setpriority(int prio) throw() {
-                priority() = prio;
+            syslog &setfacility(int fac) throw() {
+                _facility() = fac;
+                _priority   = 0;
+                return *this;
+            }
+
+            syslog &setlevel(int lev) throw() {
+                _level()  = lev;
+                _priority = 0;
                 return *this;
             }
 
@@ -93,17 +112,35 @@ namespace posix {
                 return *this;
             }
 
-            int getpriority() throw() {
-                return priority();
+            int facility() throw() {
+                return _facility();
             }
 
+            int level() throw() {
+                return _level();
+            }
+
+            int priority() throw() {
+                return _priority ? : _facility()| _level();
+            }
+
+            // change log level temporary 
+            //
+            syslog operator()(int lev) {
+                syslog ret;
+                ret._priority = _facility() | lev;
+                return ret;
+            }
+
+            // log message 
+            //
             template<typename T>
                 syslog &operator<<(const T &_m) throw() {
                     buffer << _m;
                     return *this;
                 }
 
-            // syslog << std::endl;
+            // flush syslog with << std::endl;
             //
             syslog &operator<<( std::ostream& (*_f)(std::ostream&) ) {
                 if ( _f == static_cast <std::ostream &(*)(std::ostream &)> (std::endl) ) {

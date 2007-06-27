@@ -17,7 +17,7 @@
 #include "atomicity-policy.hh"
 #include "generic.hh"
 
-// my generic singleton
+// my generic singleton, inspired to that of Alexandrescu
 //
 
 namespace generic {
@@ -32,17 +32,20 @@ namespace generic {
         singleton() { }
 
         public:
-        virtual ~singleton() { instance(false); }
+        virtual ~singleton() { 
+            instance(false); 
+        }
 
         static T &instance(bool action=true) {
+
             static typename Atomicity::mutex M_Lock;
-            static volatile bool destroyed = false;
+            static bool destroyed = false;
 
             static T *__instance;
 
             if ( action == false ) {
                 T * ret = __instance;
-                destroyed = true;
+                destroyed  = true;
                 __instance = NULL; 
                 return * (new(ret) T);      
             }

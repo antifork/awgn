@@ -28,6 +28,17 @@ namespace generic {
     class  NullType  { };
     struct EmptyType { };    
 
+    template <bool v, typename U, typename V>
+        struct Select 
+        {
+            typedef U type;
+        };
+
+    template <typename U, typename V>
+        struct Select<false, U, V> 
+        {
+            typedef V type;
+        };
 }
 
 #endif /* GENERIC_HH */
