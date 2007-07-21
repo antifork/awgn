@@ -42,33 +42,33 @@ class Journal : public generic::factoryElement<Journal, ElementBase, memory::Sta
 
 int main()
 {
-    // specify the factory, name it...
+    // 1a) define the factory, give it a name...
     //
 
     typedef generic::factory<std::string, ElementBase *> myFactory;     // GOOD factory
 //  typedef generic::factory<std::string, ElementBase  > myFactory;     // BAD  factory (no polymorphism!)
 
-    // ... and create it.
+    // ... and instance it.
 
     myFactory factory;
 
-    // specify a singleton-factory, name it...
+    // 1b) or define a singleton-factory, give it a name...
     //
 
     typedef generic::singleton<myFactory, memory::Static> mySingleFactory;
         
-    // and get a reference to it.
+    // and get a reference.
     //
 
     myFactory & rfactory = mySingleFactory::instance();
 
-    // register elements to your factory.. 
+    // 2) register elements to your factory.. 
     //
 
     factory.regist  ("book",    new Book); 
     factory.regist  ("journal", new Journal);  
 
-    rfactory.regist ("book", new Book);
+    rfactory.regist ("book",    new Book);
     rfactory.regist ("journal", new Journal);
 
     // NOT TODO: do not delete elements after their registration, the ~factory() will do it for you...
