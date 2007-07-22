@@ -32,7 +32,6 @@ using namespace generic;
 namespace posix {
 
     template <int FAMILY=AF_INET> class socket;
-
     template <int FAMILY=AF_INET, class Atomicity = atomicity::GNU_CXX >
         class sockaddress {
             friend class socket<FAMILY>;
@@ -101,8 +100,8 @@ namespace posix {
 
             sockaddress(const std::string &name, short port = 0) 
                 : he(NULL), len(sizeof(sockaddr_storage)) {
-                sockaddress_(name, port, Int2type<FAMILY>()); 
-            }
+                    sockaddress_(name, port, Int2type<FAMILY>()); 
+                }
 
             ~sockaddress() {
                 del_hostent(he);
@@ -158,40 +157,36 @@ namespace posix {
         {
             char address[40];
 
-            o << "hostent: ------------------------\n";
-
             if ( c.he == NULL ) {
-                o << "h_name    : NULL" << std::endl;
+                o << "h_name:NULL";
             } else {
-                o << "h_name    : " <<  ( c.he->h_name ? : "" ) << '\n';
+                o << "h_name:" <<  ( c.he->h_name ? : "" );
                 for (int i = 0; c.he->h_aliases[i]; i++)
-                    o << "h_alies   : " << c.he->h_aliases[i] << '\n';
-                o << "h_addrtype: " << c.he->h_addrtype << '\n';
-                o << "h_length  : " << c.he->h_length << std::endl;
+                    o << " h_alies:" << c.he->h_aliases[i];
+                o << " h_addrtype:" << c.he->h_addrtype;
+                o << " h_length:" << c.he->h_length;
             }
-
-            o << "sockaddr_storage : len= " << c.len << std::endl;
 
             switch(c.af_family) {
 
                 case AF_INET: {
-                    struct sockaddr_in *in = (struct sockaddr_in *)&c.addr;
-                    inet_ntop(AF_INET, &in->sin_addr.s_addr, address, 40);
-                    o << "sockaddr.sin_family : AF_INET\n";
-                    o << "sockaddr.sin_address: " << address << '\n';
-                    o << "sockaddr.sin_port   : " << ntohs(in->sin_port) << std::endl;
-                } break;
+                        struct sockaddr_in *in = (struct sockaddr_in *)&c.addr;
+                        inet_ntop(AF_INET, &in->sin_addr.s_addr, address, 40);
+                        o << " sin_family:AF_INET";
+                        o << " sin_address:" << address;
+                        o << " sin_port:"    << ntohs(in->sin_port);
+                    } break;
 
                 case AF_INET6: {
-                    struct sockaddr_in6 *in6 = (struct sockaddr_in6 *)&c.addr;
-                    inet_ntop(AF_INET6, &in6->sin6_addr.s6_addr, address, 40);
-                    o << "sockaddr.sin6_family : AF_INET6\n";
-                    o << "sockaddr.sin6_address: " << address << '\n';
-                    o << "sockaddr.sin6_port   : " << ntohs(in6->sin6_port) << std::endl;
-                } break;
+                        struct sockaddr_in6 *in6 = (struct sockaddr_in6 *)&c.addr;
+                        inet_ntop(AF_INET6, &in6->sin6_addr.s6_addr, address, 40);
+                        o << " sin6_family:AF_INET6";
+                        o << " sin6_address:" << address;
+                        o << " sin6_port:" << ntohs(in6->sin6_port);
+                    } break;
 
                 default:
-                    throw std::runtime_error("unknown pf class");
+                               throw std::runtime_error("unknown pf class");
             }
             return o;
         }
@@ -219,9 +214,9 @@ namespace posix {
 
             socket(int type, int protocol) 
                 : _domain(FAMILY), _type(type), _protocol(protocol),  _sock(::socket(FAMILY,type,protocol)) {
-                if (_sock == -1)
-                    throw std::runtime_error(ERR(__PRETTY_FUNCTION__));
-            }
+                    if (_sock == -1)
+                        throw std::runtime_error(ERR(__PRETTY_FUNCTION__));
+                }
 
             ~socket() { ::close (_sock); }
 
@@ -264,18 +259,14 @@ namespace posix {
                     ssize_t res, pos = 0;
 
                     while (n > pos) {
-
                         res = (this->*fun)(s + pos, n - pos, flags, addr, len);
-
                         switch (res) {
                             case -1:
                                 if (errno == EINTR || errno == EAGAIN)
                                     continue;
-
                                 throw std::runtime_error(ERR("atomicIO: "));
                             case 0:
                                 return res;
-
                             default:
                                 pos += res;
                         }
@@ -292,18 +283,14 @@ namespace posix {
                     ssize_t res, pos = 0;
 
                     while (n > pos) {
-
                         res = (this->*fun)(s + pos, n - pos, flags);
-
                         switch (res) {
                             case -1:
                                 if (errno == EINTR || errno == EAGAIN)
                                     continue;
-
                                 throw std::runtime_error(ERR("atomicIO: "));
                             case 0:
                                 return res;
-
                             default:
                                 pos += res;
                         }
@@ -412,13 +399,10 @@ namespace posix {
     template <int F>
         std::ostream & operator<<(std::ostream & o, const socket<F> & s)
         {
-            o << "socket : ------------------------\n";
-            o << "domain : " << 
-                ( s._domain == AF_INET ?  "AF_INET" : (s._domain == AF_INET6 ? "AF_INET6" : "" ) ) << '\n';
-            o << "type   : " << s._type << '\n';
-            o << "proto  : " << s._protocol << '\n';
-            o << "socket : " << s._sock << std::endl;
-
+            o << "socket<" << ( s._domain == AF_INET ?  "AF_INET" : (s._domain == AF_INET6 ? "AF_INET6" : "" ) );
+            o << "> type:" << s._type;
+            o << " proto:" << s._protocol;
+            o << " fd:"    << s._sock;
         }
 
 }

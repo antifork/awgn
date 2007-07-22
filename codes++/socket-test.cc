@@ -27,6 +27,8 @@ int main()
     posix::socket<AF_INET>  s(SOCK_STREAM,0);
 #endif
 
+    std::cout << s << std::endl;
+
     int tru = 1;
 	s.setsockopt(SOL_SOCKET, SO_REUSEADDR, &tru, sizeof(tru));
 
