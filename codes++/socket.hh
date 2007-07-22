@@ -56,7 +56,6 @@ namespace posix {
                 return he;
             }
 
-
             void sockaddress_(const std::string &name, short port, Int2type<AF_INET>) {
                 struct sockaddr_in *in = (struct sockaddr_in *)&addr;
                 len = sizeof(struct sockaddr_in);
@@ -72,7 +71,6 @@ namespace posix {
                     throw std::runtime_error("gethostbyname");
 
                 memcpy(&in->sin_addr.s_addr, he->h_addr, he->h_length);
-
             }
 
             void sockaddress_(const std::string &name, short port, Int2type<AF_INET6>) {
@@ -95,9 +93,7 @@ namespace posix {
             }
 
             public:
-
             sockaddress() : he(NULL), len(sizeof(sockaddr_storage)) { }  
-
             sockaddress(const std::string &name, short port = 0) 
                 : he(NULL), len(sizeof(sockaddr_storage)) {
                     sockaddress_(name, port, Int2type<FAMILY>()); 
@@ -168,7 +164,6 @@ namespace posix {
             }
 
             switch(c.af_family) {
-
                 case AF_INET: {
                         struct sockaddr_in *in = (struct sockaddr_in *)&c.addr;
                         inet_ntop(AF_INET, &in->sin_addr.s_addr, address, 40);
@@ -184,9 +179,8 @@ namespace posix {
                         o << " sin6_address:" << address;
                         o << " sin6_port:" << ntohs(in6->sin6_port);
                     } break;
-
                 default:
-                               throw std::runtime_error("unknown pf class");
+                    throw std::runtime_error("unknown pf class");
             }
             return o;
         }
@@ -197,7 +191,6 @@ namespace posix {
         class socket {
 
             socket &operator=(socket &);
-
             int _domain;
             int _type;
             int _protocol;
@@ -264,7 +257,7 @@ namespace posix {
                             case -1:
                                 if (errno == EINTR || errno == EAGAIN)
                                     continue;
-                                throw std::runtime_error(ERR("atomicIO: "));
+                                throw std::runtime_error(ERR("atomic IO:"));
                             case 0:
                                 return res;
                             default:
@@ -288,7 +281,7 @@ namespace posix {
                             case -1:
                                 if (errno == EINTR || errno == EAGAIN)
                                     continue;
-                                throw std::runtime_error(ERR("atomicIO: "));
+                                throw std::runtime_error(ERR("atomic IO:"));
                             case 0:
                                 return res;
                             default:
@@ -306,7 +299,6 @@ namespace posix {
                 r = atomic(&socket::c_recv, buf, len, flags);
                 if ( r == -1)
                     throw std::runtime_error(ERR(__PRETTY_FUNCTION__));
-
                 return r;
             }
 
@@ -316,7 +308,6 @@ namespace posix {
                 r = atomic(&socket::c_send, buf, len, flags);
                 if ( r == -1)
                     throw std::runtime_error(ERR(__PRETTY_FUNCTION__));
-
                 return r;
             }
 
@@ -326,7 +317,6 @@ namespace posix {
                 r = atomic(&socket::c_recvfrom, buf, len, flags, from, fromlen);
                 if ( r == -1)
                     throw std::runtime_error(ERR(__PRETTY_FUNCTION__));
-
                 return r;
             }
 
@@ -336,7 +326,6 @@ namespace posix {
                 r = atomic(&socket::c_sendto, buf, len, flags, const_cast<struct sockaddr *>(to), tolen);
                 if ( r == -1)
                     throw std::runtime_error(ERR(__PRETTY_FUNCTION__));
-
                 return r;
             }
 
@@ -357,22 +346,20 @@ namespace posix {
                 return r;
             }
 
-            int listen(int blacklog) {
+            int listen(int backlog) {
                 int r;
-                if ( (r=::listen(_sock,blacklog)) == -1 )
+                if ( (r=::listen(_sock,backlog)) == -1 )
                     throw std::runtime_error(ERR(__PRETTY_FUNCTION__));
                 return r;
             }
 
             socket *accept(sockaddress<FAMILY> &saddr) {
                 int k;
-
                 if (( k=::accept(_sock,(struct sockaddr *)&saddr.addr, &saddr.len)) == -1 )
                     throw std::runtime_error(ERR(__PRETTY_FUNCTION__));
 
                 socket *ret = new socket<FAMILY>(*this);
                 ret->_sock = k;
-
                 return ret;
             }
 
