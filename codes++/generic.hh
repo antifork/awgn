@@ -39,6 +39,10 @@ namespace generic {
         {
             typedef V type;
         };
+
+    template <bool> struct CTassert;
+    template <>
+    struct CTassert<true> { };
 }
 
 #endif /* GENERIC_HH */
