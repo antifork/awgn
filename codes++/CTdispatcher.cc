@@ -18,13 +18,12 @@ enum type {
     two
 };
 
-
 extern "C" void fun0() { std::cout << __PRETTY_FUNCTION__ << std::endl; }
            void fun1() { std::cout << __PRETTY_FUNCTION__ << std::endl; }
 
 struct test {
     template <type T> static void fun(); 
-    void fun2() __attribute__((used)) { std::cout << __PRETTY_FUNCTION__ << std::endl; }
+    static void fun2() __attribute__((used)) { std::cout << __PRETTY_FUNCTION__ << std::endl; }
 };
 
 // compile time dispatcher...
