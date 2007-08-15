@@ -39,7 +39,7 @@ const char usage[]=
       "   -C elem -C elem ... public overloaded non-virtuals call\n"
       "                       protect non-overloaded virtual idiom\n"
       "   -P                  proxy idiom\n"
-      "   -L                  operator[]: lvalue-rvalue idiom\n"
+      "   -L                  operator(): lvalue-rvalue idiom\n"
       "   -N                  non-derivable idiom\n"
       "   -O                  virtual-friend-function idiom (printOn)\n"            
       "   -3                  big-three guideline (non copyable)\n"

@@ -38,7 +38,7 @@ namespace generic {
 
         static T &instance(bool action=true) {
 
-            static typename Atomicity::mutex M_Lock;
+            static typename Atomicity::mutex lock;
             static bool destroyed = false;
 
             static T *__instance;
@@ -51,7 +51,7 @@ namespace generic {
             }
 
             if ( !__instance ) {
-                typename Atomicity::scoped_lock mutex(M_Lock);
+                typename Atomicity::scoped_lock mutex(lock);
                 if ( !__instance ) {
                     if (destroyed) { 
                         throw std::runtime_error("singleton: static order FIASCO problem!");    
