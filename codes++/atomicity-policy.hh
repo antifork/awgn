@@ -32,22 +32,32 @@ namespace atomicity {
 
     };
 
-    struct GNU_CXX {
-
-        template <int, int> struct gcc;
-        template <> struct gcc<4,1> {
-            typedef __gnu_cxx::mutex_type mutex;
-            typedef __gnu_cxx::lock scoped_lock;
-        };
-        template <> struct gcc<4,2> {
-            typedef __gnu_cxx::__mutex mutex;
-            typedef __gnu_cxx::__scoped_lock scoped_lock;
-        };
-
-        typedef gcc<__GNUC__,__GNUC_MINOR__>::mutex mutex;
-        typedef gcc<__GNUC__,__GNUC_MINOR__>::scoped_lock scoped_lock;
-
+    template <int, int> struct gnu_cxx;
+    template <>
+    struct gnu_cxx<4,0> {
+#if   __GNUC__ == 4 &&  __GNUC_MINOR__ == 0 
+        typedef __gnu_cxx::mutex_type mutex;
+        typedef __gnu_cxx::lock scoped_lock;
+#endif
     };
+
+    template <>
+    struct gnu_cxx<4,1> {
+#if   __GNUC__ == 4 &&  __GNUC_MINOR__ == 1
+        typedef __gnu_cxx::mutex_type mutex;
+        typedef __gnu_cxx::lock scoped_lock;
+#endif
+    };
+
+    template <>
+    struct gnu_cxx<4,2> {
+#if   __GNUC__ == 4 &&  __GNUC_MINOR__ == 2 
+        typedef __gnu_cxx::__mutex mutex;
+        typedef __gnu_cxx::__scoped_lock scoped_lock;
+#endif
+    };
+
+    typedef gnu_cxx<__GNUC__, __GNUC_MINOR__> GNU_CXX; 
 
 }
 
