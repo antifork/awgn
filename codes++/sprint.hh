@@ -6,6 +6,8 @@
  * this stuff is worth it, you can buy me a beer in return. Nicola Bonelli 
  * ----------------------------------------------------------------------------
  */
+#ifndef SPRINT_HH
+#define SPRINT_HH
 
 #include <iostream>
 #include <string>
@@ -113,4 +115,6 @@ namespace extra {
             return ret;
         }
 }
+
+#endif /* SPRINT_HH */
 
