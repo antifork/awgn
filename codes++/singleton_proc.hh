@@ -1,0 +1,70 @@
+#ifndef SINGLETON_PROC_HH
+#define SINGLETON_PROC_HH
+
+#include <sys/types.h>          /* See NOTES */
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <netinet/in.h>
+#include <fcntl.h>
+
+#include <iostream>
+#include <stdexcept>
+
+extern char *__progname;
+
+namespace extra {
+
+    class singleton_proc {
+
+        char lockf[24];
+        int fd, s;
+
+        public:
+        singleton_proc(unsigned short port) {
+
+            ::sprintf(lockf,"/tmp/singleton:%d",port);
+
+            if ((fd = ::open(lockf, O_CREAT|O_EXCL))== -1) 
+                throw std::runtime_error
+                    (std::string("a session of '").append(__progname).append("' is already running."));
+
+            try {
+                if ((s = ::socket(AF_INET, SOCK_STREAM, 0)) == -1)
+                    throw std::runtime_error("socket");
+
+                int on = 1;
+                if (::setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int)) == -1)
+                    throw std::runtime_error("setsockopt");
+                   
+                struct sockaddr_in addr;
+                addr.sin_family      = AF_INET;
+                addr.sin_port        = htons(port);
+                addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+
+                if (::bind(s, (const struct sockaddr *)&addr, sizeof(struct sockaddr_in)) == -1) 
+                    throw std::runtime_error(std::string("a session of '").append(__progname).append("' is already running."));
+
+                if (::listen(s,1) == -1) 
+                    throw std::runtime_error("listen");
+
+                ::close(fd);
+                ::unlink(lockf);
+
+            }
+            catch(...) {
+                ::close(fd);
+                ::unlink(lockf);
+                throw;
+            }
+        }
+
+        ~singleton_proc() {
+            ::close(fd);
+            ::unlink(lockf);
+        }
+    };
+
+}
+
+#endif /* SINGLETON_PROC_HH */
+
