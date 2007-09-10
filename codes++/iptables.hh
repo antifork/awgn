@@ -14,7 +14,7 @@
 #include <string>
 #include <sprint.hh>
 
-#define IPTABLES "/sbin/iptables"
+static const char IPTABLES[]= "/sbin/iptables";
 
 template <bool val> struct CTassert;
 template <>
@@ -99,7 +99,6 @@ class iptables {
     }    
     static void CTtarget_check(int2type<REJECT>) {
         CTassert< TABLE == filter > table_for_target __attribute__((unused));
-        CTassert< CHAIN == INPUT || CHAIN == FORWARD || CHAIN == OUTPUT > chain_for_target __attribute__((unused));
     }
     static void CTtarget_check(int2type<QUEUE>) {
         CTassert< TABLE == filter > table_for_target __attribute__((unused));
