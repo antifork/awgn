@@ -25,32 +25,41 @@ class minidb {
 
     template <typename T>
     class proxy {
-        T value_;
-        int timeout_;
+
+        T data_;
+
+        unsigned int timeout_;
         unsigned int timestamp_;
 
     public:
-        proxy(const T r = T(), int t=-1) : value_(r), timeout_(t) {
+
+        proxy(const T &r = T(), int t=0) : data_(r), timeout_(t) {
             ts_update();
         }
-        proxy & operator=(const T r) { value_ = r; ts_update(); return *this; }
 
-        operator T() const { return value_; }
-        
+        proxy & operator=(const T r) { data_ = r; ts_update(); return *this; }
+
+        operator T&() { return data_; }
+        operator T*() { return &data_; }
+
         void ts_update() {
+            if (timeout_ == 0)
+                return;
             struct timeval now;
             gettimeofday(&now,NULL);
             timestamp_ = now.tv_sec;
         }
+
         bool expired() const {
-            if (timeout_ == -1)
+            if (timeout_ == 0)
                 return false;   // never expires
             struct timeval now;
             gettimeofday(&now,NULL);
-            return now.tv_sec > (timestamp_ + timeout_);
+            return (unsigned int)now.tv_sec > (timestamp_ + timeout_);
         }
+
         void dump(std::ostream& o) const { 
-            o << "data:" << value_ << " timestamp:" << timestamp_ << " timeout:" << timeout_ << std::endl;
+            o << "data:" << data_ << " timestamp:" << timestamp_ << " timeout:" << timeout_ << std::endl;
         }
 
     };
@@ -62,22 +71,26 @@ class minidb {
     minidb() {}
     ~minidb(){}
 
-    void insert(KEY k, VALUE v, int t = -1) throw(std::runtime_error) {
+    void insert(KEY k, VALUE v, int t = 0) throw(std::runtime_error) {
         typename db_T::iterator it = db.find(k);
         if ( it != db.end() && !it->second.expired() ) 
             throw std::runtime_error("key already in use!");
         db[k] = proxy<VALUE>(v, t);
     }
 
-    VALUE find(KEY k, bool ts_update = false) throw(std::runtime_error) {
+    void update(KEY k, VALUE v, int t = 0) {
+        db[k] = proxy<VALUE>(v, t);
+    }
+
+    VALUE *find(KEY k, bool ts_update = false) throw(std::runtime_error, VALUE) {
         typename db_T::iterator it = db.find(k);
         if( it == db.end()) 
             throw std::runtime_error("key not present!");
         if (it->second.expired())
-            throw std::runtime_error("key expired!");
+            throw (VALUE)it->second;
         if (ts_update)
             it->second.ts_update();
-        return it->second;
+        return &(it->second);
     }
 
     bool findkey(KEY k, bool ts_update = false) {
