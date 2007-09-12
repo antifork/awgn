@@ -42,12 +42,11 @@ class minidb {
         operator T&() { return data_; }
         operator T*() { return &data_; }
 
-        void ts_update() {
-            if (timeout_ == 0)
-                return;
+        void ts_update(int timeo = -1) {
             struct timeval now;
             gettimeofday(&now,NULL);
             timestamp_ = now.tv_sec;
+            timeout_ = (timeo == -1 ? timeout_ : timeo);
         }
 
         bool expired() const {
@@ -71,15 +70,25 @@ class minidb {
     minidb() {}
     ~minidb(){}
 
-    void insert(KEY k, VALUE v, int t = 0) throw(std::runtime_error) {
+    VALUE *insert(KEY k, VALUE v, int t = 0) throw(std::runtime_error) {
         typename db_T::iterator it = db.find(k);
         if ( it != db.end() && !it->second.expired() ) 
             throw std::runtime_error("key already in use!");
         db[k] = proxy<VALUE>(v, t);
+        return (VALUE *) db[k];
     }
 
-    void update(KEY k, VALUE v, int t = 0) {
+    VALUE *update(KEY k, VALUE v, int t = 0) {
         db[k] = proxy<VALUE>(v, t);
+        db[k].ts_update();
+        return (VALUE *) db[k];
+    }
+
+    VALUE *update(KEY k, int t = 0) {
+        typename db_T::iterator it = db.find(k);
+        if ( it == db.end() )
+            throw std::runtime_error("key not present!");
+        it->second.ts_update(t);
     }
 
     VALUE *find(KEY k, bool ts_update = false) throw(std::runtime_error, VALUE) {
@@ -90,7 +99,7 @@ class minidb {
             throw (VALUE)it->second;
         if (ts_update)
             it->second.ts_update();
-        return &(it->second);
+        return it->second;
     }
 
     bool findkey(KEY k, bool ts_update = false) {

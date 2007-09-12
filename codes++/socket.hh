@@ -62,7 +62,7 @@ class Socket {
                 ::warn("sendto");
             return r;
         }
-        int recvfrom(int fd, void *buf, size_t len, int flags, sockaddress<FAMILY> &from) 
+        int recvfrom(void *buf, size_t len, int flags, sockaddress<FAMILY> &from) 
         {
             int r = ::recvfrom(sockfd, buf, len, flags, &from, &from.len());
             if (r == -1)
