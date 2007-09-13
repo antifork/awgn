@@ -23,6 +23,7 @@ class Socket {
     
     public:
 
+        Socket() {}
         Socket(int type, int protocol=0)
         : sockfd(::socket(FAMILY, type, protocol)) {
             if ( sockfd == -1)
@@ -34,6 +35,13 @@ class Socket {
                 ::warn("close"); 
         }
 
+        void init(int type,int protocol=0) {
+            if (sockfd>2)
+                throw std::runtime_error("socket already open");
+            sockfd = ::socket(FAMILY, type, protocol);
+            if (sockfd == -1)
+                throw std::runtime_error("socket");
+        }
         int connect(const sockaddress<FAMILY> &addr) 
         {
             int r = ::connect(sockfd, (const struct sockaddr *)&addr, addr.len());
