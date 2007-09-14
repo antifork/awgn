@@ -25,9 +25,9 @@ class human : public generic::singleton<human,memory::Static> {
         human()  { std::cout << __PRETTY_FUNCTION__ << std::endl; } 
         ~human() { 
             std::cout << __PRETTY_FUNCTION__ << std::endl; 
-            // animal & a __attribute__((unused)) = animal::instance();   // uncomment to trigger the static-order-fiasco problem ..
+            // animal & a __attribute__((unused)) = animal::instance();   // uncomment to trigger the order-fiasco problem ..
         }
-        volatile void hello() { std::cout << "  " << __PRETTY_FUNCTION__ << std::endl; }
+        void hello() { std::cout << "  " << __PRETTY_FUNCTION__ << std::endl; }
 };
 
 class immortal : public generic::singleton<immortal,memory::Malloc> {
@@ -55,6 +55,8 @@ void *thread(void *) {
 int main()
 {
     pthread_t a,b,c,d;
+
+    // human x; // <- detect errors like this at runtime
 
     pthread_create(&a,NULL,thread,NULL);
     pthread_create(&b,NULL,thread,NULL);

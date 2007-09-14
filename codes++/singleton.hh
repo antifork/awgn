@@ -12,6 +12,9 @@
 
 #include <stdexcept>
 #include <cstdlib>
+#include <string>
+#include <typeinfo>
+#include <cxxabi.h>
 
 #include "memory-policy.hh"
 #include "atomicity-policy.hh"
@@ -22,46 +25,87 @@
 
 namespace generic {
 
+    std::string demangle(const char *name) {
+        int status;
+        char *realname = abi::__cxa_demangle(name, 0, 0, &status);
+        std::string ret(realname);
+        ::free(realname);
+        return ret;
+    }
+
     template <class T, template <class> class Memory, class Atomicity = atomicity::None >
     class singleton {
 
         singleton(const singleton &);
         singleton &operator=(const singleton &);
 
-        protected:
-        singleton() { }
+        enum Tristate {Uninitialized=-1,False=false,True=true};
 
-        public:
-        virtual ~singleton() { 
+        static Tristate destroyed(Tristate action=Uninitialized) {
+            static Tristate ret = False;
+            if (action == False)
+                ret = False;
+            else 
+                if (action == True)
+                    ret = True;
+            return ret; 
+        }
+
+        protected:
+
+        virtual ~singleton() {
+            destroyed(True); 
             instance(false); 
         }
+
+        singleton() {
+            if ( destroyed() == False ) {
+                const std::type_info  &ti = typeid(T);
+                std::string cl = generic::demangle(ti.name());
+                throw std::runtime_error(
+                        std::string("singleton: built instance of '").
+                        append(cl).
+                        append("' (use ").
+                        append(cl).
+                        append("::instance() instead!)"));
+            }
+        }
+
+        public:
 
         static T &instance(bool action=true) {
 
             static typename Atomicity::mutex mutex;
-            static bool destroyed = false;
-
             static T *__instance;
+            
+            if ( !__instance || !action ) {
 
-            if ( action == false ) {
-                T * ret = __instance;
-                destroyed  = true;
-                __instance = NULL; 
-                return * (new(ret) T);      
-            }
-
-            if ( !__instance ) {
                 typename Atomicity::scoped_lock lock(mutex);
-                if ( !__instance ) {
-                    if (destroyed) { 
-                        throw std::runtime_error("singleton: static order FIASCO problem!");    
-                    }   
-                    __instance = Memory<T>::alloc();
+
+                if (!action) {
+                    T *ret = __instance;
+                    __instance = NULL;
+                    return *ret;
                 }
 
+                if (!__instance)  {
+
+                    if (destroyed() == True) {
+                        const std::type_info  &ti = typeid(T);
+                        throw std::runtime_error(
+                        std::string("singleton: instance of '").
+                             append(generic::demangle(ti.name())).
+                             append("' destroyed. (FIASCO problem!)"));
+                    }
+                    destroyed(True);
+                    __instance = Memory<T>::alloc();
+                    destroyed(False);
+                }
             }
+
             return *__instance;
         }
+
     };
 }
 
