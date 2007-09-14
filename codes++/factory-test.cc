@@ -72,7 +72,7 @@ int main()
     rfactory.regist ("journal", new Journal);
 
     // NOT TODO: do not delete elements after their registration, the ~factory() will do it for you...
-    // ... and again do not blame me why std::auto_ptr are not being used -- they are not STL compliant.
+    // ... and don't blame me because std::auto_ptr are not being used -- they are not STL compliant.
 
     std::cout << "*** factory ready ***\n";
 
