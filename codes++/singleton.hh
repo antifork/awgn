@@ -25,7 +25,7 @@
 
 namespace generic {
 
-    std::string demangle(const char *name) {
+    static std::string demangle(const char *name) {
         int status;
         char *realname = abi::__cxa_demangle(name, 0, 0, &status);
         std::string ret(realname);
