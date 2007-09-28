@@ -7,13 +7,15 @@
  * ----------------------------------------------------------------------------
  */
 
-#include <iostream>
-#include <stdexcept>
-#include <cxxabi.h>
-#include <sysexits.h>
+#include <exception.hh>
 
 extern char *__progname;
-namespace my {
+
+namespace more {
+
+    void fatal(const std::string &m) throw() {
+        throw more::fatal_error(m);
+    }
 
     void terminate() {
         try {
@@ -34,4 +36,5 @@ namespace my {
         }
     }
 }
+
 
