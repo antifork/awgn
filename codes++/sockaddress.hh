@@ -17,6 +17,7 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
+#include <cassert>
 
 template <int f> class sockaddress;
 template <>
@@ -27,13 +28,19 @@ template <>
 
         public:
 
-        sockaddress(){
+        sockaddress() {
             _len = sizeof(struct sockaddr_in);
             _addr.sin_family = AF_INET;
             _addr.sin_port   = 0;
             _addr.sin_addr.s_addr = htonl(INADDR_ANY);
         }
-
+        sockaddress(const sockaddr_in *sa) {
+            _len = sizeof(struct sockaddr_in);
+            assert(sa->sin_family == AF_INET);
+            _addr.sin_family = AF_INET;
+            _addr.sin_port   = sa->sin_port;
+            _addr.sin_addr   = sa->sin_addr;
+        }
         sockaddress(const std::string &host, unsigned short port ) { 
             _len = sizeof(struct sockaddr_in);
             _addr.sin_family = AF_INET;
@@ -93,7 +100,13 @@ template <>
             _addr.sin6_port   = 0;
             memcpy(&_addr.sin6_addr.s6_addr, &in6addr_any, sizeof(struct in6_addr));
         }
-
+        sockaddress(const sockaddr_in6 *sa) {
+            assert(sa->sin6_family == AF_INET6);
+            _len = sizeof(struct sockaddr_in6);
+            _addr.sin6_family = AF_INET6;
+            _addr.sin6_port   = sa->sin6_port;
+            memcpy(_addr.sin6_addr.s6_addr, sa->sin6_addr.s6_addr, sizeof(struct in6_addr));
+        }
         sockaddress(const std::string &host, unsigned short port ) { 
             _len = sizeof(struct sockaddr_in6);
             _addr.sin6_family = AF_INET6;
