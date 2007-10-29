@@ -26,62 +26,68 @@ extern char *__progname;
 const int log_facility = LOG_LOCAL6;
 
 static const char usage_str[]=
-        "Usage: %s [OPTIONS] -- argv[0] argv[1]...\n"
-        "   -s sec           sleep sec. before respawning              (def=1)\n"
-        "   -t max           max. consecutive failures before quitting (def=0, unlimited)\n"
-        "   -T max           max. total failures before quitting       (def=0, unlimited)\n"
-	    "   -x \"command\"     command to run at each respawn    (def. none)\n"
-        "   -e               terminate when child exits successfully  (def. always resp)\n"	
-	    "   -d               run as daemon\n"
-        "     -p             changes the working directory of child to the root \"/\"\n"
-        "     -c             redirect std input, output and error of child to /dev/null\n"
-        "   -k               signal to kill the child. (def. SIGTERM)\n" 
+        "Usage: %s [OPTIONS] -- argv[0] argv[1]...\n\n"
+        "   -s sec           sec. to sleep before respawning.          (def=1)\n"
+	"   -r \"command\"     auxiliary command to run at each respawn. (def none)\n"
+        "\n exit behaviour:\n"
+        "   -t max           max. consecutive failures before quitting.(def=0, unlimited)\n"
+        "   -T max           max. total failures before quitting.      (def=0, unlimited)\n"
+        "   -e               quit when child exits successfully = 0.   (def respawn)\n"
+        "\n signals:\n"
+        "   -k SIG -k SIG..  list of signals to redirect to the child. (def none)\n" 
+        "   -x SIG -x SIG..  list of signals that kill the child, \n"
+        "                    not triggering the respawn                (def none)\n" 
+        "\n others:\n"
+	"   -d               run as daemon.\n"
+        "     -p             changes the working directory of child to the root (\"/\")\n"
+        "     -c             redirect std input, output and error of child to /dev/null.\n"
         "   -h               print this help\n";
 
 typedef struct { 
     const char *name;
     int val;
-    int ex_val;
+    int exit;
+    int forward;
 } sigtype;
 
 
-#define _sig(x,e) [x]={ #x, x, e } 
-static sigtype signal_type[]= {
-    _sig(SIGHUP,    0),
-    _sig(SIGINT,    0),
-    _sig(SIGQUIT,   0),
-    _sig(SIGILL,    0),
-    _sig(SIGTRAP,   0),
-    _sig(SIGABRT,   0),
-    _sig(SIGIOT,    0),
-    _sig(SIGBUS,    0),
-    _sig(SIGFPE,    0),
-    _sig(SIGKILL,   0),
-    _sig(SIGUSR1,   0),
-    _sig(SIGSEGV,   0),
-    _sig(SIGUSR2,   0),
-    _sig(SIGPIPE,   0),
-    _sig(SIGALRM,   0),
-    _sig(SIGTERM,   1),
-    _sig(SIGSTKFLT, 0),
-    _sig(SIGCLD,    0),
-    _sig(SIGCHLD,   0),
-    _sig(SIGCONT,   0),
-    _sig(SIGSTOP,   0),
-    _sig(SIGTSTP,   0),
-    _sig(SIGTTIN,   0),
-    _sig(SIGTTOU,   0),
-    _sig(SIGURG,    0),
-    _sig(SIGXCPU,   0),
-    _sig(SIGXFSZ,   0),
-    _sig(SIGVTALRM, 0),
-    _sig(SIGPROF,   0),
-    _sig(SIGWINCH,  0),
-    _sig(SIGPOLL,   0),
-    _sig(SIGIO,     0),
-    _sig(SIGPWR,    0),
-    _sig(SIGSYS,    0),
-    _sig(SIGUNUSED, 0),
+#define _sig(x,e,f) [x]={ #x, x, e, f } 
+static sigtype signal_list[]= {
+    _sig(SIGHUP,    0, 0),
+    _sig(SIGINT,    0, 0),
+    _sig(SIGQUIT,   0, 0),
+    _sig(SIGILL,    0, 0),
+    _sig(SIGTRAP,   0, 0),
+    _sig(SIGABRT,   0, 0),
+    _sig(SIGIOT,    0, 0),
+    _sig(SIGBUS,    0, 0),
+    _sig(SIGFPE,    0, 0),
+    _sig(SIGKILL,   0, 0),
+    _sig(SIGUSR1,   0, 0),
+    _sig(SIGSEGV,   0, 0),
+    _sig(SIGUSR2,   0, 0),
+    _sig(SIGPIPE,   0, 0),
+    _sig(SIGALRM,   0, 0),
+    _sig(SIGTERM,   0, 0),
+    _sig(SIGSTKFLT, 0, 0),
+    _sig(SIGCLD,    0, 0),
+    _sig(SIGCHLD,   0, 0),
+    _sig(SIGCONT,   0, 0),
+    _sig(SIGSTOP,   0, 0),
+    _sig(SIGTSTP,   0, 0),
+    _sig(SIGTTIN,   0, 0),
+    _sig(SIGTTOU,   0, 0),
+    _sig(SIGURG,    0, 0),
+    _sig(SIGXCPU,   0, 0),
+    _sig(SIGXFSZ,   0, 0),
+    _sig(SIGVTALRM, 0, 0),
+    _sig(SIGPROF,   0, 0),
+    _sig(SIGWINCH,  0, 0),
+    _sig(SIGPOLL,   0, 0),
+    _sig(SIGIO,     0, 0),
+    _sig(SIGPWR,    0, 0),
+    _sig(SIGSYS,    0, 0),
+    _sig(SIGUNUSED, 0, 0),
 };
 
 int   res_sec = 1;	/* sec before respawning */
@@ -91,7 +97,7 @@ int   res_ex; 		/* terminate when child exits succefully */
 int   res_chdir;
 int   res_redirect;
 int   res_daemon;
-int   res_signal = SIGTERM;
+int   res_ksignal = SIGTERM;
 char *res_child;
 char *res_helper;
 
@@ -116,12 +122,24 @@ void exit_rt(int i)
 {
 	log("*** killing %s(%d) (request by user)", res_child , pid);
 
-    if ( kill(pid,res_signal) == -1 && errno == ESRCH)
-        log("the pid does not exist (zombie?!?)");
+        if ( kill(pid,res_ksignal) == -1 && errno == ESRCH)
+                log("the pid does not exist (zombie?!?)");
 
 	unlink(file_pid);
 	log("%s exits (goodbye)", __progname); 
 	exit (0);
+}
+
+void forward_sig(int i)
+{
+        log("*** catched signal %d(%s)!",i,signal_list[i].name);
+
+        if (!signal_list[i].forward)
+                return;
+        if (kill(pid,i) == -1 && errno == ESRCH)
+                log("the pid does not exist (zombie?!?)");
+        else
+                log("signal %d forwarded to child...", i);
 }
 
 int getsignum(const char *sig) {
@@ -132,11 +150,11 @@ int getsignum(const char *sig) {
         return ret;
     ret=-1;
 
-    for (i=0; i < sizeof(signal_type)/sizeof(signal_type[0]); i++) {
-        if (signal_type[i].name == NULL)
+    for (i=0; i < sizeof(signal_list)/sizeof(signal_list[0]); i++) {
+        if (signal_list[i].name == NULL)
             continue;
-        if (!strcmp(sig,signal_type[i].name)) {
-            ret = signal_type[i].val;
+        if (!strcmp(sig,signal_list[i].name)) {
+            ret = signal_list[i].val;
             break;
         }
     }
@@ -157,7 +175,7 @@ int save_pid(const char *filename) {
 
     fprintf(f,"%d",getpid());    
     fclose (f);
-    return 0;
+   return 0;
 }
 
 
@@ -202,7 +220,7 @@ void respawn(int argc, char *argv[], char *envp[])
 
             log("Child killed by signal %d", WTERMSIG(status));
 
-            if (WTERMSIG(status) == SIGRTMIN || signal_type[WTERMSIG(status)].ex_val) {
+            if (WTERMSIG(status) == SIGRTMIN || signal_list[WTERMSIG(status)].exit) {
                 log("%s exits (goodbye)", __progname); 
                 unlink(file_pid);
                 exit(0);
@@ -237,22 +255,31 @@ main(int argc, char *argv[], char *envp[])
 {
     int i;
 
-    while( (i=getopt(argc, argv, "s:t:T:x:k:edpch"))!= EOF)	
+    while( (i=getopt(argc, argv, "s:t:T:r:k:x:edpch"))!= EOF)	
         switch(i) {
             case 's': res_sec = atoi(optarg); break;
             case 't': res_cf  = atoi(optarg); break;
             case 'T': res_tf  = atoi(optarg); break;
             case 'e': res_ex  = 1; break;
             case 'd': res_daemon = 1; break;
-            case 'x': res_helper = optarg; break;
+            case 'r': res_helper = optarg; break;
             case 'p': res_chdir = 1; break;
             case 'c': res_redirect = 1; break;
             case 'k': {
-                        res_signal = getsignum(optarg); 
-                        if (res_signal == -1)
-                            errx(1,"unknown signal %s", optarg);
-                        break;
-                      }
+                int sig = getsignum(optarg);              
+                if (sig == -1)
+                        errx(1,"unknown signal %s", optarg);
+                signal_list[sig].forward = 1; 
+                break;
+            }
+            case 'x': {
+                res_ksignal = getsignum(optarg);
+                if (res_ksignal == -1)
+                         errx(1,"unknown signal %s", optarg);
+                signal_list[res_ksignal].exit = 1;
+                signal_list[res_ksignal].forward = 1; 
+                break;               
+            }
             case 'h': usage();
         }
 
@@ -271,24 +298,23 @@ main(int argc, char *argv[], char *envp[])
 
     res_child = argv[0];
 
-    signal(SIGHUP,SIG_IGN);
-    signal(SIGKILL,SIG_IGN);
-    signal(SIGPIPE,SIG_IGN);
-    signal(SIGALRM,SIG_IGN);
-    signal(SIGTERM,SIG_IGN);
-    signal(SIGUSR1,SIG_IGN);
-    signal(SIGUSR2,SIG_IGN);
-    signal(SIGSTOP,SIG_IGN);
-    signal(SIGTSTP,SIG_IGN);
-    signal(SIGTTIN,SIG_IGN);
-    signal(SIGTTOU,SIG_IGN);
-    signal(SIGPOLL,SIG_IGN);
-    signal(SIGPROF,SIG_IGN);
-    signal(SIGVTALRM,SIG_IGN);
+    signal(SIGHUP,   forward_sig);
+    signal(SIGKILL,  forward_sig);
+    signal(SIGPIPE,  forward_sig);
+    signal(SIGALRM,  forward_sig);
+    signal(SIGTERM,  forward_sig);
+    signal(SIGUSR1,  forward_sig);
+    signal(SIGUSR2,  forward_sig);
+    signal(SIGSTOP,  forward_sig);
+    signal(SIGTSTP,  forward_sig);
+    signal(SIGTTIN,  forward_sig);
+    signal(SIGTTOU,  forward_sig);
+    signal(SIGPOLL,  forward_sig);
+    signal(SIGPROF,  forward_sig);
+    signal(SIGVTALRM,forward_sig);
 
     signal(SIGRTMIN, exit_rt);
-    signal(SIGINT,   exit_rt);
-    signal(SIGTERM,  exit_rt);
+    signal(SIGINT,   exit_rt); // convenience ctrl+c
 
     openlog(__progname, LOG_CONS|LOG_NDELAY, log_facility);
 
@@ -298,7 +324,7 @@ main(int argc, char *argv[], char *envp[])
     fprintf(stderr,"    total_fails: %d\n", res_tf);
     fprintf(stderr,"    resp_helper: %s\n", res_helper);
     fprintf(stderr,"    file_pid   : %s\n", file_pid);
-    fprintf(stderr,"    sigkill    : %d\n", res_signal);
+    fprintf(stderr,"    sigkill    : %d\n", res_ksignal);
     if (res_chdir)
         fprintf(stderr,"    chdir to \"/\" on \n"); 
     if (res_redirect)
