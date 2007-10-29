@@ -298,23 +298,42 @@ main(int argc, char *argv[], char *envp[])
 
     res_child = argv[0];
 
-    signal(SIGHUP,   forward_sig);
-    signal(SIGKILL,  forward_sig);
-    signal(SIGPIPE,  forward_sig);
-    signal(SIGALRM,  forward_sig);
-    signal(SIGTERM,  forward_sig);
-    signal(SIGUSR1,  forward_sig);
-    signal(SIGUSR2,  forward_sig);
-    signal(SIGSTOP,  forward_sig);
-    signal(SIGTSTP,  forward_sig);
-    signal(SIGTTIN,  forward_sig);
-    signal(SIGTTOU,  forward_sig);
-    signal(SIGPOLL,  forward_sig);
-    signal(SIGPROF,  forward_sig);
-    signal(SIGVTALRM,forward_sig);
+    signal(SIGHUP,    forward_sig);
+    signal(SIGINT,    exit_rt);             // convenience ctrl+c
+    signal(SIGQUIT,   forward_sig);
+    signal(SIGILL,    forward_sig);
+    signal(SIGABRT,   forward_sig);
+    signal(SIGFPE,    forward_sig);
+    // signal(SIGKILL,   forward_sig);   cannot be caught
+    signal(SIGSEGV,   forward_sig);
+    signal(SIGPIPE,   forward_sig);
+    signal(SIGALRM,   forward_sig);
+    signal(SIGTERM,   forward_sig);
+    signal(SIGUSR1,   forward_sig);
+    signal(SIGUSR2,   forward_sig);
+    signal(SIGCHLD,   forward_sig);
+    signal(SIGCONT,   forward_sig);
+    // signal(SIGSTOP,   forward_sig);   cannot be caught
+    signal(SIGTSTP,   forward_sig);
+    signal(SIGTTIN,   forward_sig);
+    signal(SIGTTOU,   forward_sig);
+    signal(SIGBUS,    forward_sig);
+    signal(SIGPOLL,   forward_sig);
+    signal(SIGPROF,   forward_sig);
+    signal(SIGSYS,    forward_sig);
+    signal(SIGTRAP,   forward_sig);
+    signal(SIGURG,    forward_sig);
+    signal(SIGVTALRM, forward_sig);
+    signal(SIGXCPU,   forward_sig);
+    signal(SIGXFSZ,   forward_sig);
+    signal(SIGIOT,    forward_sig);
+    signal(SIGSTKFLT, forward_sig);
+    signal(SIGIO,     forward_sig);
+    signal(SIGCLD,    forward_sig);
+    signal(SIGPWR,    forward_sig);
+    signal(SIGWINCH,  forward_sig);
 
-    signal(SIGRTMIN, exit_rt);
-    signal(SIGINT,   exit_rt); // convenience ctrl+c
+    signal(SIGRTMIN,  exit_rt);
 
     openlog(__progname, LOG_CONS|LOG_NDELAY, log_facility);
 
