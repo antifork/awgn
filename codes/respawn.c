@@ -139,7 +139,7 @@ void forward_sig(int i)
         if (kill(pid,i) == -1 && errno == ESRCH)
                 log("the pid does not exist (zombie?!?)");
         else
-                log("signal %d forwarded to child...", i);
+                log("%s forwarded to child...", signal_list[i].name);
 }
 
 int getsignum(const char *sig) {
