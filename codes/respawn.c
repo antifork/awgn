@@ -311,7 +311,7 @@ main(int argc, char *argv[], char *envp[])
     signal(SIGTERM,   forward_sig);
     signal(SIGUSR1,   forward_sig);
     signal(SIGUSR2,   forward_sig);
-    signal(SIGCHLD,   forward_sig);
+    // signal(SIGCHLD,   forward_sig);	do not catch this
     signal(SIGCONT,   forward_sig);
     // signal(SIGSTOP,   forward_sig);   cannot be caught
     signal(SIGTSTP,   forward_sig);
@@ -329,7 +329,7 @@ main(int argc, char *argv[], char *envp[])
     signal(SIGIOT,    forward_sig);
     signal(SIGSTKFLT, forward_sig);
     signal(SIGIO,     forward_sig);
-    signal(SIGCLD,    forward_sig);
+    // signal(SIGCLD,    forward_sig);	do not catch this (SIGCHLD)
     signal(SIGPWR,    forward_sig);
     signal(SIGWINCH,  forward_sig);
 
