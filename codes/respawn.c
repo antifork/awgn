@@ -60,7 +60,7 @@ static sigtype signal_list[]= {
     _sig(SIGILL,    0, 0),
     _sig(SIGTRAP,   0, 0),
     _sig(SIGABRT,   0, 0),
-    _sig(SIGIOT,    0, 0),
+    // _sig(SIGIOT,    0, 0),
     _sig(SIGBUS,    0, 0),
     _sig(SIGFPE,    0, 0),
     _sig(SIGKILL,   0, 0),
@@ -127,7 +127,6 @@ void exit_rt(int i)
         if ( kill(pid,res_ksignal) == -1 && errno == ESRCH)
                 log("the pid does not exist (zombie?!?)");
 
-	unlink(file_pid);
 	log("%s exits (goodbye)", __progname); 
 	exit (0);
 }
@@ -228,14 +227,13 @@ void respawn(int argc, char *argv[], char *envp[])
 
             if (WTERMSIG(status) == SIGRTMIN || signal_list[WTERMSIG(status)].exit) {
                 log("%s exits (goodbye)", __progname); 
-                unlink(file_pid);
                 exit(0);
             }
 
         }
 
         if (res_tf && (res_tf < tf)) {
-            log("Max. total failures reached; exit forced.");		
+            log("Max. total failures reached; exit forced.");
             exit(1);
         }
 
@@ -255,6 +253,12 @@ restart:
 
 }
 
+void thefunctionafter() __attribute__((destructor));
+void
+thefunctionafter()
+{
+	unlink(file_pid);	
+}
 
 int 
 main(int argc, char *argv[], char *envp[])
@@ -364,7 +368,7 @@ main(int argc, char *argv[], char *envp[])
         strcat(file_pid, r ? r+1 : argv[0]);
         strcat(file_pid,".rpid");
         if ( save_pid(file_pid) != 0 )
-            exit (1);
+            abort();
     }
 
     respawn(argc, argv, envp);
