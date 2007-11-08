@@ -169,7 +169,7 @@ int save_pid(const char *filename) {
     /* save the pid */
     f = fopen(filename, "wx");
     if (f == NULL) {
-        warn("%s", filename);
+        log("%s exist (daemon is running, or stale pidfile to be removed)", filename);
         return -1;
     }
 
