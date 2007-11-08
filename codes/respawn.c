@@ -28,17 +28,18 @@ const int log_facility = LOG_LOCAL6;
 static const char usage_str[]=
         "Usage: %s [OPTIONS] -- argv[0] argv[1]...\n\n"
         "   -s sec           sec. to sleep before respawning.          (def=1)\n"
-	"   -r \"command\"     auxiliary command to run at each respawn. (def none)\n"
+		"   -r \"command\"     auxiliary command to run at each respawn. (def none)\n"
         "\n exit behaviour:\n"
         "   -t max           max. consecutive failures before quitting.(def=0, unlimited)\n"
         "   -T max           max. total failures before quitting.      (def=0, unlimited)\n"
-        "   -e               quit when child exits successfully = 0.   (def respawn)\n"
+        "   -e               quit when child exits successfully(0).    (def respawn)\n"
+		"   -q               quit when child exits with any code (useful with -x/-k options)\n"
         "\n signals:\n"
         "   -k SIG -k SIG..  list of signals to redirect to the child. (def none)\n" 
         "   -x SIG -x SIG..  list of signals that kill the child, \n"
         "                    not triggering the respawn                (def none)\n" 
         "\n others:\n"
-	"   -d               run as daemon.\n"
+		"   -d               run as daemon.\n"
         "     -p             changes the working directory of child to the root (\"/\")\n"
         "     -c             redirect std input, output and error of child to /dev/null.\n"
         "   -h               print this help\n";
@@ -94,6 +95,7 @@ int   res_sec = 1;	/* sec before respawning */
 int   res_cf;		/* consecutive failures  */
 int   res_tf;		/* total failures */
 int   res_ex; 		/* terminate when child exits succefully */
+int   res_ex_any;   /* terminate when child exits with any code */
 int   res_chdir;
 int   res_redirect;
 int   res_daemon;
@@ -202,6 +204,10 @@ void respawn(int argc, char *argv[], char *envp[])
 
         if (WIFEXITED(status)) {
             log("*** Child exited with: %d", WEXITSTATUS(status));
+			if (res_ex_any) {
+				log("child-exit-quit; bye.");
+				exit(0);
+			}
         }
 
         if (WIFEXITED(status) && WEXITSTATUS(status)==0) {
@@ -255,12 +261,13 @@ main(int argc, char *argv[], char *envp[])
 {
     int i;
 
-    while( (i=getopt(argc, argv, "s:t:T:r:k:x:edpch"))!= EOF)	
+    while( (i=getopt(argc, argv, "s:t:T:r:k:x:eqdpch"))!= EOF)	
         switch(i) {
             case 's': res_sec = atoi(optarg); break;
             case 't': res_cf  = atoi(optarg); break;
             case 'T': res_tf  = atoi(optarg); break;
             case 'e': res_ex  = 1; break;
+		    case 'q': res_ex_any = 1; res_ex = 1; break;
             case 'd': res_daemon = 1; break;
             case 'r': res_helper = optarg; break;
             case 'p': res_chdir = 1; break;
