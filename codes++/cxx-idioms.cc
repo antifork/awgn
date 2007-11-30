@@ -693,7 +693,7 @@ main(int argc, char *argv[]) {
 
             case 'N': { 
 
-                 notnull(x)->DerivationPolicy::push(Element::opt(std::string("ForceLeaf<")+x->__name+">","private virtual"));
+                 notnull(x)->DerivationPolicy::push(Element::opt(std::string("ForceLeaf<")+notnull(x)->__name+">","private virtual"));
 
                  Class *y = new Class("Type2type", true);
                  y->TemplatePolicy::push(Element::opt("T","class"));
@@ -772,31 +772,33 @@ main(int argc, char *argv[]) {
                                         "std::ostream & o", "{ o << __PRETTY_FUNCTION__ << std::endl; }");
                 f->virtuale();
                 f->scope(_protected_);
-                x->pushMember(f);
+                notnull(x)->pushMember(f);
 
                 f = new MemberFunction( "friend std::ostream &", 
                                         "operator<<",
-                                        std::string("std::ostream& o, const ") + x->__name + "& b", 
+                                        std::string("std::ostream& o, const ") + notnull(x)->__name + "& b", 
                                         "{ b.printOn(o); return o; }" );
                 f->scope(_public_);
-                x->pushMember(f);
+                notnull(x)->pushMember(f);
 
                 break;
             }
 
             case '3': { 
 
-                 MemberFunction *copyctor = new MemberFunction("",x->__name,x->__name + " &");
+                 MemberFunction *copyctor = new MemberFunction( "",
+                                                                notnull(x)->__name,
+                                                                std::string("const ")+ notnull(x)->__name + " &");
                  copyctor->signatureOnly().scope(_private_);
-                 x->pushMember(copyctor);
+                 notnull(x)->pushMember(copyctor);
 
                  MemberFunction *opequal = new MemberFunction(
-                                                x->__name+"&", 
+                                                notnull(x)->__name+"&", 
                                                 "operator=", 
-                                                std::string("const ") + x->__name + "&" );
+                                                std::string("const ") + notnull(x)->__name + "&" );
 
                  opequal->signatureOnly().scope(_private_);
-                 x->pushMember(opequal);
+                 notnull(x)->pushMember(opequal);
                  break;
             }
 
