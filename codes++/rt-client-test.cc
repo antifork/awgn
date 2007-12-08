@@ -10,7 +10,6 @@
 #include <signal.h>
 #include <iostream>
 
-#include <user-message.hh>
 #include <rt-message.hh>
 
 #define HELLO  0      // realtime message 0
