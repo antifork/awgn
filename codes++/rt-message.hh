@@ -103,6 +103,8 @@ class RTMessage {
 
     static void rt_sigaction (int signum, siginfo_t *info, void *context)
     {
+        if (!that)
+            throw std::runtime_error("rt_sigaction");
         that->ret.sival_int = info->si_value.sival_int;
         ack = true;
     }
@@ -121,19 +123,19 @@ class RTMessage {
 
     int msg(int msg, int val) {
 
-        sigval v; v.sival_int = val;
-        that = this;
-        ack = false;
-
         if ( msg+SIGRTMIN >= SIGRTMAX )
             throw std::out_of_range("rt-message");
+
+        sigval v; v.sival_int = val;
+        that = this; ack = false;
+
         if ( sigqueue(target,msg+SIGRTMIN,v) < 0)
             throw std::runtime_error(std::string("sigqueue: ").append(strerror(errno)));        
 
         while (!ack)
             usleep(100);
 
-        that = NULL;
+        that = NULL; 
         return ret.sival_int;
     }    
 
