@@ -17,6 +17,7 @@
 
 #include <singleton.hh>
 #include <signal.h>
+#include <time.h>
 #include <errno.h>
 
 class RTMessageSrv : public generic::singleton<RTMessageSrv, memory::Static> {
@@ -39,10 +40,9 @@ class RTMessageSrv : public generic::singleton<RTMessageSrv, memory::Static> {
     {
         // std::cout << "***   si_sgno: " << info->si_signo << std::endl;
         // std::cout << "      si_errn: " << info->si_errno << std::endl;
-        // std::cout << "      si_code: " << info->si_code << std::endl;
-        // std::cout << "          pid: " << info->si_pid << std::endl;
-        // std::cout << "        value: " << info->si_value.sival_int << std::endl;
-        // std::cout << "       si_int: " << info->si_int << std::endl;
+        // std::cout << "      si_code: " << info->si_code  << std::endl;
+        // std::cout << "          pid: " << info->si_pid   << std::endl;
+        // std::cout << "       si_int: " << info->si_int   << std::endl;
 
         sigval ret;
 
@@ -57,12 +57,11 @@ class RTMessageSrv : public generic::singleton<RTMessageSrv, memory::Static> {
             ret.sival_int = -1;
         }
 
-        if ( sigqueue(info->si_pid, SIGRTMAX, ret) < 0)
-            throw std::runtime_error(std::string("sigqueue: ").append(strerror(errno)));
+        if(sigqueue(info->si_pid, SIGRTMAX, ret) < 0)
+            std::clog << "sigqueue: " << strerror(errno) << std::endl;
     }
 
     RTMessageSrv() {
-
         struct sigaction act;
         for(int s= SIGRTMIN; s < SIGRTMAX ;s++) {
             act.sa_sigaction = rt_sigaction;
@@ -92,48 +91,61 @@ class RTMessageSrv : public generic::singleton<RTMessageSrv, memory::Static> {
 class RTMessage {
 
     struct sigaction oldact;
-
-    int target;
-    sigval ret;
-
+    struct timespec timeo;
     static RTMessage *that;
-    static volatile bool ack;
+
+    pid_t target;
+    sigval ret;
 
     public:
 
-    static void rt_sigaction (int signum, siginfo_t *info, void *context)
-    {
-        if (!that)
-            throw std::runtime_error("rt_sigaction");
-        that->ret.sival_int = info->si_value.sival_int;
-        ack = true;
-    }
+    RTMessage(int pid, int t=1) : target(pid) { 
 
-    RTMessage(int pid) : target(pid) { 
+        timeo.tv_sec = t;
+        timeo.tv_nsec = 0;
+
         struct sigaction act;
         act.sa_sigaction = rt_sigaction;
         act.sa_flags = SA_SIGINFO;
         sigemptyset(&act.sa_mask);
         sigaction(SIGRTMAX, &act,&oldact); 
+
     }
 
     ~RTMessage() {
         sigaction(SIGRTMAX, &oldact,NULL); 
     }
 
-    int msg(int msg, int val) {
+    static void rt_sigaction (int signum, siginfo_t *info, void *context)
+    {
+        if (!that)
+            throw std::runtime_error("rt_sigaction");
+        that->ret.sival_int = info->si_value.sival_int;
+        kill(getpid(), SIGUSR1);
+    }
+
+    int send(int msg, int val) {
 
         if ( msg+SIGRTMIN >= SIGRTMAX )
             throw std::out_of_range("rt-message");
 
-        sigval v; v.sival_int = val;
-        that = this; ack = false;
+        that = this;
 
+        sigset_t mask, omask;
+        sigemptyset(&mask);
+        sigaddset(&mask, SIGUSR1);
+        sigprocmask(SIG_BLOCK, &mask,&omask); 
+
+        sigval v; v.sival_int = val;
         if ( sigqueue(target,msg+SIGRTMIN,v) < 0)
             throw std::runtime_error(std::string("sigqueue: ").append(strerror(errno)));        
 
-        while (!ack)
-            usleep(100);
+        int r;
+        while ( (r=sigtimedwait(&mask, NULL, &timeo)) < 0  && errno == EINTR ) {}
+
+        sigprocmask(SIG_SETMASK, &omask, NULL);
+        if ( r < 0 ) 
+            throw errno;
 
         that = NULL; 
         return ret.sival_int;

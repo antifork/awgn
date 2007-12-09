@@ -22,10 +22,18 @@ int main(int argc, char *argv[]) {
         exit(0);
     }
 
-    RTMessage remote(atoi(argv[1]));
+    int timeout = 5; // sec
 
-    std::cout << "*** " << remote.msg(HELLO, 1) << std::endl; 
-    std::cout << "*** " << remote.msg(WORLD, 2) << std::endl; 
+    RTMessage remote(atoi(argv[1]), timeout);
+
+    try {
+        std::cout << "*** " << remote.send(HELLO, 10) << std::endl;
+    }
+    catch(int rerrno) {
+        std::cout << "remote errno:" << rerrno << std::endl;
+    }
+
+    std::cout << "*** " << remote.send(WORLD, 2) << std::endl; 
 
     return 0;
 }

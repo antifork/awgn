@@ -10,5 +10,3 @@
 #include <rt-message.hh>
 
 RTMessage *RTMessage::that = NULL;
-volatile bool RTMessage::ack = false;
-
