@@ -20,20 +20,23 @@ template <int FAMILY>
 class Socket {
 
     int sockfd;
-    
+
+    bool _connected;
+    bool _bound;
+    bool _listening;
+
+    std::string _pathname;   // unix socket
+
     public:
 
-        Socket() {}
+        Socket() : sockfd(-1), _connected(false), _bound(false) {}
         Socket(int type, int protocol=0)
-        : sockfd(::socket(FAMILY, type, protocol)) {
+        : sockfd(::socket(FAMILY, type, protocol)), _connected(false), _bound(false) {
             if ( sockfd == -1)
                 throw std::runtime_error("socket");
         }
 
-        ~Socket() { 
-            if ( ::close(sockfd) == -1) 
-                ::warn("close"); 
-        }
+        ~Socket();
 
         void init(int type,int protocol=0) {
             if (sockfd>2)
@@ -41,13 +44,6 @@ class Socket {
             sockfd = ::socket(FAMILY, type, protocol);
             if (sockfd == -1)
                 throw std::runtime_error("socket");
-        }
-        int connect(const sockaddress<FAMILY> &addr) 
-        {
-            int r = ::connect(sockfd, (const struct sockaddr *)&addr, addr.len());
-            if (r == -1)
-                ::warn("connect");
-            return r;
         }
         int send(const void *buf, size_t len, int flags) 
         {
@@ -77,27 +73,38 @@ class Socket {
                 ::warn("recvfrom");
             return r;
         }
-        int bind(const sockaddress<FAMILY> &my_addr) 
+
+        int connect(const sockaddress<FAMILY> &addr); 
+        const bool connected() const { return _connected; }
+
+        int bind(const sockaddress<FAMILY> &my_addr);
+        const bool bound() const { return _bound; }
+
+        Socket accept(sockaddress<FAMILY> &addr) 
         {
-            int r = ::bind(sockfd,(const struct sockaddr *)&my_addr, my_addr.len());
-            if (r == -1)
-                ::warn("bind");
-            return r;
-        }
-        int accept(sockaddress<FAMILY> &addr) 
-        {
+            Socket ret;
+
             int r = ::accept(sockfd, &addr, &addr.len());
-            if (r == -1)
+            if (r == -1) {
                 ::warn("accept");
-            return r;
+            }
+            else {
+                ret.sockfd = r;
+                ret._connected = true;
+            }
+            return ret;
         }
         int listen(int backlog) 
         {
             int r = ::listen(sockfd, backlog);
             if (r == -1)
                 ::warn("listen");
+            else
+                _listening = true;
             return r;
         }
+        const bool listening() const { return _listening; }
+
         int getsockname(sockaddress<FAMILY> &name) 
         {
             int r = ::getsockname(sockfd, &name, &name.len());
@@ -130,6 +137,72 @@ class Socket {
         const int fd() const { return sockfd; }
 };
 
+// destructor specializations...
+//
+template <int FAMILY>
+Socket<FAMILY>::~Socket<FAMILY>() {
+    if ( ::close(sockfd) == -1) 
+        ::warn("close"); 
+}
+template <>
+Socket<PF_UNIX>::~Socket<PF_UNIX>() { 
+    if ( ::close(sockfd) == -1) 
+        ::warn("close");
+    if ( !_pathname.empty()) {
+        if ( ::unlink(_pathname.c_str()) == -1)
+            ::warn("unlink");
+    }
+}
 
+// bind specializations..
+//
+template <int FAMILY>
+int Socket<FAMILY>::bind(const sockaddress<FAMILY> &my_addr) 
+{
+    int r = ::bind(sockfd,(const struct sockaddr *)&my_addr, my_addr.len());
+    if (r == -1)
+        ::warn("bind");
+    else
+        _bound = true;
+    return r;
+}
+template <>
+int Socket<PF_UNIX>::bind(const sockaddress<PF_UNIX> &my_addr) 
+{
+    int r = ::bind(sockfd,(const struct sockaddr *)&my_addr, my_addr.len());
+    if (r == -1)
+        ::warn("bind");
+    else {
+        _bound = true;
+        _pathname = my_addr;
+    }
+    return r;
+}
+
+// connect specializations...
+//
+template <int FAMILY>
+int Socket<FAMILY>::connect(const sockaddress<FAMILY> &addr) 
+{
+    int r = ::connect(sockfd, (const struct sockaddr *)&addr, addr.len());
+    if (r == -1)
+        ::warn("connect");
+    else {
+        _connected = true;
+    }
+    return r;
+}
+template <>
+int Socket<PF_UNIX>::connect(const sockaddress<PF_UNIX> &addr) 
+{
+    int r = ::connect(sockfd, (const struct sockaddr *)&addr, addr.len());
+    if (r == -1)
+        ::warn("connect");
+    else {
+        _connected = true;
+        _pathname = addr;
+    }
+    return r;
+}
 #endif /* SOCKET_HH */
 

@@ -12,6 +12,7 @@
 
 #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <arpa/inet.h>
 
 #include <iostream>
@@ -19,7 +20,28 @@
 #include <stdexcept>
 #include <cassert>
 
+#ifndef UNIX_PATH_MAX
+#define UNIX_PATH_MAX 108
+#endif
+
 template <int f> class sockaddress;
+template <>
+    class sockaddress<AF_UNIX> {
+        sockaddr_un _addr;
+        public:
+        sockaddress(const std::string &name) {
+            _addr.sun_family = AF_UNIX;
+            strncpy(_addr.sun_path, name.c_str(), UNIX_PATH_MAX-1);
+            _addr.sun_path[UNIX_PATH_MAX-1]='\0';
+        }
+        int family() const { return _addr.sun_family; }
+        operator std::string() const { return _addr.sun_path; }
+        sockaddr *operator &() {
+            return (sockaddr *)&_addr;
+        }
+        const socklen_t len() const { return sizeof(sockaddr_un); }
+    };
+
 template <>
     class sockaddress<AF_INET> {
 
