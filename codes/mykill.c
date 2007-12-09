@@ -46,14 +46,12 @@
 #include <signal.h>
 
 extern char *__progname;
-const int log_facility = LOG_LOCAL6;
 
 static const char usage_str[]=
         "Usage: %s [OPTIONS] target name (argv[0]) or pid\n\n"
         "   -k SIG..         signal to send (def=SIGTERM)\n"
         "   -s sec           sec. to wait before sending a SIGKILL (def=10)\n"
         "   -h               print this help\n";
-
 
 #define _sig(x) [x] = #x
 char *signal_list[]= {
@@ -212,7 +210,6 @@ int main(int argc, char *argv[])
         if ( kill(pid,signum) < 0 )
             err(3,"kill");
 
-                
         sprintf(status,"/proc/%d/status", pid);
 
         signal(SIGALRM, sigalarm);
