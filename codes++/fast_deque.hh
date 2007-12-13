@@ -31,7 +31,7 @@
 #include <iostream> 
 #include <stdexcept>
 
-namespace extra {
+namespace more {
 
 /* note: this is a lockless version of stack/deque that can 
          only be used by a single producer and a single consumer. 

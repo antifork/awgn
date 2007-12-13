@@ -11,8 +11,8 @@
 
 int main()
 {
-        extra::Matrix<int> a(2,2);
-        extra::Matrix<int> b(2,2);
+        more::Matrix<int> a(2,2);
+        more::Matrix<int> b(2,2);
 
         a(0,0) = 1;
         a(0,1) = 2;
@@ -20,7 +20,7 @@ int main()
         a(1,1) = 4;
 
         b = a;
-        extra::Matrix<int> c(a);
+        more::Matrix<int> c(a);
 
         std::cout << a << b << c ; 
 }

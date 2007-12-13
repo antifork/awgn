@@ -21,7 +21,7 @@
 
 extern char *__progname;
 
-namespace extra {
+namespace more {
 
     class singleton_proc {
 

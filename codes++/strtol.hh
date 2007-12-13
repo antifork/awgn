@@ -12,9 +12,9 @@
 
 #include <errno.h>
 
-namespace extra {
+namespace more {
 
-    static long int strtol(const std::string &s, int base = 0) {
+    static inline long int strtol(const std::string &s, int base = 0) {
 
         char *endptr;
         long int r;

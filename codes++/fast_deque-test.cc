@@ -10,7 +10,7 @@
 #include <pthread.h>
 #include "fast_deque.hh"
 
-extra::fast_deque<int *> deck(1000);    
+more::fast_deque<int *> deck(1000);    
 
 void *thread_a(void *x)
 {

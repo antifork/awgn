@@ -165,13 +165,13 @@ class iptables {
 
     static int exec(const std::string &c, const std::string chain, const std::string &rulespec, const std::string &opt="") {
         std::string com( 
-            extra::sprint("%s -t %s %s %s %s %s", 
+            more::sprint("%s -t %s %s %s %s %s", 
             IPTABLES, ipt_table_str[TABLE], c.c_str(), chain.c_str(), rulespec.c_str(), opt.c_str()));
 
         std::cout << ".:[" << com << "]:.\n";
         int ret = system(com.c_str());
         if ( ret < 0 || WEXITSTATUS(ret) != 0  )
-            std::clog << extra::sprint("system(): WEXITSTATUS=%d", WEXITSTATUS(ret)) << std::endl;
+            std::clog << more::sprint("system(): WEXITSTATUS=%d", WEXITSTATUS(ret)) << std::endl;
         return WEXITSTATUS(ret); 
     }
 
@@ -204,7 +204,7 @@ class iptables {
         CTtable_check(int2type<TABLE>());
 
         std::string chain(ipt_chain_str[CHAIN]);
-        return exec( "-D", chain, extra::sprint("%d", rulenum), opt);
+        return exec( "-D", chain, more::sprint("%d", rulenum), opt);
     }
 
     template <ipt_target TARGET>
@@ -226,7 +226,7 @@ class iptables {
 
         std::string chain(ipt_chain_str[CHAIN]);
         std::string target(ipt_target_str[TARGET]);
-        std::string ruln( rulenum ? extra::sprint("%d",rulenum) : std::string("") );
+        std::string ruln( rulenum ? more::sprint("%d",rulenum) : std::string("") );
         return exec( "-I" , chain , ruln.append(" ").append(rule), std::string("-j ").append(target).append(" ").append(opt));
     }
 
@@ -238,7 +238,7 @@ class iptables {
 
         std::string chain(ipt_chain_str[CHAIN]);
         std::string target(ipt_target_str[TARGET]);
-        std::string ruln( rulenum ? extra::sprint("%d",rulenum) : std::string("") );
+        std::string ruln( rulenum ? more::sprint("%d",rulenum) : std::string("") );
         return exec( "-R" , chain , ruln.append(" ").append(rule), std::string("-j ").append(target).append(" ").append(opt));
     }
 

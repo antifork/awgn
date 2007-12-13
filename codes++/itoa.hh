@@ -13,7 +13,7 @@
 #include <iostream>
 #include <cstdio>
 
-namespace extra {
+namespace more {
     template <typename T>
     static inline std::string itoa(const T &value, const char *format) {
             char buff[32];

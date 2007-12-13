@@ -17,10 +17,10 @@ int main()
       struct timeval tv;
       gettimeofday(&tv,NULL);
        
-      std::cout << extra::itoa(-1) << std::endl;
-      std::cout << extra::itoa(-1UL) << std::endl;
-      std::cout << extra::itoa(0xdeadbeef,"%x") << std::endl;
-      std::cout << extra::itoa(tv.tv_sec,"%d") << std::endl; 
+      std::cout << more::itoa(-1) << std::endl;
+      std::cout << more::itoa(-1UL) << std::endl;
+      std::cout << more::itoa(0xdeadbeef,"%x") << std::endl;
+      std::cout << more::itoa(tv.tv_sec,"%d") << std::endl; 
 }
 
 

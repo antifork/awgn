@@ -13,7 +13,7 @@
 #include <iostream>
 #include <stdexcept>
 
-namespace extra {
+namespace more {
 
     template <typename T>
         class Matrix {
