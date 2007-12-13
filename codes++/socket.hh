@@ -140,11 +140,13 @@ class Socket {
 // destructor specializations...
 //
 template <int FAMILY>
+inline
 Socket<FAMILY>::~Socket<FAMILY>() {
     if ( ::close(sockfd) == -1) 
         ::warn("close"); 
 }
 template <>
+inline
 Socket<PF_UNIX>::~Socket<PF_UNIX>() { 
     if ( ::close(sockfd) == -1) 
         ::warn("close");
@@ -157,6 +159,7 @@ Socket<PF_UNIX>::~Socket<PF_UNIX>() {
 // bind specializations..
 //
 template <int FAMILY>
+inline
 int Socket<FAMILY>::bind(const sockaddress<FAMILY> &my_addr) 
 {
     int r = ::bind(sockfd,(const struct sockaddr *)&my_addr, my_addr.len());
@@ -167,6 +170,7 @@ int Socket<FAMILY>::bind(const sockaddress<FAMILY> &my_addr)
     return r;
 }
 template <>
+inline
 int Socket<PF_UNIX>::bind(const sockaddress<PF_UNIX> &my_addr) 
 {
     int r = ::bind(sockfd,(const struct sockaddr *)&my_addr, my_addr.len());
@@ -181,7 +185,9 @@ int Socket<PF_UNIX>::bind(const sockaddress<PF_UNIX> &my_addr)
 
 // connect specializations...
 //
+   
 template <int FAMILY>
+inline
 int Socket<FAMILY>::connect(const sockaddress<FAMILY> &addr) 
 {
     int r = ::connect(sockfd, (const struct sockaddr *)&addr, addr.len());
@@ -193,6 +199,7 @@ int Socket<FAMILY>::connect(const sockaddress<FAMILY> &addr)
     return r;
 }
 template <>
+inline
 int Socket<PF_UNIX>::connect(const sockaddress<PF_UNIX> &addr) 
 {
     int r = ::connect(sockfd, (const struct sockaddr *)&addr, addr.len());
@@ -204,5 +211,6 @@ int Socket<PF_UNIX>::connect(const sockaddress<PF_UNIX> &addr)
     }
     return r;
 }
+ 
 #endif /* SOCKET_HH */
 
