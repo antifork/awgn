@@ -9,80 +9,92 @@
 
 #include <iostream>
 #include <string>
+#include <factory.hh>
 
-#include "factory.hh"
-#include "singleton.hh"
-
-class ElementBase {
-
+class Base {
     public:
-        virtual ~ElementBase(){ };
-        virtual ElementBase &alloc()=0; // REQUIRED
+    virtual ~Base() {};
 
-        virtual void whoami() { std::cout << __PRETTY_FUNCTION__ << std::endl;}
+    virtual Base &alloc()=0;                // to call the default ctor
+    virtual Base &alloc(const int &)=0;     // to call the ctor(const int &) 
+    virtual void dealloc(Base &)=0;         // to free the allocated object
+
+    virtual void whoami() { std::cout << __PRETTY_FUNCTION__ << std::endl;}
+
 };
 
 
-class Book : public generic::factoryElement<Book, ElementBase, memory::New> {
-    public:
-        Book() { std::cout << __PRETTY_FUNCTION__ << std::endl; }
-        ~Book() { std::cout << __PRETTY_FUNCTION__ << std::endl;}
+class One : public generic::factoryElement<One, int, Base, memory::New> {
 
-        virtual void whoami() { std::cout << __PRETTY_FUNCTION__ << std::endl;}
+    public:
+        One() { std::cout << __PRETTY_FUNCTION__ << std::endl; }
+        One(const int &) { std::cout << __PRETTY_FUNCTION__ << std::endl; }
+        ~One() { std::cout << __PRETTY_FUNCTION__ << std::endl; }
+
+        void whoami() { std::cout << __PRETTY_FUNCTION__ << std::endl;}
+
 };
 
+class Two : public generic::factoryElement<Two, int, Base, memory::Static> {
 
-class Journal : public generic::factoryElement<Journal, ElementBase, memory::Static> {
     public:
-        Journal() { std::cout << __PRETTY_FUNCTION__ << std::endl; }
-        ~Journal() { std::cout << __PRETTY_FUNCTION__ << std::endl;}
-        virtual void whoami() { std::cout << __PRETTY_FUNCTION__ << std::endl;}
+        Two() { std::cout << __PRETTY_FUNCTION__ << std::endl; }
+        Two(const int &) { std::cout << __PRETTY_FUNCTION__ << std::endl; }
+        ~Two() { std::cout << __PRETTY_FUNCTION__ << std::endl; }
+        
+        void whoami() { std::cout << __PRETTY_FUNCTION__ << std::endl;}
+};
+
+class Three : public generic::factoryElement<Three, int, Base, memory::Malloc> {
+
+    public:
+        Three() { std::cout << __PRETTY_FUNCTION__ << std::endl; }
+        Three(const int &) { std::cout << __PRETTY_FUNCTION__ << std::endl; }
+        ~Three() { std::cout << __PRETTY_FUNCTION__ << std::endl; }
+
+        void whoami() { std::cout << __PRETTY_FUNCTION__ << std::endl;}
 };
 
 
 int main()
 {
-    // 1a) define the factory, give it a name...
-    //
+    // define the factory, give it a name...
 
-    typedef generic::factory<std::string, ElementBase *> myFactory;     // GOOD factory
-//  typedef generic::factory<std::string, ElementBase  > myFactory;     // BAD  factory (no polymorphism!)
+ // typedef generic::factory<std::string, Base  > myFactory; BAD! (no polymorphism!)
+    typedef generic::factory<std::string, Base *> myFactory;
 
     // ... and instance it.
-
     myFactory factory;
 
-    // 1b) or define a singleton-factory, give it a name...
+    std::cout << "::::: registering producers...\n";
+
+    // register elements/producers into your factory...
+
+    factory.regist("one",   new One);
+    factory.regist("two",   new Two);
+    factory.regist("three", new Three);
+
+    std::cout << "\n::::: building objects with the factory...\n";
+
+    // construct elements by name...
     //
+    Base &ref1 = factory("one",1);
+    Base &ref2 = factory("two");
+    Base &ref3 = factory("three");
 
-    typedef generic::singleton<myFactory, memory::Static> mySingleFactory;
-        
-    // and get a reference.
+    std::cout << "\n::::: who are you?\n";
+
+    ref1.whoami();
+    ref2.whoami();
+    ref3.whoami();
+
+    std::cout << "\n::::: freeing objects\n";
+
+    // and delete them once out of scope 
     //
+    factory.dealloc(ref1);
+    factory.dealloc(ref2);
+    factory.dealloc(ref3);
 
-    myFactory & rfactory = mySingleFactory::instance();
-
-    // 2) register elements to your factory.. 
-    //
-
-    factory.regist  ("book",    new Book); 
-    factory.regist  ("journal", new Journal);  
-
-    rfactory.regist ("book",    new Book);
-    rfactory.regist ("journal", new Journal);
-
-    // NOT TODO: do not delete elements after their registration, the ~factory() will do it for you...
-    // ... and don't blame me because std::auto_ptr are not being used -- they are not STL compliant.
-
-    std::cout << "*** factory ready ***\n";
-
-    ElementBase &ref1 = factory("book");
-    ElementBase &ref2 = factory("book");
-
-    ElementBase &ref3 = rfactory("journal");
-    ElementBase &ref4 = rfactory("journal");
-
-    std::cout << std::hex << "memory::New    -> " << &ref1 << " " << &ref2 << std::endl;
-    std::cout << std::hex << "memory::Static -> " << &ref3 << " " << &ref4 << std::endl;
-
+    std::cout << "\n::::: destroying the factory...\n";
 }

@@ -17,22 +17,34 @@
 //
 namespace memory {
 
-    template <class T>
+    template <class T, class E = int>
         struct New {
             static T *alloc() {
                 return new T;
+            }            
+            static T *alloc(const E &e) {
+                return new T(e);
+            }
+            static void dealloc(T &obj) {
+                delete &obj;
             }
         };
 
-    template <class T>
+    template <class T, class E = int>
         struct Static {
             static T *alloc() {
                 static T ret;
                 return &ret;
             }
+            static T *alloc(const E &e) {
+                static T ret(e);
+                return &ret;
+            }
+            static void dealloc(T &) { 
+            }
         };
 
-    template <class T>
+    template <class T, class E = int>
         struct Malloc {
             static T *alloc() {
                 void * place = malloc(sizeof(T));
@@ -40,6 +52,17 @@ namespace memory {
                     throw std::runtime_error("malloc");
                 T * r = new (place)T();
                 return r;
+            }
+            static T *alloc(const E &e) {
+                void * place = malloc(sizeof(T));
+                if (place == NULL)
+                    throw std::runtime_error("malloc");
+                T * r = new (place)T(e);
+                return r;
+            }
+            static void dealloc(T &obj) {
+                obj.~T();
+                free(&obj);
             }
         };
 
