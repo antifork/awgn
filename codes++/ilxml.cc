@@ -28,10 +28,13 @@
 
 extern char *__progname;
 
+static char version[]="$Id$";
+
 static char usage[] = "\
 Usage: %s [options] file\n\
 Options:\n\
   -o <file>           place the output into <file>\n\
+  -v                  display the program version\n\
   -h                  help\n";
 
 enum
@@ -155,8 +158,11 @@ main(int argc, char *argv[])
 
     int opt;
 
-    while ( (opt=getopt(argc, argv, ":o:a:h")) != EOF )
+    while ( (opt=getopt(argc, argv, ":o:a:vh")) != EOF )
         switch(opt) {
+        case 'v':
+            printf("%s\n",version);
+            exit(0);
         case 'h':
             printf(usage,__progname);
             exit(0);
