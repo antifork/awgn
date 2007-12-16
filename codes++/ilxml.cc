@@ -24,7 +24,7 @@
 #include <cstdio>
 #include <err.h>
 
-#define INLINE_ASM  "__xml__"
+#define INLINE_XML  "__xml__"
 
 extern char *__progname;
 
@@ -106,7 +106,7 @@ restart:
         switch (state) {
 
         case S_cpp:
-            ph = buffer.find(INLINE_ASM);
+            ph = buffer.find(INLINE_XML);
             if (ph == std::string::npos) {
                 *outstream << buffer << std::endl;
                 continue;
