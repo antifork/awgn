@@ -32,11 +32,11 @@ int main()
     std::string attr("attr_name");
 
     XMLNode n = __xml__ (
-                <home attr_1="$i" attr_2="$j" >
+                <root attr_1="$i" attr_2="$j" >
                     <test attr="$fix"/>
                     <$node $attr="0" > $msg </$node> 
-                    <pippo/> 
-                </home>);
+                    <empty/> 
+                </root>);
 
     std::cout << n.createXMLString() << std::endl;        
         
