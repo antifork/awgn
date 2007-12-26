@@ -111,8 +111,8 @@ namespace numeric
     {
         enum { value = binary<N/10>::value * 2 + N%10 };
     }; 
-    template <>                           // specialization
-    struct binary<0>                      // terminates recursion
+    template <>                           
+    struct binary<0>                      
     {
         enum { value = 0 };
     };
