@@ -88,6 +88,25 @@ namespace numeric
         enum { value = N};
     };
 
+    // pow2
+    template <int N>
+    struct pow2 
+    {
+        enum { value = 1 << N };
+    };
+
+    // is_pow2
+    template <int N>
+    struct is_pow2
+    {
+        enum { value = ((N & (N - 1)) == 0) };
+    };
+    template<>
+    struct is_pow2<0>
+    {
+        enum { value = 0 };
+    };
+
     // is_prime 
     template <int p, int i>
     struct is_prime 

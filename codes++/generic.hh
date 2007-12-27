@@ -17,33 +17,78 @@
 namespace generic {
 
     template <int v>
-        struct Int2type {
-            enum { value = v };
-        };
+    struct Int2type 
+    {
+        enum { value = v };
+    };
 
     template <typename T>
-        struct Type2type {
-            typedef T type;
-        };
-
-    class  NullType  { };
-    struct EmptyType { };    
+    struct Type2type 
+    {
+        typedef T type;
+    };
 
     template <bool v, typename U, typename V>
-        struct Select 
-        {
-            typedef U type;
-        };
-
+    struct select 
+    {
+        typedef U type;
+    };
     template <typename U, typename V>
-        struct Select<false, U, V> 
-        {
-            typedef V type;
-        };
+    struct select<false, U, V> 
+    {
+        typedef V type;
+    };
 
+    // CTassert ala Loki
     template <bool> struct CTassert;
     template <>
     struct CTassert<true> { };
+
+    // the is_class (using SFINAE... Vandevoorde/Josuttis)
+    template <typename T>
+    class is_class 
+    {
+        typedef char one;
+        typedef long two;
+        template <typename C> static one test(int C::*);
+        template <typename C> static two test(...);
+
+    public:
+        enum { value = sizeof(test<T>(0)) == sizeof(char) }; 
+    };
+
+    // paramenter optimization ala Loki (Alexandrescu)
+    template <typename U> struct __param 
+    {
+        typedef const U & type;
+    };
+    template <typename U> struct __param<U &> 
+    {
+        typedef U& type;
+    };
+
+    template <typename T>
+    struct parameter {
+        typedef typename select< is_class<T>::value, typename __param<T>::type, T>::type type;
+    };
+
+    // enable_if / disable_if ala boost (using SFINAE...)
+    // to be used on return type or additional paramenter
+    //
+    template <bool B, class T = void>
+    struct enable_if {
+        typedef T type;
+    };
+    template <class T>
+    struct enable_if<false, T> {};
+
+    template <bool B, class T = void>
+    struct disable_if {
+        typedef T type;
+    };
+    template <class T>
+    struct disable_if<true, T> {};
+
 }
 
 #endif /* GENERIC_HH */
