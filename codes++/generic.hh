@@ -66,9 +66,9 @@ namespace generic {
     {
         typedef U& type;
     };
-
     template <typename T>
-    struct parameter {
+    struct parameter 
+    {
         typedef typename select< is_class<T>::value, typename __param<T>::type, T>::type type;
     };
 
@@ -76,19 +76,20 @@ namespace generic {
     // to be used on return type or additional paramenter
     //
     template <bool B, class T = void>
-    struct enable_if {
+    struct enable_if 
+    {
         typedef T type;
     };
     template <class T>
     struct enable_if<false, T> {};
 
     template <bool B, class T = void>
-    struct disable_if {
+    struct disable_if 
+    {
         typedef T type;
     };
     template <class T>
     struct disable_if<true, T> {};
-
 }
 
 #endif /* GENERIC_HH */
