@@ -76,9 +76,9 @@ namespace generic
         }
 
         friend std::ostream &
-        operator<<(std::ostream &, const probe &) 
+        operator<<(std::ostream &, const probe &that) 
         {
-            std::cout << "<<probe:" << this << ">>";    
+            std::cout << "<<probe:" << &that << ">>";    
         } 
 
     };
