@@ -73,7 +73,14 @@ namespace generic
         ~probe() 
         { 
             probe_dump("[d]"); 
+        }
+
+        friend std::ostream &
+        operator<<(std::ostream &, const probe &) 
+        {
+            std::cout << "<<probe:" << this << ">>";    
         } 
+
     };
 
 } // namespace generic

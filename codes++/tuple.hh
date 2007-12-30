@@ -120,7 +120,7 @@ namespace generic
 
     template <typename T1>
     static inline tuple<TLIST_1(T1)> 
-    make_tuple (T1 a1) 
+    make_tuple (const T1& a1) 
     {
         tuple<TLIST_1(T1)> ret;
         ret.template get<0>() = a1;
@@ -129,7 +129,7 @@ namespace generic
     
     template <typename T1, typename T2>
     static inline tuple<TLIST_2(T1,T2)> 
-    make_tuple (T1 a1, T2 a2) 
+    make_tuple (const T1& a1, const T2& a2) 
     {
         tuple<TLIST_2(T1,T2)> ret;
         ret.template get<0>() = a1;
@@ -139,7 +139,7 @@ namespace generic
 
     template <typename T1, typename T2, typename T3>
     static inline tuple<TLIST_3(T1,T2,T3)> 
-    make_tuple (T1 a1, T2 a2, T3 a3) 
+    make_tuple (const T1& a1, const T2& a2, const T3& a3) 
     {
         tuple<TLIST_3(T1,T2,T3)> ret;
         ret.template get<0>() = a1;
@@ -151,8 +151,8 @@ namespace generic
     template <typename T1, typename T2, typename T3,
               typename T4>
     static inline tuple<TLIST_4(T1,T2,T3,T4)> 
-    make_tuple (T1 a1, T2 a2, T3 a3, 
-                T4 a4) 
+    make_tuple (const T1& a1, const T2& a2, const T3& a3, 
+                const T4& a4) 
     {
         tuple<TLIST_4(T1,T2,T3,T4)> ret;
         ret.template get<0>() = a1;
@@ -165,8 +165,8 @@ namespace generic
     template <typename T1, typename T2, typename T3,
               typename T4, typename T5>
     static inline tuple<TLIST_5(T1,T2,T3,T4,T5)> 
-    make_tuple (T1 a1, T2 a2, T3 a3, 
-                T4 a4, T5 a5) 
+    make_tuple (const T1& a1, const T2& a2, const T3& a3, 
+                const T4& a4, const T5& a5) 
     {
         tuple<TLIST_5(T1,T2,T3,T4,T5)> ret;
         ret.template get<0>() = a1;
@@ -180,8 +180,8 @@ namespace generic
     template <typename T1, typename T2, typename T3,
               typename T4, typename T5, typename T6>
     static inline tuple<TLIST_6(T1,T2,T3,T4,T5,T6)> 
-    make_tuple (T1 a1, T2 a2, T3 a3, 
-                T4 a4, T5 a5, T6 a6) 
+    make_tuple (const T1& a1, const T2& a2, const T3& a3, 
+                const T4& a4, const T5& a5, const T6& a6) 
     {
         tuple<TLIST_6(T1,T2,T3,T4,T5,T6)> ret;
         ret.template get<0>() = a1;
@@ -197,9 +197,9 @@ namespace generic
               typename T4, typename T5, typename T6,
               typename T7>
     static inline tuple<TLIST_7(T1,T2,T3,T4,T5,T6,T7)> 
-    make_tuple (T1 a1, T2 a2, T3 a3, 
-                T4 a4, T5 a5, T6 a6,
-                T7 a7) 
+    make_tuple (const T1& a1, const T2& a2, const T3& a3, 
+                const T4& a4, const T5& a5, const T6& a6,
+                const T7& a7) 
     {
         tuple<TLIST_7(T1,T2,T3,T4,T5,T6,T7)> ret;
         ret.template get<0>() = a1;
@@ -216,9 +216,9 @@ namespace generic
               typename T4, typename T5, typename T6,
               typename T7, typename T8>
     static inline tuple<TLIST_8(T1,T2,T3,T4,T5,T6,T7,T8)> 
-    make_tuple (T1 a1, T2 a2, T3 a3, 
-                T4 a4, T5 a5, T6 a6, 
-                T7 a7, T8 a8) 
+    make_tuple (const T1& a1, const T2& a2, const T3& a3, 
+                const T4& a4, const T5& a5, const T6& a6, 
+                const T7& a7, const T8& a8) 
     {
         tuple<TLIST_8(T1,T2,T3,T4,T5,T6,T7,T8)> ret;
         ret.template get<0>() = a1;
@@ -236,9 +236,9 @@ namespace generic
               typename T4, typename T5, typename T6,
               typename T7, typename T8, typename T9>
     static inline tuple<TLIST_9(T1,T2,T3,T4,T5,T6,T7,T8,T9)> 
-    make_tuple (T1 a1, T2 a2, T3 a3, 
-                T4 a4, T5 a5, T6 a6, 
-                T7 a7, T8 a8, T9 a9) 
+    make_tuple (const T1& a1, const T2& a2, const T3& a3, 
+                const T4& a4, const T5& a5, const T6& a6, 
+                const T7& a7, const T8& a8, const T9& a9) 
     {
         tuple<TLIST_8(T1,T2,T3,T4,T5,T6,T7,T8)> ret;
         ret.template get<0>() = a1;
