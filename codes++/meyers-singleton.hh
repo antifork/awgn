@@ -48,8 +48,8 @@ namespace generic
         template <int n>
         static T& instance()
         {
-            static T _one_((singleton<T>()));
-            return _one_;
+            static T _n_((singleton<T>()));
+            return _n_;
         }
 
     };
