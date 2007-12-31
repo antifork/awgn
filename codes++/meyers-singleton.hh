@@ -8,25 +8,37 @@
  * ----------------------------------------------------------------------------
  */
 
-#ifndef MEYERS_HH
-#define MEYERS_HH
+#ifndef MEYERS_SINGLETON_HH
+#define MEYERS_SINGLETON_HH
 
-#define SINGLETON(x)        x : public generic::singleton<x>
-#define SINGLETON_FRIEND(x) friend class generic::singleton<x>
-
-// Singleton Meyers is thread safe when compiled with g++ 4.0 or later
 //
+// My best singleton/multiton version, inspired to that of Meyers. It is thread safe 
+// when compiled with g++ 4.0 or higher 
+//
+
+#define SINGLETON_CTOR(x)   x(const generic::singleton<x> &abc) : generic::singleton<x>(abc)
 
 namespace generic
 {
+    template <typename T> class base_singleton;
     template <typename T>
-    struct singleton
+    class singleton : public base_singleton<T>
+    {
+        friend class base_singleton<T>;
+        singleton() {}
+
+    public:        
+        singleton(const singleton &) {}
+    };
+
+    template <typename T>
+    struct base_singleton
     {
         // singleton instance...
         //
         static T& instance()
         {
-            static T _one_;
+            static T _one_((singleton<T>()));
             return _one_;
         }
 
@@ -35,11 +47,13 @@ namespace generic
         template <int n>
         static T& instance()
         {
-            static T _one_;
+            static T _one_((singleton<T>()));
             return _one_;
         }
 
     };
+
 }
 
-#endif /* MEYERS_HH */
+#endif /* MEYERS_SINGLETON_HH */
+
