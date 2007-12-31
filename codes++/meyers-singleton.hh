@@ -22,11 +22,23 @@ namespace generic
     template <typename T>
     struct singleton
     {
+        // singleton instance...
+        //
         static T& instance()
         {
             static T _one_;
             return _one_;
         }
+
+        // multitons...
+        //
+        template <int n>
+        static T& instance()
+        {
+            static T _one_;
+            return _one_;
+        }
+
     };
 }
 

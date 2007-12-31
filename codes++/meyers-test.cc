@@ -24,6 +24,14 @@ public:
 int 
 main(int argc, char *argv[])
 {
-    hello &ref = hello::instance();
+    hello &ref  = hello::instance();
+
+    hello &mul0 = hello::instance<0>(); // multiton: slot 0
+    hello &mul1 = hello::instance<1>(); // multiton: slot 1
+
+    std::cout << &ref  << '\n';
+    std::cout << &mul0 << '\n';
+    std::cout << &mul1 << '\n';
+
     // hello a;
 }
