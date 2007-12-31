@@ -16,7 +16,8 @@
 // when compiled with g++ 4.0 or higher 
 //
 
-#define SINGLETON_CTOR(x)   x(const generic::singleton<x> &abc) : generic::singleton<x>(abc)
+#define SINGLETON_CTOR(x)  \
+    x(const generic::singleton<x> &abc) : generic::singleton<x>(abc)
 
 namespace generic
 {
