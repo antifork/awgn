@@ -19,6 +19,9 @@
 #define SINGLETON_CTOR(x)  \
     x(const generic::singleton<x> &abc) : generic::singleton<x>(abc)
 
+#define MULTITON_CTOR(x,...)  \
+    x(const generic::singleton<x> &abc, ## __VA_ARGS__) : generic::singleton<x>(abc)
+
 namespace generic
 {
     template <typename T> class base_singleton;
@@ -45,10 +48,10 @@ namespace generic
 
         // multitons...
         //
-        template <int n>
-        static T& instance()
+        template <int n, typename U>
+        static T& instance(const U &u = U())
         {
-            static T _n_((singleton<T>()));
+            static T _n_((singleton<T>()), u);
             return _n_;
         }
 
