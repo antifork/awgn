@@ -12,7 +12,7 @@
 #define MEYERS_SINGLETON_HH
 
 //
-// My best singleton/multiton version, inspired to that of Meyers. It is thread safe 
+// My best singleton/multiton implementation, inspired to that of Meyers. It is thread safe 
 // when compiled with g++ 4.0 or higher 
 //
 
