@@ -54,6 +54,18 @@ namespace generic
             static T _n_((singleton<T>()), u);
             return _n_;
         }
+        template <int n, typename U, typename V>
+        static T& instance(const U &u = U(), const V &v = V())
+        {
+            static T _n_((singleton<T>()), u, v);
+            return _n_;
+        }
+        template <int n, typename U, typename V, typename W>
+        static T& instance(const U &u = U(), const V &v = V(), const W &w = W())
+        {
+            static T _n_((singleton<T>()), u, v,w);
+            return _n_;
+        }
 
     };
 
