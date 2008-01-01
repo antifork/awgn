@@ -17,13 +17,13 @@
 namespace generic {
 
     template <int v>
-    struct Int2type 
+    struct int2type 
     {
         enum { value = v };
     };
 
     template <typename T>
-    struct Type2type 
+    struct type2type 
     {
         typedef T type;
     };
@@ -66,11 +66,12 @@ namespace generic {
     {
         typedef U& type;
     };
+
     template <typename T>
-    struct parameter 
-    {
-        typedef typename select< is_class<T>::value, typename __param<T>::type, T>::type type;
-    };
+    struct param : select< is_class<T>::value, 
+                           typename __param<T>::type, 
+                           typename type2type<T>::type >
+    {};
 
     // enable_if / disable_if ala boost (using SFINAE...)
     // to be used on return type or additional paramenter
