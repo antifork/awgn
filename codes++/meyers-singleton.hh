@@ -48,6 +48,12 @@ namespace generic
 
         // multitons...
         //
+        template <int n>
+        static T& instance()
+        {
+            static T _n_((singleton<T>()));
+            return _n_;
+        }
         template <int n, typename U>
         static T& instance(const U &u = U())
         {

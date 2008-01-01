@@ -47,5 +47,7 @@ main(int argc, char *argv[])
     hello &mulB = hello::instance<0>(1,2);
 
     std::cout << "instance @" << &mulB << " par1:" << mulB.par << " par2:" << mulB.par2 << '\n';
+
     // hello a;  <- any other instance of hello is not allowed 
+
 }
