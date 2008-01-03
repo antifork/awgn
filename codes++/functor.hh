@@ -12,7 +12,7 @@
 #define FUNCTOR_HH
 
 // this (generic) functor implementation bases on automatic-type-erasure
-// mechanism [ 9.7.4 C++ Template Metaprogramming: Abrahams/Gutyovoy ]
+// mechanism [ 9.7.4 C++ Template Metaprogramming: Abrahams/Gurtovoy ]
 //
 
 namespace generic {
