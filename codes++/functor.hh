@@ -37,14 +37,12 @@ namespace generic {
             }
 
         private:
-
             F f;
         };
 
         std::auto_ptr<base_functor> ptr;
 
     public:
-
         template <class F>
         explicit functor(const F &f) : ptr( new wrapper<F>(f) ) {}
 
