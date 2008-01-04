@@ -87,7 +87,7 @@ int main()
         std::cout << "     cnt() = " << std::setw(4) << c << check(c) << std::endl; 
     }
 
-    std::cout << "TEST: refcounter(MultiThread) with 3 threads... [correct]\n"; 
+    std::cout << "TEST: refcounter(MultiThread) with multiple threads... [correct]\n"; 
 
     for (int i=0; i < 20 ; i++) {
 
