@@ -83,8 +83,8 @@ int main()
         pthread_join(f,NULL);
         pthread_join(g,NULL);
 
-        int c = test_single::cnt();
-        std::cout << "     cnt() = " << std::setw(4) << c << check(c) << std::endl; 
+        int c = test_single::counter();
+        std::cout << "     counter() = " << std::setw(4) << c << check(c) << std::endl; 
     }
 
     std::cout << "TEST: refcounter(MultiThread) with multiple threads... [correct]\n"; 
@@ -106,8 +106,8 @@ int main()
         pthread_join(f,NULL);
         pthread_join(g,NULL);
 
-        int c = test_multi::cnt();
-        std::cout << "     cnt() = " << std::setw(4) << c << check(c) << std::endl; 
+        int c = test_multi::counter();
+        std::cout << "     counter() = " << std::setw(4) << c << check(c) << std::endl; 
     }
 }
 

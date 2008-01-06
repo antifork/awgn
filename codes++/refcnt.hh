@@ -30,8 +30,8 @@ namespace more
         static _Atomic_word ref(int i)
         {
             static volatile _Atomic_word _ref;
-            _ref += i;
-            return _ref;
+            _Atomic_word ret = _ref; _ref += i;
+            return ret;
         }   
     };
 
@@ -51,7 +51,7 @@ namespace more
         ~refcnt() { PolicyThread::ref(-1); }
 
         static _Atomic_word 
-        cnt() 
+        counter() 
         { 
             return PolicyThread::ref(0); 
         }
