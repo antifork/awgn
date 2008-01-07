@@ -40,7 +40,7 @@ main(int argc, char *argv[])
     std::cout << "slot0    @" << &mul0 << " par:" << mul0.par << '\n';
     std::cout << "slot1    @" << &mul1 << " par:" << mul1.par << '\n';
 
-    std::cout << "\naccesing to multiton slot0...\n";
+    std::cout << "\ngetting a reference to multiton slot0...\n";
     std::cout << "slot0 param:" << hello::instance<0,int>().par << std::endl;
 
     std::cout << "\nmultiton with 2-parameters ctor..\n";
