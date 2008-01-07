@@ -59,6 +59,7 @@ main(int argc, char *argv[])
 
     std::cout << "instance @" << &mulB << " par1:" << mulB.par1 << " par2:" << mulB.par2 << '\n';
 
-    // hello a;  <- any other instance of hello is not allowed 
+    // hello1 a;  <- instances of singleton are not allowed, and non copyable. 
+
 
 }
