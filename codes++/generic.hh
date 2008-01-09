@@ -40,9 +40,16 @@ namespace generic {
     };
 
     // CTassert ala Loki
-    template <bool> struct CTassert;
+    template <bool> struct CTassert; 
     template <>
-    struct CTassert<true> { };
+    struct CTassert<true> 
+    {
+       enum { value = true }; 
+    };
+
+#ifndef __GXX_EXPERIMENTAL_CXX0X__
+#define static_assert(v,e) generic::CTassert<v>::value
+#endif
 
     // the is_class (using SFINAE... Vandevoorde/Josuttis)
     template <typename T>
