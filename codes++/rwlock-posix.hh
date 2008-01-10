@@ -24,6 +24,7 @@ namespace posix
 {
     class RWmutex 
     {
+
     public:
         enum Type {
             reader,
@@ -46,10 +47,8 @@ namespace posix
 
         int rdlock() {
             int r;
-            if ( (r=pthread_rwlock_rdlock(&lock)) != 0 ) {
-                std::clog << r << std::endl;
+            if ( (r=pthread_rwlock_rdlock(&lock)) != 0 ) 
                 throw std::runtime_error(std::string("pthread_rwlock_rdlock: ").append(strerror(errno)));
-            }
             return r;
         }
         int wrlock() {
