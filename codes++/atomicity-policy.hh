@@ -58,6 +58,13 @@ namespace atomicity {
         typedef __gnu_cxx::__scoped_lock scoped_lock;
 #endif
     };
+    template <>
+    struct gnu_cxx<4,3> {
+#if   __GNUC__ == 4 &&  __GNUC_MINOR__ == 3 
+        typedef __gnu_cxx::__mutex mutex;
+        typedef __gnu_cxx::__scoped_lock scoped_lock;
+#endif
+    };
 
     typedef gnu_cxx<__GNUC__, __GNUC_MINOR__> GNU_CXX; 
 

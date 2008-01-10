@@ -16,6 +16,9 @@
 
 namespace generic {
 
+    class NullType   { };
+    struct EmptyType { };
+
     template <int v>
     struct int2type 
     {
