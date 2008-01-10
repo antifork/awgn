@@ -11,7 +11,6 @@
 #ifndef RWLOCK_POSIX_H
 #define RWLOCK_POSIX_H
 
-#include <iostream>
 #include <string>
 #include <stdexcept>
 
@@ -51,21 +50,18 @@ namespace posix
                 std::clog << r << std::endl;
                 throw std::runtime_error(std::string("pthread_rwlock_rdlock: ").append(strerror(errno)));
             }
-            std::cout << __PRETTY_FUNCTION__ << std::endl;
             return r;
         }
         int wrlock() {
             int r;
             if ( (r=pthread_rwlock_wrlock(&lock)) != 0 )
                 throw std::runtime_error(std::string("pthread_rwlock_wrlock: ").append(strerror(errno)));
-            std::cout << __PRETTY_FUNCTION__ << std::endl;
             return r;
         }
         int unlock() {
             int r;
             if ( (r=pthread_rwlock_unlock(&lock)) != 0 )
                 throw std::runtime_error(std::string("pthread_rwlock_unlock: ").append(strerror(errno)));
-            std::cout << __PRETTY_FUNCTION__ << std::endl;
             return r;
         }
     };
