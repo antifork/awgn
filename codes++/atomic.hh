@@ -54,8 +54,8 @@ namespace more {
         }
     };
 
-    // this bases on an idea of Alexandrescu, see http://www.ddj.com/cpp/184403766 
-    // for further details.
+    // the following atomic_ptr is based on an idea of Alexandrescu, 
+    // see http://www.ddj.com/cpp/184403766 for further details.
 
     template <typename Atomicity = atomicity::GNU_CXX>
     struct atomic_class 
