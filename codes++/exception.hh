@@ -15,6 +15,7 @@
 #include <stdexcept>
 #include <cxxabi.h>
 #include <sysexits.h>
+#include <cstring>
 
 extern char *__progname;
 
@@ -25,11 +26,45 @@ namespace more {
 
     class fatal_error : public std::exception {
         std::string _M_msg;
-        public:
-        fatal_error(const std::string &m) : _M_msg(m) { }
-        virtual ~fatal_error() throw () {}
-        virtual const char* what() const throw() { return _M_msg.c_str(); }
+
+    public:
+        fatal_error(const std::string &m) 
+        : _M_msg(m) 
+        { }
+
+        virtual 
+        ~fatal_error() throw () 
+        {}
+
+        virtual const char* 
+        what() const throw() 
+        { 
+            return _M_msg.c_str(); 
+        }
     };
+
+    class syscall_error : public std::exception {
+        std::string _M_msg;
+        int _M_e;
+
+    public:
+        syscall_error(int e) 
+        : _M_msg(strerror(e)), _M_e(e) 
+        {}
+
+        virtual 
+        ~syscall_error() throw () 
+        {}
+
+        virtual const char* 
+        what() const throw() 
+        { 
+            return _M_msg.c_str(); 
+        }
+
+        int errno() const throw() { return _M_e; }
+    };
+
 
 }
 
