@@ -99,8 +99,9 @@ void *thread_2(void *)
 void *thread_3(void *)
 {
     for (int i=0;i<1000000; i++) {
-        atomic_ptr<good_class> ptr(example_1);
-        (*ptr)--;
+        // a more capillary way to run a single
+        // method (thread safe) is using a temporary...
+        (*atomic_ptr<good_class>(example_1))--;
     }
 }
 
