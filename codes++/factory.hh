@@ -14,8 +14,15 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <map>
-
 #include <memory-policy.hh>
+
+#if   __GNUC__ >= 4
+#include <tr1/memory>
+#elif (__GNUC__ == 3) && (__GNUC_MINOR__ == 4)
+#include <bits/atomicity.h>
+#else
+#error "g++ compiler not supported"
+#endif
 
 // my generic factory, inspired to that of Andrei Alexandrescu (Modern C++ Design)
 //
@@ -25,14 +32,14 @@ namespace generic {
     template <class T, typename E, class factoryBase, template <class, class> class Memory = memory::New>
         class factoryElement : public factoryBase {
             public:
-                factoryBase &alloc() {
-                    return *Memory<T,int>::alloc();
+                std::tr1::shared_ptr<factoryBase> alloc() {
+                    return std::tr1::shared_ptr<factoryBase>( Memory<T,int>::alloc(), factoryElement::dealloc );
                 }
-                factoryBase &alloc(const E &e) {
-                    return *Memory<T,E>::alloc(e);
+                std::tr1::shared_ptr<factoryBase> alloc(const E &e) {
+                    return std::tr1::shared_ptr<factoryBase>( Memory<T,E>::alloc(e), factoryElement::dealloc );
                 }
-                void dealloc(factoryBase &obj) {
-                    Memory<T,E>::dealloc(dynamic_cast<T &>(obj));
+                static void dealloc(factoryBase *obj) {
+                    Memory<T,E>::dealloc(static_cast<T *>(obj));
                 }
         };    
 
@@ -51,7 +58,7 @@ namespace generic {
             }
 
             template <typename E>
-            factoryBase & operator()(const Key &k, const E &e) throw(std::runtime_error) {
+            std::tr1::shared_ptr<factoryBase> operator()(const Key &k, const E &e) throw(std::runtime_error) {
 
                 typename FactoryMap::const_iterator i = theFactoryMap.find(k); 
 
@@ -61,7 +68,7 @@ namespace generic {
                 return i->second->alloc(e);
             }
 
-            factoryBase & operator()(const Key &k) throw(std::runtime_error) {
+            std::tr1::shared_ptr<factoryBase> operator()(const Key &k) throw(std::runtime_error) {
 
                 typename FactoryMap::const_iterator i = theFactoryMap.find(k); 
 
@@ -71,11 +78,7 @@ namespace generic {
                 return i->second->alloc();
             }
 
-            void dealloc(factoryBase &r) {
-                r.dealloc(r);
-            }
-
-            bool inset(const Key &k) const {
+            bool has_key(const Key &k) const {
                 typename FactoryMap::const_iterator i = theFactoryMap.find(k);
                 if ( i == theFactoryMap.end() )
                     return false;

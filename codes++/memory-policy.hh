@@ -26,8 +26,8 @@ namespace memory {
             static T *alloc(const E &e) {
                 return new T(e);
             }
-            static void dealloc(T &obj) {
-                delete &obj;
+            static void dealloc(T *obj) {
+                delete obj;
             }
         };
 
@@ -41,7 +41,7 @@ namespace memory {
                 static T ret(e);
                 return &ret;
             }
-            static void dealloc(T &) { 
+            static void dealloc(T *) { 
             }
         };
 
@@ -61,9 +61,9 @@ namespace memory {
                 T * r = new (place)T(e);
                 return r;
             }
-            static void dealloc(T &obj) {
-                obj.~T();
-                free(&obj);
+            static void dealloc(T *obj) {
+                obj->~T();
+                free(obj);
             }
         };
 

@@ -16,9 +16,8 @@ class Base {
     public:
     virtual ~Base() {};
 
-    virtual Base &alloc()=0;                // to call the default ctor
-    virtual Base &alloc(const int &)=0;     // to call the ctor(const int &) 
-    virtual void dealloc(Base &)=0;         // to free the allocated object
+    virtual std::tr1::shared_ptr<Base> alloc()=0;               // to call the default ctor
+    virtual std::tr1::shared_ptr<Base> alloc(const int &)=0;    // to call the ctor(const int &) 
 
     virtual void whoami() { std::cout << __PRETTY_FUNCTION__ << std::endl;}
 
@@ -77,25 +76,25 @@ int main()
 
     std::cout << "\n::::: building objects with the factory...\n";
 
+    {
     // construct elements by name...
     //
-    Base &ref1 = factory("one",1);
-    Base &ref2 = factory("two");
-    Base &ref3 = factory("three");
+        std::tr1::shared_ptr<Base> ref1( factory("one",1) );
+        std::tr1::shared_ptr<Base> ref2( factory("two") );
+        std::tr1::shared_ptr<Base> ref3( factory("three") );
 
-    std::cout << "\n::::: who are you?\n";
+        std::cout << "\n::::: querying objects: who are you?\n";
 
-    ref1.whoami();
-    ref2.whoami();
-    ref3.whoami();
+        ref1->whoami();
+        ref2->whoami();
+        ref3->whoami();
 
-    std::cout << "\n::::: freeing objects\n";
+        std::cout << "\n::::: automatic freeing objects\n";
+        std::cout << "::::: note: Two destructor is postponed because the Static memory policy\n";
+    }
 
     // and delete them once out of scope 
     //
-    factory.dealloc(ref1);
-    factory.dealloc(ref2);
-    factory.dealloc(ref3);
 
     std::cout << "\n::::: destroying the factory...\n";
 }
