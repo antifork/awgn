@@ -70,7 +70,7 @@ namespace more
             {  delete[] _M_arena; }
 
             int 
-            push_front(T *ptr) volatile 
+            push_back(T *ptr) volatile 
             {
                 int nh = next(_M_head);
                 if (unlikely(nh == _M_tail))
@@ -81,7 +81,7 @@ namespace more
             }
 
             int 
-            pop_back(T * &ret) volatile
+            pop_front(T * &ret) volatile
             {
                 if (unlikely(_M_head == _M_tail))
                     return -1;

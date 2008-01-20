@@ -36,7 +36,7 @@ void *thread_a(void *)
     int r;
     for(int i=1 ;i<200;) {
         elem * p = new elem(i);
-        std::cout << "push: " << i << " " << (r=deck.push_front(p)) << std::endl; 
+        std::cout << "push: " << i << " " << (r=deck.push_back(p)) << std::endl; 
         if (r >= 0)
             i++;
         usleep(1000);
@@ -49,7 +49,7 @@ void *thread_b(void *)
 {
     elem *r;
     for(;;) {
-        if ( deck.pop_back(r) >= 0 ) {
+        if ( deck.pop_front(r) >= 0 ) {
             std::cout << "pop: " << r->value() << std::endl;
             delete r;
         }
