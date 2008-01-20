@@ -93,8 +93,8 @@ namespace more
 
             //  note: a lockless/thread-safe version of clear() cannot be implemented.
             //        Instead, you can use clear_push() and/or clear_pop(), that do the same
-            //        of clear() and are supposed to be called from the same context of 
-            //        the threads that do push_front() and do pop_back() respectively.
+            //        of clear() and are supposed to be called from the same context as 
+            //        that of the threads doing push_front()/pop_back() respectively.
 
             void 
             clear_push() volatile 
