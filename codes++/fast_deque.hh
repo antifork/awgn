@@ -34,7 +34,7 @@ namespace more
 // note: this decaffeinated/lockless version of deque can be only 
 //       used by a single producer and a single consumer. 
 //       Multiple consumers or producers are not allowed and 
-//       should not be used.
+//       should be avoided.
  
     template <typename T> class fast_deque;
     template <typename T>
