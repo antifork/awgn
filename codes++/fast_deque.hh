@@ -91,18 +91,17 @@ namespace more
                 return 0;
             }
 
-            //  note: a lockless/thread-safe version of clear() cannot be implemented.
-            //        Instead, you can use clear_push() and/or clear_pop(), that do the same
-            //        of clear() and are supposed to be called from the same context as 
-            //        that of the threads doing push_front()/pop_back() respectively.
+            //  note: clear() is supposed to be called from the same context as 
+            //        that of the consumer, the thread that does pop_back().
 
             void 
-            clear_push() volatile 
-            { _M_head = _M_tail; }
-
-            void 
-            clear_pop() volatile 
-            { _M_tail = _M_head; }
+            clear() volatile 
+            { 
+                int head = _M_head;
+                for( ; _M_tail != head ; _M_tail++) {
+                    delete _M_arena[_M_tail];
+                }
+            }
 
             size_type 
             max_size() const volatile 
@@ -124,8 +123,8 @@ namespace more
             { 
                 std::cout << " size:"     << size()     << 
                              " max_size:" << max_size() << 
-                             " head:"     << _M_head      << 
-                             " tail:"     << _M_tail      << 
+                             " head:"     << _M_head    << 
+                             " tail:"     << _M_tail    << 
                              " empty:"    << empty()    << std::endl; 
             }
 

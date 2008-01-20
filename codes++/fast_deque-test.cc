@@ -11,13 +11,32 @@
 #include <pthread.h>
 #include "fast_deque.hh"
 
-volatile more::fast_deque<int *> deck(100);    
+class elem 
+{
+    int e;
+
+public:
+    elem (int _e) 
+    : e(_e)
+    {}
+
+    ~elem()
+    { std::cout << __PRETTY_FUNCTION__ << std::endl; }
+
+    int value()
+    { return e; }
+};
+
+
+volatile more::fast_deque<elem *> deck(100);    
+
 
 void *thread_a(void *)
 {
     int r;
-    for(int i=1 ;i<100;) {
-        std::cout << "push: " << i << " " << (r=deck.push_front((int *)i)) << std::endl; 
+    for(int i=1 ;i<200;) {
+        elem * p = new elem(i);
+        std::cout << "push: " << i << " " << (r=deck.push_front(p)) << std::endl; 
         if (r >= 0)
             i++;
         usleep(1000);
@@ -28,10 +47,12 @@ void *thread_a(void *)
 
 void *thread_b(void *)
 {
-    int *r;
+    elem *r;
     for(;;) {
-        if ( deck.pop_back(r) >= 0 )
-            std::cout << "pop: " << r << std::endl; 
+        if ( deck.pop_back(r) >= 0 ) {
+            std::cout << "pop: " << r->value() << std::endl;
+            delete r;
+        }
         usleep(100);
         deck.dump();
     }
@@ -41,11 +62,11 @@ void *thread_b(void *)
 
 void *thread_c(void *)
 {
-    for(int i=0; i<100; i++)
+    for(int i=0; i<200; i++)
     {
-        deck.clear_pop();
+        deck.clear();
         std::cout << "clear: " << deck.empty() << std::endl;       
-        usleep(1000);
+        usleep(2000);
     }
 }
 
