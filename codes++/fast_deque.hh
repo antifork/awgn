@@ -92,7 +92,7 @@ namespace more
             }
 
             //  note: clear() is supposed to be called from the same context as 
-            //        that of the consumer, the thread that does pop_back().
+            //        that of the consumer, the thread that does pop_front().
 
             void 
             clear() volatile 
