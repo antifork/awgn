@@ -11,29 +11,27 @@
 #include <pthread.h>
 #include "fast_deque.hh"
 
-more::fast_deque<int *> deck(1000);    
+volatile more::fast_deque<int *> deck(100);    
 
-void *thread_a(void *x)
+void *thread_a(void *)
 {
     int r;
-    for(int i=1 ;i<1000;) {
-
+    for(int i=1 ;i<100;) {
         std::cout << "push: " << i << " " << (r=deck.push_front((int *)i)) << std::endl; 
         if (r >= 0)
             i++;
         usleep(1000);
     }
 
-    exit(0);    
     return NULL;
 }
 
-void *thread_b(void *x)
+void *thread_b(void *)
 {
     int *r;
     for(;;) {
         if ( deck.pop_back(r) >= 0 )
-        std::cout << "pop: " << (int)r << std::endl; 
+            std::cout << "pop: " << r << std::endl; 
         usleep(100);
         deck.dump();
     }
@@ -41,15 +39,28 @@ void *thread_b(void *x)
     return NULL;
 }
 
+void *thread_c(void *)
+{
+    for(int i=0; i<100; i++)
+    {
+        deck.clear_pop();
+        std::cout << "clear: " << deck.empty() << std::endl;       
+        usleep(1000);
+    }
+}
+
 
 int main()
 {
     pthread_t a;
     pthread_t b;
+    pthread_t c;
 
     pthread_create(&a, NULL, thread_a, NULL);
     pthread_create(&b, NULL, thread_b, NULL);
+    // pthread_create(&c, NULL, thread_c, NULL);
 
     pthread_join(a,NULL);
     pthread_join(b,NULL);
+    // pthread_join(c,NULL);
 }

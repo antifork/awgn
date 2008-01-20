@@ -12,18 +12,14 @@
 #define FAST_DEQUE_HH
 
 #ifdef X86_FEATURE_XMM2
-
 #define mb()  asm volatile("mfence" ::: "memory")
 #define rmb() asm volatile("lfence" ::: "memory")
 #define wmb() asm volatile("sfence" ::: "memory")
-
 #else
-
 #warning "compile with -DX86_FEATURE_XMM2 to have optimized memory barriers"
 #define mb()  asm volatile("lock; addl $0,0(%%esp)" ::: "memory")
 #define rmb() asm volatile("lock; addl $0,0(%%esp)" ::: "memory")
 #define wmb() asm volatile("lock; addl $0,0(%%esp)" ::: "memory")
-
 #endif
 
 #define likely(x)   __builtin_expect(!!(x), 1)
@@ -32,79 +28,109 @@
 #include <iostream> 
 #include <stdexcept>
 
-namespace more {
+namespace more 
+{
 
-/* note: this is a lockless version of stack/deque that can 
-         only be used by a single producer and a single consumer. 
-         Multiple consumers or producers are not allowed.
- */ 
-        
+// note: this decaffeinated/lockless version of deque can be only 
+//       used by a single producer and a single consumer. 
+//       Multiple consumers or producers are not allowed and 
+//       should not be used.
+ 
     template <typename T> class fast_deque;
     template <typename T>
         class fast_deque<T *> {
 
+        public:
+            typedef size_t              size_type;
+            typedef T *                 value_type;
+
         private:
-            typedef T * ptr_T;
+            fast_deque(fast_deque &);                   // uncopyable
+            fast_deque& operator=(const fast_deque&);   // uncopyable
 
-            size_t _size;
+            value_type * _M_arena;
+            size_type   _M_size;
 
-            volatile int _head;
-            volatile int _tail;
+            int _M_head;
+            int _M_tail;
 
-            ptr_T * _arena;
-
-            int next(int p) {
-                return ( unlikely(p == (int)_size) ? 0 : p+1 );
-            }
-
-            fast_deque(fast_deque &);
-            fast_deque& operator=(const fast_deque&);
+            int 
+            next(int p) volatile 
+            { return ( unlikely(p == (int)_M_size) ? 0 : p+1 ); }
 
         public:
+            fast_deque(int s) 
+            : _M_size(s), 
+              _M_head(0), 
+              _M_tail(0), 
+              _M_arena(new value_type[s+1]) 
+            {}
 
-            fast_deque(int s) : _size(s), _head(0), _tail(0), _arena(new ptr_T[s+1]) { }
+            ~fast_deque() 
+            {  delete[] _M_arena; }
 
-            ~fast_deque() {  delete[] _arena; }
-
-            int push_front(T *ptr) {
-                int nh = next(_head);
-
-                if (unlikely(nh == _tail))
+            int 
+            push_front(T *ptr) volatile 
+            {
+                int nh = next(_M_head);
+                if (unlikely(nh == _M_tail))
                     return -1;
-
-                _arena[_head] = ptr;
+                _M_arena[_M_head] = ptr;
                 wmb();
-
-                return _head = nh;
+                return _M_head = nh;
             }
 
-            int pop_back(T * &ret) {
-                if (unlikely(_head == _tail))
+            int 
+            pop_back(T * &ret) volatile
+            {
+                if (unlikely(_M_head == _M_tail))
                     return -1;
-
-                ret = _arena[_tail];
+                ret = _M_arena[_M_tail];
                 rmb();
-                _tail = next(_tail);
-
+                _M_tail = next(_M_tail);
                 return 0;
             }
 
-            int size() const { return _size; }
+            //  note: a lockless/thread-safe version of clear() cannot be implemented.
+            //        Instead, you can use clear_push() and/or clear_pop(), that do the same
+            //        of clear() and are supposed to be called from the same context of 
+            //        the threads that do push_front() and do pop_back() respectively.
 
-            int depth() const { 
-                int ret = _head-_tail;
-                return ret >= 0 ? ret : ret + _size + 1; 
+            void 
+            clear_push() volatile 
+            { _M_head = _M_tail; }
+
+            void 
+            clear_pop() volatile 
+            { _M_tail = _M_head; }
+
+            size_type 
+            max_size() const volatile 
+            { return _M_size; }
+
+            size_type 
+            size() const volatile
+            { 
+                int ret = _M_head-_M_tail;
+                return ret >= 0 ? ret : ret + _M_size + 1; 
             }
-        
-            void dump() const { 
-                std::cout << " size:"  << _size   << 
-                             " depth:" << depth() << 
-                             " head:"  << _head   << 
-                             " tail:"  << _tail   << std::endl; 
+
+            bool
+            empty() const volatile
+            { return _M_head == _M_tail; }
+
+            void 
+            dump() const volatile
+            { 
+                std::cout << " size:"     << size()     << 
+                             " max_size:" << max_size() << 
+                             " head:"     << _M_head      << 
+                             " tail:"     << _M_tail      << 
+                             " empty:"    << empty()    << std::endl; 
             }
 
         };
-}
+} // namespace more
 
 #endif /* FAST_DEQUE_HH */
 
