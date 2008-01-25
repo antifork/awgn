@@ -44,12 +44,16 @@ namespace more {
     };
 
     class syscall_error : public std::exception {
+
         std::string _M_msg;
-        int _M_e;
+        int _M_err;
 
     public:
+        syscall_error(const std::string &m, int e) 
+        : _M_msg(std::string(m).append(": ").append(strerror(e))), _M_err(e) 
+        {}
         syscall_error(int e) 
-        : _M_msg(strerror(e)), _M_e(e) 
+        : _M_msg(strerror(e)), _M_err(e) 
         {}
 
         virtual 
@@ -62,9 +66,10 @@ namespace more {
             return _M_msg.c_str(); 
         }
 
-        int errno() const throw() { return _M_e; }
-    };
+        int err() const throw() 
+        { return _M_err; }
 
+    };
 
 }
 
