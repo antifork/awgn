@@ -8,6 +8,9 @@
  * ----------------------------------------------------------------------------
  */
 
+#ifndef ATOMIC_HH
+#define ATOMIC_HH
+
 #include <iostream>
 #include "atomicity-policy.hh"
 
@@ -98,4 +101,4 @@ namespace more {
 
 } // namespace more
 
-
+#endif /* ATOMIC_HH */
