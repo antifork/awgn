@@ -21,10 +21,8 @@ namespace posix {
 
     class syslog
     {
-
         private:
-
-            std::stringstream buffer;
+            std::stringstream _buffer;
 
             int  _priority;
 
@@ -42,7 +40,6 @@ namespace posix {
             syslog & operator= (const syslog &);
 
         public:
-
             // option: 	
             //      LOG_CONS	Write directly to system console
             //		LOG_NDELAY	Open the connection immediately
@@ -78,9 +75,10 @@ namespace posix {
 
             // priority:    facility|level
 
-            syslog(const char *ident, int opt = LOG_CONS, int fac = LOG_USER, int lev = LOG_NOTICE ) throw() :
-                _priority(0) {
-
+            syslog(const char *ident, int opt = LOG_CONS, int fac = LOG_USER, int lev = LOG_NOTICE ) throw() 
+            :
+            _priority(0) 
+            {
                 _facility() = fac;
                 _level()    = lev;
 
@@ -88,46 +86,63 @@ namespace posix {
                     ::openlog(ident,opt,_facility());		
             } 
             
-            syslog() : _priority(0) { }
+            syslog() 
+            : _priority(0) 
+            {}
 
-            ~syslog() throw() {
-                if (!buffer.str().empty()) {
-                    ::syslog( priority() , buffer.str().c_str());
+            ~syslog() throw() 
+            {
+                if (!_buffer.str().empty()) {
+                    ::syslog( priority() , _buffer.str().c_str());
                 }
             }
 
-            syslog &setfacility(int fac) throw() {
+            syslog &
+            setfacility(int fac) throw() 
+            {
                 _facility() = fac;
                 _priority   = 0;
                 return *this;
             }
 
-            syslog &setlevel(int lev) throw() {
+            syslog &
+            setlevel(int lev) throw() 
+            {
                 _level()  = lev;
                 _priority = 0;
                 return *this;
             }
 
-            syslog &setlogmask(int mask) throw() {
+            syslog &
+            setlogmask(int mask) throw() 
+            {
                 ::setlogmask(mask);
                 return *this;
             }
 
-            int facility() throw() {
-                return _facility();
+            const int 
+            facility() const throw() 
+            {
+                return const_cast<syslog *>(this)->_facility();
             }
 
-            int level() throw() {
-                return _level();
+            const int 
+            level() const throw() 
+            {
+                return const_cast<syslog *>(this)->_level();
             }
 
-            int priority() throw() {
-                return _priority ? : _facility()| _level();
+            const int 
+            priority() const throw() 
+            {
+                return _priority ? : const_cast<syslog *>(this)->_facility()| const_cast<syslog *>(this)->_level();
             }
 
             // change log level temporary 
             //
-            syslog operator()(int lev) {
+            syslog 
+            operator()(int lev) throw() 
+            {
                 syslog ret;
                 ret._priority = _facility() | lev;
                 return ret;
@@ -136,17 +151,20 @@ namespace posix {
             // log message 
             //
             template<typename T>
-                syslog &operator<<(const T &_m) throw() {
-                    buffer << _m;
+                syslog &operator<<(const T &_m) throw() 
+                {
+                    _buffer << _m;
                     return *this;
                 }
 
             // flush syslog with << std::endl;
             //
-            syslog &operator<<( std::ostream& (*_f)(std::ostream&) ) {
+            syslog &
+            operator<<( std::ostream& (*_f)(std::ostream&) ) 
+            {
                 if ( _f == static_cast <std::ostream &(*)(std::ostream &)> (std::endl) ) {
-                    ::syslog(priority(), buffer.str().c_str());
-                    buffer.str(std::string());  // flush the msg 
+                    ::syslog(priority(), _buffer.str().c_str());
+                    _buffer.str(std::string());  // flush the msg 
                 }
                 return *this;
             }
