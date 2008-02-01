@@ -22,7 +22,7 @@ namespace posix {
     class syslog
     {
         private:
-            std::stringstream _buffer;
+            mutable std::stringstream _buffer;
 
             int  _priority;
 
@@ -148,14 +148,38 @@ namespace posix {
                 return ret;
             }
 
-            // log message 
+            // log message (on const syslog) 
             //
             template<typename T>
-                syslog &operator<<(const T &_m) throw() 
+                const syslog &
+                operator<<(const T &_m) const throw() 
                 {
                     _buffer << _m;
                     return *this;
                 }
+
+            // log message 
+            //
+            template<typename T>
+                syslog &
+                operator<<(const T &_m) throw() 
+                {
+                    _buffer << _m;
+                    return *this;
+                }
+
+
+            // flush syslog with << std::endl;
+            //
+            const syslog &
+            operator<<( std::ostream& (*_f)(std::ostream&) ) const
+            {
+                if ( _f == static_cast <std::ostream &(*)(std::ostream &)> (std::endl) ) {
+                    ::syslog(priority(), _buffer.str().c_str());
+                    _buffer.str(std::string());  // flush the msg 
+                }
+                return *this;
+            }
 
             // flush syslog with << std::endl;
             //
@@ -168,6 +192,7 @@ namespace posix {
                 }
                 return *this;
             }
+
 
     };
 
