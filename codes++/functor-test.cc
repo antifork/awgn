@@ -27,13 +27,21 @@ struct aclass {
 
 };
 
+
+void foo(const generic::functor<int,int> &ref)
+{
+    ref(3);
+}
+
 int main()
 {
     aclass test;
 
     generic::functor<int,int> hello1(&freefunction);    
     generic::functor<int,int> hello2(test);    
-
+    
     hello1(1);
     hello2(2);
+
+    foo(hello2);
 }

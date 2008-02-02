@@ -15,6 +15,12 @@
 // mechanism [ 9.7.4 C++ Template Metaprogramming: Abrahams/Gurtovoy ]
 //
 
+#if   __GNUC__ >= 4
+#include <tr1/memory>
+#else
+#error "g++ compiler not supported"
+#endif
+
 namespace generic {
 
     template <class R, class P>
@@ -29,27 +35,30 @@ namespace generic {
         template <class F>
         struct wrapper : base_functor 
         {
-            explicit wrapper(F f) : f(f) {}
+            explicit wrapper(F f) 
+            : f(f) 
+            {}
 
-            R operator()(const P& x) const
-            {
-                return this->f(x);
-            }
+            R 
+            operator()(const P& x) const
+            { return this->f(x); }
 
         private:
             F f;
         };
 
-        std::auto_ptr<base_functor> ptr;
+        std::tr1::shared_ptr<base_functor> ptr;
 
     public:
         template <class F>
-        explicit functor(const F &f) : ptr( new wrapper<F>(f) ) {}
+        explicit functor(const F &f) 
+        : 
+        ptr( new wrapper<F>(f) ) 
+        {}
 
-        R operator()(const P &p) const
-        {
-            return (*ptr)(p);
-        }
+        R 
+        operator()(const P &p) const
+        { return (*ptr)(p); }
 
     };
 
