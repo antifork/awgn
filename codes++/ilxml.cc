@@ -102,7 +102,7 @@ parser(const std::string &f)
     int line=0; 
 
     while( std::getline(source,buffer) ) {
-        unsigned int ph;
+        std::string::size_type ph;
         ++line;
 
 restart:

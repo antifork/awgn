@@ -77,13 +77,13 @@ namespace more {
 
     public:
 
-        explicit atomic_ptr(volatile T& obj, typename Atomicity::mutex& m_)
-        : ptr(const_cast<T*>(&obj)), lock(m_) 
-        { }
         explicit atomic_ptr(volatile T& obj)
         : ptr(const_cast<T*>(&obj)), lock(const_cast<T *>(&obj)->mutex) 
         { }
-
+        atomic_ptr(volatile T& obj, typename Atomicity::mutex& m_)
+        : ptr(const_cast<T*>(&obj)), lock(m_) 
+        { }
+ 
         ~atomic_ptr() 
         { }
 

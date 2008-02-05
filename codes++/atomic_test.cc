@@ -9,9 +9,12 @@
  */
 
 #include <iostream>
+//#include <boost/thread.hpp>
 #include "atomic.hh"
 
 using namespace more;
+
+typedef atomicity::GNU_CXX_RECURSIVE AtomicityPolicy;
 
 // this bad_class is shared between threads.
 //
@@ -42,7 +45,7 @@ public:
 // it correctly derives from atomic_class...
 //
 
-class good_class : public more::atomic_class<>
+class good_class : public more::atomic_class<AtomicityPolicy>
 {
     int val;
 
@@ -91,7 +94,7 @@ void *thread_1(void *)
 void *thread_2(void *)
 {
     for (int i=0;i<1000000; i++) {
-        atomic_ptr<good_class> ptr(example_1);
+        atomic_ptr<good_class, AtomicityPolicy> ptr(example_1);
         (*ptr)++;
     }
 }
@@ -99,9 +102,9 @@ void *thread_2(void *)
 void *thread_3(void *)
 {
     for (int i=0;i<1000000; i++) {
-        // a more capillary way to run a single
+        // a capillary way to run a single
         // method (thread safe) is using a temporary...
-        (*atomic_ptr<good_class>(example_1))--;
+        (*atomic_ptr<good_class, AtomicityPolicy >(example_1))--;
     }
 }
 

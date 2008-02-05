@@ -20,19 +20,50 @@
 
 namespace atomicity {
 
-    struct None {
+    /// @brief  A template Scoped lock idiom (inspired to that of gnu_cxx).
+    // Acquire the mutex here with a constructor call, then release with
+    // the destructor call in accordance with RAII style.
+
+    template <class M>
+    class __scoped_lock
+    {
+    public:
+        typedef M __mutex_type;
+
+    private:
+        __mutex_type& _M_device;
+
+        __scoped_lock(const __scoped_lock&);
+        __scoped_lock& operator=(const __scoped_lock&);
+
+    public:
+        explicit __scoped_lock(__mutex_type& __name) : _M_device(__name)
+        { _M_device.lock(); }
+
+        ~__scoped_lock() throw()
+        { _M_device.unlock(); }
+    };
+
+
+    struct NONE {
         typedef generic::NullType mutex;
         typedef generic::NullType scoped_lock;
     };
 
-    struct Boost {
-
+    struct BOOST {
 #ifdef BOOST_HAS_THREADS
         typedef boost::mutex mutex;
         typedef boost::mutex::scoped_lock scoped_lock;
 #endif
-
     };
+
+    struct BOOST_RECURSIVE {
+#ifdef BOOST_HAS_THREADS
+        typedef boost::recursive_mutex mutex;
+        typedef boost::recursive_mutex::scoped_lock scoped_lock;
+#endif
+    };
+
 
     template <int, int> struct gnu_cxx;
     template <>
@@ -66,8 +97,24 @@ namespace atomicity {
 #endif
     };
 
-    typedef gnu_cxx<__GNUC__, __GNUC_MINOR__> GNU_CXX; 
+    template <int, int> struct gnu_cxx_recursive;
+    template <>
+    struct gnu_cxx_recursive<4,2> {
+#if   __GNUC__ == 4 &&  __GNUC_MINOR__ == 2 
+        typedef __gnu_cxx::__recursive_mutex mutex;
+        typedef ::atomicity::__scoped_lock<mutex> scoped_lock; // not yet sopported in gnu_cxx 
+#endif
+    };
+    template <>
+    struct gnu_cxx_recursive<4,3> {
+#if   __GNUC__ == 4 &&  __GNUC_MINOR__ == 3 
+        typedef __gnu_cxx::__recursive_mutex mutex;
+        typedef ::atomicity::__scoped_lock<mutex> scoped_lock; // not yet supported in gnu_cxx
+#endif
+    };
 
+    typedef gnu_cxx<__GNUC__, __GNUC_MINOR__> GNU_CXX; 
+    typedef gnu_cxx_recursive<__GNUC__, __GNUC_MINOR__> GNU_CXX_RECURSIVE; 
 }
 
 #endif /* ATOMICITY_HH */
