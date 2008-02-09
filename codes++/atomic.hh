@@ -24,37 +24,93 @@
 
 namespace more {
 
+    template <typename T = _Atomic_word>
     class atomic_word
     {
-        _Atomic_word value;
+        volatile T _M_value;
 
     public:
-        explicit atomic_word(_Atomic_word v=0) : value(v) {}
 
-        operator int() volatile {
-            return value;
-        }
+        explicit atomic_word(T v=0) 
+        : 
+        _M_value(v)
+        {}
 
-        _Atomic_word operator=(_Atomic_word n) volatile 
+        const T 
+        operator=(T n) volatile 
         {
-            return value = n;
+            return _M_value = n;
         }
+
+        operator T() const volatile 
+        {
+            return _M_value;
+        }
+
+#ifdef USE_GCC_BUILTIN
+        const T 
+        operator++(int) volatile
+        {
+            return __sync_fetch_and_add(&_M_value, 1); 
+        }        
+        const T 
+        operator--(int) volatile
+        {  
+            return __sync_fetch_and_sub(&_M_value, 1); 
+        }
+        const T
+        operator++() volatile 
+        {
+            return  __sync_add_and_fetch(&_M_value, 1);
+        }        
+        const T 
+        operator--() volatile
+        {
+            return  __sync_sub_and_fetch(&_M_value, 1);
+        }
+        const T 
+        operator &=(T v) volatile
+        {
+            return  __sync_and_and_fetch(&_M_value,v); 
+        }
+        const T 
+        operator |=(T v) volatile 
+        {
+            return __sync_or_and_fetch(&_M_value,v); 
+        }
+        const T 
+        operator ^=(T v) volatile 
+        {
+            return  __sync_xor_and_fetch(&_M_value,v); 
+        }        
+        
+        const T 
+        val_compare_and_swap(T oldval, T newval) volatile
+        {
+            return  __sync_val_compare_and_swap(&_M_value, oldval, newval); 
+        }
+ 
+        bool 
+        bool_compare_and_swap(T oldval, T newval) volatile
+        {
+            return __sync_bool_compare_and_swap(&_M_value, oldval, newval); 
+        }
+        static void memory_barrier()
+        {
+            __sync_synchronize();
+        }
+
+#else // USE__GNU_CXX
         _Atomic_word operator++(int) volatile
         {
-            return __gnu_cxx::__exchange_and_add(&value,1);
+            return __gnu_cxx::__exchange_and_add(&_M_value,1);
         }    
         _Atomic_word operator--(int) volatile
         {
-            return __gnu_cxx::__exchange_and_add(&value,-1);
+            return __gnu_cxx::__exchange_and_add(&_M_value,-1);
         } 
-        _Atomic_word operator+=(int n) volatile
-        {
-            return __gnu_cxx::__exchange_and_add(&value,n);
-        }
-        _Atomic_word operator-=(int n) volatile
-        {
-            return __gnu_cxx::__exchange_and_add(&value,-n);
-        }
+#endif
+    
     };
 
     // the following atomic_ptr is based on an idea of Alexandrescu, 

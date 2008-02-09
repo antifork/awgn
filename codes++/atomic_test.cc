@@ -72,7 +72,7 @@ public:
 
 volatile bad_class   example_0(0);
 volatile good_class  example_1(0);
-volatile atomic_word example_2(0);
+volatile atomic_word<int> example_2(0);
 
 // threads..
 //
