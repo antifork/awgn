@@ -48,6 +48,7 @@ namespace more {
         }
 
 #ifdef USE_GCC_BUILTIN
+
         const T 
         operator++(int) volatile
         {
@@ -68,6 +69,7 @@ namespace more {
         {
             return  __sync_sub_and_fetch(&_M_value, 1);
         }
+
         const T 
         operator &=(T v) volatile
         {
@@ -95,12 +97,14 @@ namespace more {
         {
             return __sync_bool_compare_and_swap(&_M_value, oldval, newval); 
         }
+
         static void memory_barrier()
         {
             __sync_synchronize();
         }
 
 #else // USE__GNU_CXX
+
         _Atomic_word operator++(int) volatile
         {
             return __gnu_cxx::__exchange_and_add(&_M_value,1);
@@ -109,6 +113,7 @@ namespace more {
         {
             return __gnu_cxx::__exchange_and_add(&_M_value,-1);
         } 
+
 #endif
     
     };
