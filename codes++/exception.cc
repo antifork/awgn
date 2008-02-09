@@ -21,7 +21,7 @@ namespace more {
 
     void unexpected()
     {
-        throw;
+        throw std::bad_exception();
     }
 
     void terminate() {

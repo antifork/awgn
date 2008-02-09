@@ -35,11 +35,11 @@ namespace more {
         { }
 
         virtual 
-        ~fatal_error()  
+        ~fatal_error() throw() 
         {}
 
         virtual const char* 
-        what() const  
+        what() const throw()  
         { 
             return _M_msg.c_str(); 
         }
@@ -59,11 +59,11 @@ namespace more {
         {}
 
         virtual 
-        ~syscall_error()  
+        ~syscall_error() throw() 
         {}
 
         virtual const char* 
-        what() const  
+        what() const throw()  
         { 
             return _M_msg.c_str(); 
         }
