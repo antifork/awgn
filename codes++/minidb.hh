@@ -71,7 +71,8 @@ class minidb {
     minidb() {}
     ~minidb(){}
 
-    VALUE *insert(KEY k, VALUE v, int t = 0) throw(std::runtime_error) {
+    VALUE *insert(KEY k, VALUE v, int t = 0) 
+    {
         typename db_T::iterator it = db.find(k);
         if ( it != db.end() && !it->second.expired() ) 
             throw std::runtime_error("key already in use!");
@@ -92,7 +93,8 @@ class minidb {
         it->second.ts_update(t);
     }
 
-    VALUE *find(KEY k, bool ts_update = false) throw(std::runtime_error, VALUE) {
+    VALUE *find(KEY k, bool ts_update = false) 
+    {
         typename db_T::iterator it = db.find(k);
         if( it == db.end()) 
             throw std::runtime_error("key not present!");

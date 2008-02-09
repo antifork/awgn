@@ -65,7 +65,8 @@ namespace Linux {
 
             public:
 
-            Inotify() throw(std::runtime_error) {
+            Inotify() 
+            {
                 fd = inotify_init();
                 if ( fd < 0 )
                     throw std::runtime_error(ERR("inotify_init")); 
@@ -81,8 +82,8 @@ namespace Linux {
                 return inotify_rm_watch(fd, wd);
             }
 
-            Inotify_list wait_events() throw (std::runtime_error) {
-
+            Inotify_list wait_events() 
+            {
                 int len, i = 0;
                 for (;;) {
                     len = read (fd, buf, L);

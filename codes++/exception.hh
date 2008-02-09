@@ -23,8 +23,10 @@ namespace more {
 
     extern void fatal(const std::string &m) throw(); 
     extern void terminate() __attribute__((noreturn));
+    extern void unexpected();
 
-    class fatal_error : public std::exception {
+    class fatal_error : public std::exception 
+    {
         std::string _M_msg;
 
     public:
@@ -33,18 +35,18 @@ namespace more {
         { }
 
         virtual 
-        ~fatal_error() throw () 
+        ~fatal_error()  
         {}
 
         virtual const char* 
-        what() const throw() 
+        what() const  
         { 
             return _M_msg.c_str(); 
         }
     };
 
-    class syscall_error : public std::exception {
-
+    class syscall_error : public std::exception 
+    {
         std::string _M_msg;
         int _M_err;
 
@@ -57,16 +59,16 @@ namespace more {
         {}
 
         virtual 
-        ~syscall_error() throw () 
+        ~syscall_error()  
         {}
 
         virtual const char* 
-        what() const throw() 
+        what() const  
         { 
             return _M_msg.c_str(); 
         }
 
-        int err() const throw() 
+        int err() const  
         { return _M_err; }
 
     };

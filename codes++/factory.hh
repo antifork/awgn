@@ -56,8 +56,9 @@ namespace generic {
             }
 
             template <typename E>
-            std::tr1::shared_ptr<factoryBase> operator()(const Key &k, const E &e) throw(std::runtime_error) {
-
+            std::tr1::shared_ptr<factoryBase> 
+            operator()(const Key &k, const E &e) 
+            {
                 typename FactoryMap::const_iterator i = theFactoryMap.find(k); 
 
                 if ( i == theFactoryMap.end() )
@@ -66,8 +67,9 @@ namespace generic {
                 return i->second->alloc(e);
             }
 
-            std::tr1::shared_ptr<factoryBase> operator()(const Key &k) throw(std::runtime_error) {
-
+            std::tr1::shared_ptr<factoryBase> 
+            operator()(const Key &k) 
+            {
                 typename FactoryMap::const_iterator i = theFactoryMap.find(k); 
 
                 if ( i == theFactoryMap.end() )

@@ -60,7 +60,7 @@ namespace generic
         {}
 
         FactoryFunction 
-        operator()(const Key &k) const throw(std::runtime_error) 
+        operator()(const Key &k) const  
         {
             typename FactoryMap::const_iterator it = theFactoryMap.find(k); 
             if ( it == theFactoryMap.end() )

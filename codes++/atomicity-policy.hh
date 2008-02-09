@@ -40,7 +40,7 @@ namespace atomicity {
         explicit __scoped_lock(__mutex_type& __name) : _M_device(__name)
         { _M_device.lock(); }
 
-        ~__scoped_lock() throw()
+        ~__scoped_lock() 
         { _M_device.unlock(); }
     };
 

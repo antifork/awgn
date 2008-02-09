@@ -14,15 +14,22 @@ extern char *__progname;
 
 namespace more {
 
-    void fatal(const std::string &m) throw() {
+    void fatal(const std::string &m) throw() 
+    {
         throw more::fatal_error(m);
+    }
+
+    void unexpected()
+    {
+        throw;
     }
 
     void terminate() {
         try {
             throw;
         }
-        catch(std::exception &e) {
+        catch(std::exception &e) 
+        {
             int status;
             const std::type_info  &ti = typeid(e);
             char *realname = abi::__cxa_demangle(ti.name(), 0, 0, &status);
@@ -31,7 +38,8 @@ namespace more {
             free(realname);
             exit(EX_SOFTWARE);
         }
-        catch(...) {
+        catch(...) 
+        {
             std::cerr << __progname << " terminated after throwing something...\n";
             exit(EX_SOFTWARE);
         }
