@@ -26,11 +26,9 @@ public:
     get() const
     { return priv; }
 
-    // to return a reference to an internal,
-    // both methos are required.
-    //
-    // the const method makes use of the non-const 
-    // implementation...
+    // to return a reference to an internal data,
+    // both methods are required -- the const one 
+    // makes use of the non-const implementation...
     //
 
     int &ref()
