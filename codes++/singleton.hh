@@ -34,7 +34,7 @@ namespace generic {
         return ret;
     }
 
-    template <class T, template <class, class T = int> class Memory, class Atomicity = atomicity::None >
+    template <class T, template <class, class T = int> class Memory, class Atomicity = atomicity::NONE >
     class singleton {
 
         singleton(const singleton &);

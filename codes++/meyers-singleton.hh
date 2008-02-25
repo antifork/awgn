@@ -94,6 +94,9 @@ namespace generic
 
         singleton(const VOID&) {}
 
+        virtual ~singleton()
+        {}
+
     private:
         singleton(const singleton&);                // noncopyable
         singleton &operator=(const singleton &);    // noncopyable  

@@ -92,6 +92,12 @@ namespace generic
         list_type list;
 
     public:
+    
+        tuple() :
+        elem(),
+        list()
+        {}
+
         template <int n>
         typename add_reference<typename tl_at<TL,n>::type_val >::type_val
         get()

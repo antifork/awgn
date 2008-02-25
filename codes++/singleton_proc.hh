@@ -30,11 +30,13 @@ namespace more {
         int fd, s;
 
         public:
-        singleton_proc(unsigned short port) {
-
+        singleton_proc(unsigned short port) :
+        fd(::open(lockf, O_CREAT|O_EXCL)),
+        s()
+        {
             ::sprintf(lockf,"/tmp/singleton:%d",port);
 
-            if ((fd = ::open(lockf, O_CREAT|O_EXCL))== -1) 
+            if (fd == -1) 
                 throw std::runtime_error
                     (std::string("a session of '").append(__progname).append("' is already running."));
 
@@ -51,7 +53,7 @@ namespace more {
                 addr.sin_port        = htons(port);
                 addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
-                if (::bind(s, (const struct sockaddr *)&addr, sizeof(struct sockaddr_in)) == -1) 
+                if (::bind(s, reinterpret_cast<const struct sockaddr *>(&addr), sizeof(struct sockaddr_in)) == -1) 
                     throw std::runtime_error(std::string("a session of '").append(__progname).append("' is already running."));
 
                 if (::listen(s,1) == -1) 

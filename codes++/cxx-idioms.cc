@@ -195,7 +195,13 @@ struct BaseClass {
     // idioms
     //
 
-    BaseClass(const std::string &n="") : __name(n) { } 
+    BaseClass(const std::string &n="") : 
+    scopeList(),
+    __name(n) 
+    {} 
+    
+    virtual ~BaseClass()
+    {}
 
     void pushMember(Member *ptr) {
         scopeList.push_back(ptr);
@@ -231,6 +237,13 @@ struct BaseClass {
 struct ExtraPolicy: public virtual BaseClass {
     std::set<std::string> blocks;
 
+    ExtraPolicy() :
+    blocks()
+    {}
+
+    virtual ~ExtraPolicy() 
+    {}
+
     void push(const std::string &s) {
         blocks.insert(s);
     }
@@ -253,6 +266,13 @@ struct ExtraPolicy: public virtual BaseClass {
 //
 struct IncludePolicy: public virtual BaseClass {
     std::set<std::string> includes;
+
+    IncludePolicy() :
+    includes()
+    {}
+
+    virtual ~IncludePolicy()
+    {}
 
     void push(const std::string &s) {
         includes.insert(s);
@@ -277,6 +297,13 @@ struct IncludePolicy: public virtual BaseClass {
 struct TemplatePolicy : public virtual BaseClass {
 
     std::list<Element>  list;        
+
+    TemplatePolicy() :
+    list()
+    {}
+
+    virtual ~TemplatePolicy()
+    {}
 
     void push(const Element &e) {
         list.push_back(e);                
@@ -315,7 +342,15 @@ struct TemplatePolicy : public virtual BaseClass {
 //
 struct InitPolicy : public virtual BaseClass {
 
-    std::list<Element>  list;        
+    std::list<Element>  list;  
+
+    InitPolicy() :
+    list()
+    {}
+
+    virtual ~InitPolicy()
+    {}
+
     void push(const Element &e) {
         list.push_back(e);                
     }
@@ -352,6 +387,14 @@ struct InitPolicy : public virtual BaseClass {
 struct DerivationPolicy : public virtual BaseClass {
 
     std::list<Element>  list;        
+
+    DerivationPolicy() :
+    list()
+    {}
+
+    virtual ~DerivationPolicy()
+    {}
+
     void push(const Element &e) {
         list.push_back(e);                
     }
@@ -494,7 +537,7 @@ class Class :
 
         void guardName(const std::string &n) {
             __NAME.append("__").append(n);
-            std::transform(__NAME.begin(), __NAME.end(), __NAME.begin(), (int(*)(int)) toupper);
+            std::transform(__NAME.begin(), __NAME.end(), __NAME.begin(), static_cast<int(*)(int)>(toupper));
         }
 
         Class(Class &);
@@ -503,7 +546,11 @@ class Class :
     public:
 
         explicit Class (const std::string &n, bool s = false ) 
-            : BaseClass(n), struc(s) { } 
+        : 
+        BaseClass(n),
+        out(NULL),
+        struc(s) 
+        {} 
 
         static std::string openGuard() {
             std::string ret;
@@ -522,7 +569,7 @@ class Class :
               theClasses.push_back(c);
               if(guard) {
                  __NAME.append("__").append(c->__name);
-                 std::transform(__NAME.begin(), __NAME.end(), __NAME.begin(), (int(*)(int)) toupper); 
+                 std::transform(__NAME.begin(), __NAME.end(), __NAME.begin(), static_cast<int(*)(int)> (toupper)); 
               }
         }
 

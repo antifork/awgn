@@ -24,8 +24,14 @@ class bad_class
     int val;
 
 public:
-    bad_class() {}
-    bad_class(int i) : val(i) {}
+    bad_class() 
+    :
+    val(0)
+    {}
+
+    bad_class(int i) : 
+    val(i) 
+    {}
 
     bad_class &operator++(int) volatile 
     {
@@ -50,7 +56,9 @@ class good_class : public more::atomic_class<AtomicityPolicy>
     int val;
 
 public:
-    good_class() {}
+    good_class() : 
+    val(0)
+    {}
     good_class(int i) : val(i) {}
 
     good_class &operator++(int) 
@@ -82,6 +90,7 @@ void *thread_0(void *)
     for (int i=0;i<1000000; i++) {
         example_0++;
     }
+    return NULL;
 }
 
 void *thread_1(void *)
@@ -89,6 +98,7 @@ void *thread_1(void *)
     for (int i=0;i<1000000; i++) {
         example_0--;
     }
+    return NULL;
 }
 
 void *thread_2(void *)
@@ -97,6 +107,7 @@ void *thread_2(void *)
         atomic_ptr<good_class, AtomicityPolicy> ptr(example_1);
         (*ptr)++;
     }
+    return NULL;
 }
 
 void *thread_3(void *)
@@ -106,6 +117,7 @@ void *thread_3(void *)
         // method (thread safe) is using a temporary...
         (*atomic_ptr<good_class, AtomicityPolicy >(example_1))--;
     }
+    return NULL;
 }
 
 void *thread_4(void *)
@@ -113,6 +125,7 @@ void *thread_4(void *)
     for (int i=0;i<1000000; i++) {
         example_2++;
     }
+    return NULL;
 }
 
 void *thread_5(void *)
@@ -120,6 +133,7 @@ void *thread_5(void *)
     for (int i=0;i<1000000; i++) {
         example_2--;
     }
+    return NULL;
 }
 
 const char *check(int n)

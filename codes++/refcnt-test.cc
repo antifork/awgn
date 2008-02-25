@@ -19,7 +19,6 @@ class test_single
 class test_multi 
 : public more::refcnt<test_multi, more::MultiThread> { };
 
-
 void *thread_single(void *h)
 {
     for(int i = 0; i< 100000; ++i) {
@@ -31,6 +30,7 @@ void *thread_single(void *h)
         test_single tmp5;
         test_single tmp6;
     }
+    return NULL;
 }
 
 void *thread_multi(void *h)
@@ -44,6 +44,7 @@ void *thread_multi(void *h)
         test_multi tmp5;
         test_multi tmp6;
     }
+    return NULL;
 }
 
 const char *check(int n)

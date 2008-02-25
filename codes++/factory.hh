@@ -49,6 +49,11 @@ namespace generic {
             FactoryMap theFactoryMap;    
 
             public:
+
+            factory() :
+            theFactoryMap()
+            {}
+
             ~factory() {
                 typename FactoryMap::const_iterator i;
                 for ( i = theFactoryMap.begin() ; i != theFactoryMap.end() ; i++ )

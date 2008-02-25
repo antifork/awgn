@@ -48,21 +48,22 @@ namespace more
             fast_deque(fast_deque &);                   // uncopyable
             fast_deque& operator=(const fast_deque&);   // uncopyable
 
-            value_type * _M_arena;
-            size_type   _M_size;
 
             int _M_head;
             int _M_tail;
 
+            size_type   _M_size;
+            value_type * _M_arena;
+
             int 
             next(int p) volatile 
-            { return ( unlikely(p == (int)_M_size) ? 0 : p+1 ); }
+            { return ( unlikely(p == static_cast<int>(_M_size)) ? 0 : p+1 ); }
 
         public:
             fast_deque(int s) 
-            : _M_size(s), 
-              _M_head(0), 
+            : _M_head(0), 
               _M_tail(0), 
+              _M_size(s), 
               _M_arena(new value_type[s+1]) 
             {}
 

@@ -65,9 +65,9 @@ namespace Linux {
 
             public:
 
-            Inotify() 
+            Inotify()
+            : fd(inotify_init())
             {
-                fd = inotify_init();
                 if ( fd < 0 )
                     throw std::runtime_error(ERR("inotify_init")); 
             }
@@ -100,7 +100,7 @@ namespace Linux {
 
                 for (; i < len ; i += EVENT_SIZE + event->len) {
 
-                    event = (struct inotify_event *) &buf[i];
+                    event = reinterpret_cast<struct inotify_event *> (&buf[i]);
 
                     Inotify_event tmp (event->wd, event->mask, event->cookie, event->len, event->name);
                     ret.push_back(tmp);                 

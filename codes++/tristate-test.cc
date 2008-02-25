@@ -39,11 +39,11 @@ int main(int argc, char *argv[])
         std::cout << "operator==(more::tristate::state) ok!\n";
     }
 
-    std::cout << "operator std::string :" << (std::string)!x << std::endl;
+    std::cout << "operator std::string :" << static_cast<std::string>(!x) << std::endl;
 
     x = false;
-    std::cout << "operator std::string :" << (std::string) x << std::endl;
-    std::cout << "operator std::string :" << (std::string)!x << std::endl;
+    std::cout << "operator std::string :" << static_cast<std::string>(x) << std::endl;
+    std::cout << "operator std::string :" << static_cast<std::string>(!x) << std::endl;
 
     return 0;
 }

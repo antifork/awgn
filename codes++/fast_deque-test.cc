@@ -68,6 +68,7 @@ void *thread_c(void *)
         std::cout << "clear: " << deck.empty() << std::endl;       
         usleep(2000);
     }
+    return NULL;
 }
 
 
@@ -75,7 +76,7 @@ int main()
 {
     pthread_t a;
     pthread_t b;
-    pthread_t c;
+    // pthread_t c;
 
     pthread_create(&a, NULL, thread_a, NULL);
     pthread_create(&b, NULL, thread_b, NULL);

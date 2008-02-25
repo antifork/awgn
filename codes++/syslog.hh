@@ -77,6 +77,7 @@ namespace posix {
 
             syslog(const char *ident, int opt = LOG_CONS, int fac = LOG_USER, int lev = LOG_NOTICE ) throw() 
             :
+            _buffer(),
             _priority(0) 
             {
                 _facility() = fac;
@@ -86,8 +87,9 @@ namespace posix {
                     ::openlog(ident,opt,_facility());		
             } 
             
-            syslog() 
-            : _priority(0) 
+            syslog() : 
+            _buffer(),
+            _priority(0) 
             {}
 
             ~syslog() throw() 

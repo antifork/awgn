@@ -33,8 +33,11 @@ class minidb {
         unsigned int timestamp_;
 
     public:
-
-        proxy(const T &r = T(), int t=0) : data_(r), timeout_(t) {
+        proxy(const T &r = T(), int t=0) : 
+        data_(r), 
+        timeout_(t),
+        timestamp_()
+        {
             ts_update();
         }
 
@@ -55,7 +58,7 @@ class minidb {
                 return false;   // never expires
             struct timeval now;
             gettimeofday(&now,NULL);
-            return (unsigned int)now.tv_sec > (timestamp_ + timeout_);
+            return static_cast<unsigned int>(now.tv_sec) > (timestamp_ + timeout_);
         }
 
         void dump(std::ostream& o) const { 
@@ -68,7 +71,9 @@ class minidb {
     typedef typename std::map<KEY,proxy<VALUE> >::iterator iterator;
     typedef typename std::map<KEY,proxy<VALUE> >::const_iterator const_iterator;
 
-    minidb() {}
+    minidb() :
+    db()
+    {}
     ~minidb(){}
 
     VALUE *insert(KEY k, VALUE v, int t = 0) 
@@ -77,13 +82,13 @@ class minidb {
         if ( it != db.end() && !it->second.expired() ) 
             throw std::runtime_error("key already in use!");
         db[k] = proxy<VALUE>(v, t);
-        return (VALUE *) db[k];
+        return static_cast<VALUE *> (db[k]);
     }
 
     VALUE *update(KEY k, VALUE v, int t = 0) {
         db[k] = proxy<VALUE>(v, t);
         db[k].ts_update();
-        return (VALUE *) db[k];
+        return static_cast<VALUE *> (db[k]);
     }
 
     VALUE *update(KEY k, int t = 0) {
@@ -91,6 +96,7 @@ class minidb {
         if ( it == db.end() )
             throw std::runtime_error("key not present!");
         it->second.ts_update(t);
+        return static_cast<VALUE *> (db[k]);
     }
 
     VALUE *find(KEY k, bool ts_update = false) 
@@ -99,7 +105,7 @@ class minidb {
         if( it == db.end()) 
             throw std::runtime_error("key not present!");
         if (it->second.expired())
-            throw (VALUE)it->second;
+            throw static_cast<VALUE>(it->second);
         if (ts_update)
             it->second.ts_update();
         return it->second;

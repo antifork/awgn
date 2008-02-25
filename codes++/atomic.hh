@@ -125,6 +125,13 @@ namespace more {
     struct atomic_class 
     {
         typename Atomicity::mutex mutex;
+
+        atomic_class()
+        : mutex()
+        {}
+
+        virtual ~atomic_class()
+        {}
     };
 
     template <typename T, class Atomicity = atomicity::GNU_CXX>

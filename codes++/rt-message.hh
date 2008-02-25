@@ -62,7 +62,8 @@ class RTMessageSrv : public generic::singleton<RTMessageSrv, memory::Static> {
             std::clog << "sigqueue: " << strerror(errno) << std::endl;
     }
 
-    RTMessageSrv() {
+    RTMessageSrv() 
+    {
         struct sigaction act;
         for(int s= SIGRTMIN; s < SIGRTMAX ;s++) {
             act.sa_sigaction = rt_sigaction;

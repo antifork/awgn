@@ -53,7 +53,9 @@ namespace generic
 
         };
 
-        functionFactory() 
+        functionFactory()
+        :
+        theFactoryMap()
         {}
 
         ~functionFactory()

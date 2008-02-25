@@ -19,25 +19,27 @@ namespace more {
     template <typename T>
         class Matrix {
 
-            T *matrix;
-
             int row;
             int col;
 
+            T *matrix;
+
             public:
-            Matrix(int r, int c) : row(r), col(c) { 
-                matrix = new T[r*c];
-            }
+            Matrix(int r, int c) : 
+            row(r), 
+            col(c),  
+            matrix(new T[r*c])
+            {}
 
             ~Matrix() {
                 delete [] matrix;
             }
 
-            Matrix(Matrix &aMatrix) {
-                matrix = new T[aMatrix.row*aMatrix.col];
-                row = aMatrix.row;
-                col = aMatrix.col;
-
+            Matrix(Matrix &aMatrix) :
+            row(aMatrix.row),
+            col(aMatrix.col),
+            matrix(new T[aMatrix.row*aMatrix.col])
+            {
                 for(int i=0;i < aMatrix.row ; i++)
                     for(int j=0; j < aMatrix.col; j++) {
                         matrix[i*col+j] = aMatrix(i,j);

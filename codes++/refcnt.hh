@@ -47,8 +47,11 @@ namespace more
     class refcnt 
     {
     public:
-        refcnt()  { PolicyThread::ref(1); }
-        ~refcnt() { PolicyThread::ref(-1); }
+        refcnt()  
+        { PolicyThread::ref(1); }
+
+        virtual ~refcnt() 
+        { PolicyThread::ref(-1); }
 
         static _Atomic_word 
         counter() 

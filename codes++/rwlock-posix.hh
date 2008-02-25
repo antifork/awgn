@@ -24,7 +24,6 @@ namespace posix
 {
     class RWmutex 
     {
-
     public:
         enum Type {
             reader,
@@ -33,7 +32,9 @@ namespace posix
 
         template <RWmutex::Type RW> friend class RWlock;
 
-        RWmutex(pthread_rwlockattr_t *attr = NULL) {
+        explicit RWmutex(pthread_rwlockattr_t *attr = NULL) :
+        lock()
+        {
             if ( pthread_rwlock_init(&lock, attr) != 0 )
                 throw std::runtime_error(std::string("pthread_rwlock_init: ").append(strerror(errno)));
         }
