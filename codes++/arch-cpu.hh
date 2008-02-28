@@ -8,8 +8,8 @@
  * ----------------------------------------------------------------------------
  */
 
-#ifndef ARCH_TSC_HH 
-#define ARCH_TSC_HH 
+#ifndef ARCH_CPU_HH 
+#define ARCH_CPU_HH 
 
 #include <cstring>
 #include <cstdio>
@@ -187,5 +187,5 @@ namespace arch
 
 }
 
-#endif /* ARCH_TSC_HH */
+#endif /* ARCH_CPU_HH */
 
