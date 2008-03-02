@@ -141,5 +141,11 @@ int main(int argc, char *argv[])
     delete one;
     delete three;
 
+    std::cout << "[*] stopping a thread in a critical section (ENABLE_CANCEL)...\n";
+    
+    one = new Reader;
+    one->start();
+    delete one;
+        
     return 0;
 }
