@@ -80,6 +80,10 @@ namespace posix
         getschedparam(int *policy, struct sched_param *param) const 
         { return ::pthread_getschedparam(thread, policy, param); }
 
+        int
+        setschedprio(int prio)
+        { return ::pthread_setschedprio(thread,prio); }
+
         pthread_t 
         id() const 
         { return thread; }
@@ -98,6 +102,14 @@ namespace posix
         int 
         psigmask(int how, const sigset_t * __restrict s, sigset_t * __restrict os)
         { return ::pthread_sigmask(how,s,os); }
+
+        int
+        getconcurrency()
+        { return ::pthread_getconcurrency(); }
+
+        int
+        setconcurrency(int new_level)
+        { return ::pthread_setconcurrency(new_level); }
 
     };
 
