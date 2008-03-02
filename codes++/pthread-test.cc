@@ -28,6 +28,10 @@ public:
         return NULL;
     }
 
+    ~Hello()
+    {
+        this->cancel();        
+    }
 };
 
 class World : public posix::pthread {
@@ -44,6 +48,10 @@ public:
         return NULL;
     }
 
+    ~World()
+    {
+        this->cancel();
+    }
 };
 
 rw_mutex yyy;
@@ -62,6 +70,10 @@ public:
         return NULL;
     }
 
+    ~Reader()
+    {
+        this->cancel();
+    }
 };
 
 class Writer : public posix::pthread {
@@ -76,6 +88,11 @@ public:
             sleep(1);
         }
         return NULL;
+    }
+
+    ~Writer()
+    {
+        this->cancel();
     }
 
 };

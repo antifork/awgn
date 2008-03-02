@@ -34,13 +34,7 @@ namespace posix
 
         virtual ~pthread() 
         {
-#ifdef ENABLE_CANCEL
-            ::pthread_cancel(thread);
-            while (::pthread_cancel(thread)==0) {
-                std::clog << "pthread_cancel(" << thread << ") spinning...\n";
-                usleep(1000000);
-            }
-#endif
+            // std::clog << __PRETTY_FUNCTION__ << std::endl;
         }
 
         virtual void *operator()() = 0;
@@ -56,6 +50,18 @@ namespace posix
         {
             if (::pthread_create(&thread, attr, start_routine, this ) != 0)
                 throw std::runtime_error("pthread_create");
+        }
+
+        void cancel()
+        {
+            // std::clog << __PRETTY_FUNCTION__ << std::endl;
+#ifdef ENABLE_CANCEL
+            ::pthread_cancel(thread);
+            while (::pthread_cancel(thread)==0) {
+                std::clog << "pthread_cancel(" << thread << ") spinning...\n";
+                usleep(1000000);
+            }
+#endif
         }
 
         int 
@@ -100,6 +106,8 @@ namespace posix
     public:
         enum { reader = 1, writer = 2 };
 
+        static __thread int lock_cnt;
+
         base_lock()
         {}
 
@@ -111,12 +119,10 @@ namespace posix
         void operator delete(void*);                        // disable delete operation
         void operator delete[](void*);                      // disable delete operation
         base_lock* operator&();                             // disable address taking
-
-        static __thread int lock_cnt;
     };
 
     template <class M, int N=0>
-    class scoped_lock : protected base_lock 
+    class scoped_lock : public base_lock 
     {
     public:
         typedef M mutex_type;
@@ -126,7 +132,7 @@ namespace posix
         _mutex(m)
         {
 #ifdef ENABLE_CANCEL
-            if ( !lock_cnt++ ) {
+            if ( !base_lock::lock_cnt++ ) {
                 ::pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,&_cs_old);
                 // std::clog << pthread_self() << " !going to non cancellable state!\n";
             }
@@ -138,7 +144,7 @@ namespace posix
         {
             _mutex.unlock();
 #ifdef ENABLE_CANCEL
-            if (!--lock_cnt) {
+            if (!--base_lock::lock_cnt) {
                 ::pthread_setcancelstate(_cs_old,NULL);
                 // std::clog << pthread_self() << " !going back to previous state!\n";
             }
@@ -161,7 +167,7 @@ namespace posix
         _mutex(m)
         {
 #ifdef ENABLE_CANCEL
-            if ( !lock_cnt++ ) {
+            if ( !base_lock::lock_cnt++ ) {
                 ::pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,&_cs_old);
                 // std::clog << pthread_self() << " !going to non cancellable state!\n";
             }
@@ -173,7 +179,7 @@ namespace posix
         {
             _mutex.unlock();
 #ifdef ENABLE_CANCEL
-            if (!--lock_cnt) {
+            if (!--base_lock::lock_cnt) {
                 ::pthread_setcancelstate(_cs_old,NULL);
                 // std::clog << pthread_self() << " !going back to previous state!\n";
             }
@@ -196,7 +202,7 @@ namespace posix
         _mutex(m)
         {
 #ifdef ENABLE_CANCEL
-            if ( !lock_cnt++ ) {
+            if ( !base_lock::lock_cnt++ ) {
                 ::pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,&_cs_old);
                 // std::clog << pthread_self() << " !going to non cancellable state!\n";
             }
@@ -208,7 +214,7 @@ namespace posix
         {
             _mutex.unlock();
 #ifdef ENABLE_CANCEL
-            if (!--lock_cnt) {
+            if (!--base_lock::lock_cnt) {
                 ::pthread_setcancelstate(_cs_old,NULL);
                 // std::clog << pthread_self() << " !going back to previous state!\n";
             }
