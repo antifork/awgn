@@ -19,7 +19,7 @@ class Hello : public posix::pthread {
 public:
     void *operator()()
     {
-        posix::scoped_lock<mutex> lock(xxx);
+        scoped_lock<mutex> lock(xxx);
 
         for(int i=0;i<3;i++) {
             std::cout << pthread_self() << " hello\n";
@@ -39,7 +39,7 @@ class World : public posix::pthread {
 public:
     void *operator()()
     {
-        posix::scoped_lock<mutex> lock(xxx);
+        scoped_lock<mutex> lock(xxx);
 
         for(int i=0;i<3;i++) {
             std::cout << pthread_self() << " world\n";
