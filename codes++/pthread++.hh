@@ -13,6 +13,8 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <stdexcept>
+
 #include <pthread.h>
 #include <signal.h>
 
@@ -61,6 +63,8 @@ namespace posix
                 std::clog << "pthread_cancel(" << thread << ") spinning...\n";
                 usleep(1000000);
             }
+#else
+            throw std::runtime_error("compile pthread++ with -DENABLE_CANCEL");
 #endif
         }
 
