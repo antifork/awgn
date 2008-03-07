@@ -14,7 +14,7 @@
 #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
 #include <sys/stat.h>
-#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <fcntl.h>
 
 #include <iostream>
@@ -22,32 +22,35 @@
 
 extern char *__progname;
 
-namespace more {
+namespace more 
+{
 
-    class singleton_proc {
-
+    class singleton_proc 
+    {
         char lockf[24];
         int fd, s;
 
-        public:
-        singleton_proc(unsigned short port) :
-        fd(::open(lockf, O_CREAT|O_EXCL)),
-        s()
+    public:
+        singleton_proc(unsigned short port) 
+        : lockf(),
+          fd(),
+          s()
         {
             ::sprintf(lockf,"/tmp/singleton:%d",port);
-
+            fd = open(lockf, O_CREAT|O_EXCL);
             if (fd == -1) 
                 throw std::runtime_error
-                    (std::string("a session of '").append(__progname).append("' is already running."));
+                (std::string("a session of '").append(__progname).append("' is already running."));
 
             try {
+
                 if ((s = ::socket(AF_INET, SOCK_STREAM, 0)) == -1)
                     throw std::runtime_error("socket");
 
                 int on = 1;
                 if (::setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int)) == -1)
                     throw std::runtime_error("setsockopt");
-                   
+
                 struct sockaddr_in addr;
                 addr.sin_family      = AF_INET;
                 addr.sin_port        = htons(port);
