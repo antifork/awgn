@@ -36,7 +36,7 @@ namespace numeric
     template <int i>
     struct ceil2_r 
     {
-        enum { value = ceil2_r<i>>1>::value << 1 };
+        enum { value = ceil2_r< (i>>1) >::value << 1 };
     };
     template <>
     struct ceil2_r<0> 
@@ -46,7 +46,7 @@ namespace numeric
     template <int i>
     struct ceil2 
     {
-        enum { value = ceil2_r<(i-1)>>1>::value << 1 };
+        enum { value = ceil2_r< (i-1>>1) >::value << 1 };
     };
     template <>
     struct ceil2<0> 
@@ -58,7 +58,7 @@ namespace numeric
     template <int i>
     struct floor2_r 
     {
-        enum { value = floor2_r<i>>1>::value << 1 };
+        enum { value = floor2_r< (i>>1) >::value << 1 };
     };
     template <>
     struct floor2_r<0> 
@@ -68,7 +68,7 @@ namespace numeric
     template <int i>
     struct floor2 
     {
-        enum { value = floor2_r<i>>1>::value };
+        enum { value = floor2_r< (i>>1) >::value };
     };
     template <>
     struct floor2<0> 

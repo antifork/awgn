@@ -28,61 +28,61 @@ namespace more {
         return std::string();
     }
     template <>
-    static inline std::string itoa(const char &value) {
+    inline std::string itoa(const char &value) {
             char buff[32];
             snprintf(buff,32, "%hhd", value);
             return buff;
         }
     template <>
-    static inline std::string itoa(const unsigned char &value) {
+    inline std::string itoa(const unsigned char &value) {
             char buff[32];
             snprintf(buff,32, "%hhu", value);
             return buff;
         }
     template <>
-    static inline std::string itoa(const short int &value) {
+    inline std::string itoa(const short int &value) {
             char buff[32];
             snprintf(buff,32, "%hd", value);
             return buff;
         }
     template <>
-    static inline std::string itoa(const unsigned short int &value) {
+    inline std::string itoa(const unsigned short int &value) {
             char buff[32];
             snprintf(buff,32, "%hu", value);
             return buff;
         }
     template <>
-    static inline std::string itoa(const int &value) {
+    inline std::string itoa(const int &value) {
             char buff[32];
             snprintf(buff,32, "%d", value);
             return buff;
         }    
     template <>
-    static inline std::string itoa(const unsigned int &value) {
+    inline std::string itoa(const unsigned int &value) {
             char buff[32];
             snprintf(buff,32, "%u", value);
             return buff;
         }
     template <>
-    static inline std::string itoa(const long int &value) {
+    inline std::string itoa(const long int &value) {
             char buff[32];
             snprintf(buff,32, "%ld", value);
             return buff;
         }    
     template <>
-    static inline std::string itoa(const unsigned long int &value) {
+    inline std::string itoa(const unsigned long int &value) {
             char buff[32];
             snprintf(buff,32, "%lu", value);
             return buff;
         }
     template <>
-    static inline std::string itoa(const long long int &value) {
+    inline std::string itoa(const long long int &value) {
             char buff[32];
             snprintf(buff,32, "%lld", value);
             return buff;
         }    
     template <>
-    static inline std::string itoa(const unsigned long long int &value) {
+    inline std::string itoa(const unsigned long long int &value) {
             char buff[32];
             snprintf(buff,32, "%llu", value);
             return buff;

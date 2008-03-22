@@ -10,9 +10,10 @@
 #ifndef SPRINT_HH
 #define SPRINT_HH
 
-#include <cstdio>
 #include <iostream>
 #include <string>
+#include <cstdio>
+#include <cstdlib>
 
 namespace more {
 

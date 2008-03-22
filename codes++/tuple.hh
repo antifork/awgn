@@ -28,9 +28,9 @@ namespace generic
 {
     struct empty {};
 
-    // int2type
+    // int2Type
     template <int n>
-    struct int2type 
+    struct int2Type 
     {
         enum { value = n };
     };
@@ -102,19 +102,19 @@ namespace generic
         typename add_reference<typename tl_at<TL,n>::type_val >::type_val
         get()
         {   
-            return __get(int2type<n>());
+            return __get(int2Type<n>());
         }
 
-        // __get is overloaded by means of int2type
+        // __get is overloaded by means of int2Type
         template <int n>
         typename add_reference<typename tl_at<TL,n>::type_val >::type_val
-        __get(int2type<n>)
+        __get(int2Type<n>)
         {
-            return list.__get(int2type<n-1>());
+            return list.__get(int2Type<n-1>());
         }
 
         typename add_reference<head_type>::type_val
-        __get(int2type<0>)
+        __get(int2Type<0>)
         {
             return elem;
         }

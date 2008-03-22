@@ -35,7 +35,7 @@ namespace ilx
     }
 
     template<> 
-    static inline std::string str<bool>(const bool& x)
+    inline std::string str<bool>(const bool& x)
     {
         std::ostringstream out;
         out << std::boolalpha << x;
@@ -43,7 +43,7 @@ namespace ilx
     }
 
     template<> 
-    static inline std::string str<std::string>(const std::string& x)
+    inline std::string str<std::string>(const std::string& x)
     {
         return x;
     } 
