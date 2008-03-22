@@ -13,7 +13,6 @@
 
 #include <iostream>
 #include <string>
-#include <sprint.hh>
 
 template <bool val> struct CTassert;
 template <>
@@ -35,12 +34,10 @@ namespace ipt {
     };
 
     struct chain {
-        enum val { NONE, INPUT, FORWARD, OUTPUT, 
-            PREROUTING, POSTROUTING, };
-        enum { user = POSTROUTING+1 };
+        enum val { NONE, INPUT, FORWARD, OUTPUT, PREROUTING, POSTROUTING, };
     };
     static const char *chain_str[16] = {
-        NULL, "INPUT", "FORWARD", "OUTPUT", "PREROUTING", "POSTROUTING", };
+        "", "INPUT", "FORWARD", "OUTPUT", "PREROUTING", "POSTROUTING", };
 
     struct target {
         enum val {
@@ -55,25 +52,89 @@ namespace ipt {
         "REDIRECT", "REJECT", "SAME", "SECMARK", "SET", "SNAT", "TARPIT", "TCPMSS", "TOS", "TTL", "ULOG"
     };
 
-    template <table::val TABLE, chain::val CHAIN = chain::NONE>
-    class iptables {
+    struct command {
+        enum val {
+            APPEND=1, DELETE, INSERT, REPLACE, LIST, FLUSH, ZERO, 
+            NEW_CHAIN, DELETE_CHAIN, POLICY, RENAME_CHAIN
+        };
+    };
+    static const char command_char[] = { '\0', 'A', 'D', 'I', 'R', 'L', 'F', 'Z', 'N', 'X', 'P', 'E' };
 
-#define usr_chain(x) ( x >= static_cast<chain::val>(chain::user) )
+    // Dummy Actuator Policy...
+    //
+    struct DummyActuator
+    {
+        static int exec(command::val c, 
+                        const char *table, const char *chain, const char *target,
+                        const char *rule,  const char *opt, int rulenum=0)
+        {
+            char com[1024];
+            char num[21];
+
+            sprintf(num, "%d",rulenum);
+            sprintf(com, "/bin/iptables -t %s -%c %s %s %s %s %s %s", table,
+                                                       command_char[c], chain,
+                                                       ( rulenum ? num : "" ), rule, opt,
+                                                       ( c == command::LIST  || 
+                                                         c == command::FLUSH ||
+                                                         c == command::ZERO  ||
+                                                         c == command::POLICY ? "" : "-j" ), target 
+                                                       );
+            std::cout << "DummyActuator .:[" << com << "]:.\n";
+        }
+
+    };
+
+    // Simple Actuator Policy...
+    //
+    struct SimpleActuator
+    {
+
+        static int exec(command::val c,
+                        const char *table, const char *chain, const char *target,
+                        const char *rule,  const char *opt, int rulenum=0)
+        {
+            char com[1024];
+            char num[21];
+
+            sprintf(num, "%d",rulenum);
+            sprintf(com, "/bin/iptables -t %s -%c %s %s %s %s %s %s", table,
+                                                       command_char[c], chain,
+                                                       ( rulenum ? num : "" ), rule, opt,
+                                                       ( c == command::LIST  ||
+                                                         c == command::FLUSH ||
+                                                         c == command::ZERO  ||
+                                                         c == command::POLICY ? "" : "-j" ), target
+                                                       );
+            int ret = system(com);
+            if (ret < 0 || WEXITSTATUS(ret) != 0  )
+                std::clog << "system: WEXITSTATUS=" << WEXITSTATUS(ret) << std::endl;
+
+            return WEXITSTATUS(ret);
+        }
+    };
+
+#ifndef DEFAULT_ACTUATOR
+#define DEFAULT_ACTUATOR SimpleActuator
+#endif
+
+    template <table::val TABLE, chain::val CHAIN = chain::NONE, typename ACTUATOR = DEFAULT_ACTUATOR >
+    class iptables {
 
         // tables check...
         //
         static void CTtable_check(int2type<table::filter>) {
             CTassert< CHAIN == chain::INPUT         ||
                       CHAIN == chain::OUTPUT        ||
-                      CHAIN == chain::FORWARD       ||
-                      usr_chain(CHAIN) > chain_for_table_filter __attribute__((unused));
+                      CHAIN == chain::FORWARD       
+                     > chain_for_table_filter __attribute__((unused));
         }
 
         static void CTtable_check(int2type<table::nat>) {
             CTassert< CHAIN == chain::PREROUTING    ||
                       CHAIN == chain::OUTPUT        ||
-                      CHAIN == chain::POSTROUTING   ||
-                      usr_chain(CHAIN) > chain_for_table_nat __attribute__((unused));
+                      CHAIN == chain::POSTROUTING   
+                    > chain_for_table_nat __attribute__((unused));
         }
 
         static void CTtable_check(int2type<table::mangle>) {
@@ -81,197 +142,200 @@ namespace ipt {
                       CHAIN == chain::OUTPUT        ||
                       CHAIN == chain::INPUT         ||
                       CHAIN == chain::FORWARD       ||
-                      CHAIN == chain::POSTROUTING   ||
-                      usr_chain(CHAIN) > chain_for_table_mangle __attribute__((unused));
+                      CHAIN == chain::POSTROUTING   
+                    > chain_for_table_mangle __attribute__((unused));
         }
 
         static void CTtable_check(int2type<table::raw>) {
             CTassert< CHAIN == chain::PREROUTING   ||
-                      CHAIN == chain::OUTPUT       ||
-                      usr_chain(CHAIN) >  chain_for_table_raw __attribute__((unused));
+                      CHAIN == chain::OUTPUT       
+                    >  chain_for_table_raw __attribute__((unused));
         }
 
         // targets check...
         //
-        static void CTtarget_check(int2type<target::ACCEPT>) {
-            CTassert< TABLE == table::filter > table_for_target __attribute__((unused));
+        static void CTtarget_check(int2type<target::ACCEPT>)  {}
+        static void CTtarget_check(int2type<target::DROP>)    {}
+        static void CTtarget_check(int2type<target::RETURN>)  {}
+        static void CTtarget_check(int2type<target::QUEUE>)   {}
+        static void CTtarget_check(int2type<target::NFQUEUE>) {}
+
+        static void CTtarget_check(int2type<target::REJECT>) 
+        {
+            CTassert< CHAIN == chain::INPUT  || 
+                      CHAIN == chain::OUTPUT ||
+                      CHAIN == chain::FORWARD > table_for_target __attribute__((unused));
         }
-        static void CTtarget_check(int2type<target::DROP>) {
-            CTassert< TABLE == table::filter > table_for_target __attribute__((unused));
-        }
-        static void CTtarget_check(int2type<target::RETURN>) {
-            CTassert< TABLE == table::filter > table_for_target __attribute__((unused));
-        }    
-        static void CTtarget_check(int2type<target::REJECT>) {
-            CTassert< TABLE == table::filter > table_for_target __attribute__((unused));
-        }
-        static void CTtarget_check(int2type<target::QUEUE>) {
-            CTassert< TABLE == table::filter > table_for_target __attribute__((unused));
-        }
-        static void CTtarget_check(int2type<target::NFQUEUE>) {
-            CTassert< TABLE == table::filter > table_for_target __attribute__((unused));
-        }
-        static void CTtarget_check(int2type<target::CLASSIFY>) {
+
+        static void CTtarget_check(int2type<target::CLASSIFY>) 
+        {
             CTassert< TABLE == table::mangle > table_for_target __attribute__((unused));
-            CTassert< CHAIN == chain::OUTPUT            || 
-                      CHAIN == chain::FORWARD           || 
-                      CHAIN == chain::POSTROUTING       ||
-                      usr_chain(CHAIN) > chain_for_target __attribute__((unused));
+            CTassert< CHAIN == chain::POSTROUTING > chain_for_target __attribute__((unused));
         }
-        static void CTtarget_check(int2type<target::CONNSECMARK>) {
+
+        static void CTtarget_check(int2type<target::CONNSECMARK>) 
+        {
             CTassert< TABLE == table::mangle > table_for_target __attribute__((unused));
         }    
-        static void CTtarget_check(int2type<target::DNAT>) {
+        static void CTtarget_check(int2type<target::DNAT>) 
+        {
             CTassert< TABLE == table::nat > table_for_target __attribute__((unused));
             CTassert< CHAIN == chain::PREROUTING || 
-                      CHAIN == chain::OUTPUT     ||
-                      usr_chain(CHAIN) > chain_for_target __attribute__((unused));
+                      CHAIN == chain::OUTPUT     
+                    > chain_for_target __attribute__((unused));
         }
-        static void CTtarget_check(int2type<target::SNAT>) {
+        static void CTtarget_check(int2type<target::SNAT>) 
+        {
             CTassert< TABLE == table::nat > table_for_target __attribute__((unused));
-            CTassert< CHAIN == chain::POSTROUTING ||
-                      usr_chain(CHAIN) > chain_for_target __attribute__((unused));
+            CTassert< CHAIN == chain::POSTROUTING 
+                    > chain_for_target __attribute__((unused));
         }
-        static void CTtarget_check(int2type<target::MASQUERADE>) {
+        static void CTtarget_check(int2type<target::MASQUERADE>) 
+        {
             CTassert< TABLE == table::nat > table_for_target __attribute__((unused));
-            CTassert< CHAIN == chain::POSTROUTING || 
-                      usr_chain(CHAIN) > chain_for_target __attribute__((unused));
+            CTassert< CHAIN == chain::POSTROUTING  
+                    > chain_for_target __attribute__((unused));
         }
-        static void CTtarget_check(int2type<target::NETMAP>) {
+        static void CTtarget_check(int2type<target::NETMAP>) 
+        {
             CTassert< TABLE == table::nat > table_for_target __attribute__((unused));
             CTassert< CHAIN == chain::PREROUTING    || 
                       CHAIN == chain::POSTROUTING   || 
-                      CHAIN == chain::OUTPUT ||
-                      usr_chain(CHAIN) > chain_for_target __attribute__((unused));
+                      CHAIN == chain::OUTPUT 
+                    > chain_for_target __attribute__((unused));
         }
-        static void CTtarget_check(int2type<target::REDIRECT>) {
+        static void CTtarget_check(int2type<target::REDIRECT>) 
+        {
             CTassert< TABLE == table::nat > table_for_target __attribute__((unused));
             CTassert< CHAIN == chain::PREROUTING    || 
-                      CHAIN == chain::OUTPUT || 
-                      usr_chain(CHAIN) > chain_for_target __attribute__((unused));
+                      CHAIN == chain::OUTPUT  
+                    > chain_for_target __attribute__((unused));
         }
-        static void CTtarget_check(int2type<target::SAME>) {
+        static void CTtarget_check(int2type<target::SAME>) 
+        {
             CTassert< TABLE == table::nat > table_for_target __attribute__((unused));
             CTassert< CHAIN == chain::PREROUTING    || 
-                      CHAIN == chain::POSTROUTING   ||
-                      usr_chain(CHAIN) > chain_for_target __attribute__((unused));
+                      CHAIN == chain::POSTROUTING  
+                    > chain_for_target __attribute__((unused));
         }
-        static void CTtarget_check(int2type<target::DSCP>) {
+        static void CTtarget_check(int2type<target::DSCP>) 
+        {
             CTassert< TABLE == table::mangle > table_for_target __attribute__((unused));
         }
-        static void CTtarget_check(int2type<target::ECN>) {
+        static void CTtarget_check(int2type<target::ECN>) 
+        {
             CTassert< TABLE == table::mangle > table_for_target __attribute__((unused));
         }
-        static void CTtarget_check(int2type<target::MARK>) {
+        static void CTtarget_check(int2type<target::MARK>) 
+        {
             CTassert< TABLE == table::mangle > table_for_target __attribute__((unused));
         }
-        static void CTtarget_check(int2type<target::NOTRACK>) {
+        static void CTtarget_check(int2type<target::NOTRACK>) 
+        {
             CTassert< TABLE == table::raw > table_for_target __attribute__((unused));
         }
-        static void CTtarget_check(int2type<target::SECMARK>) {
+        static void CTtarget_check(int2type<target::SECMARK>) 
+        {
             CTassert< TABLE == table::mangle > table_for_target __attribute__((unused));
         }
-        static void CTtarget_check(int2type<target::TOS>) {
+        static void CTtarget_check(int2type<target::TOS>) 
+        {
             CTassert< TABLE == table::mangle > table_for_target __attribute__((unused));
         }
-        static void CTtarget_check(int2type<target::TTL>) {
+        static void CTtarget_check(int2type<target::TTL>) 
+        {
             CTassert< TABLE == table::mangle > table_for_target __attribute__((unused));
         }
         static void CTtarget_check(...) {
         }
 
-        static int exec(const std::string &c, const std::string chain, 
-                        const std::string &rulespec, const std::string &opt="") {
-            std::string com( more::sprint("%s -t %s %s %s %s %s", 
-                             "/sbin/iptables", table_str[TABLE], c.c_str(), chain.c_str(), 
-                                                                 rulespec.c_str(), opt.c_str()));
-            std::cout << ".:[" << com << "]:.\n";
-            int ret = system(com.c_str());
-            if ( ret < 0 || WEXITSTATUS(ret) != 0  )
-                std::clog << more::sprint("system(): WEXITSTATUS=%d", WEXITSTATUS(ret)) << std::endl;
-            return WEXITSTATUS(ret); 
-        }
-
     public:
 
         template <target::val TARGET>
-        static int append(const std::string &rule, const std::string &opt="") {
+        static int append(const char *rule, const char * opt="") {
             CTtable_check(int2type<TABLE>());
             CTtarget_check(int2type<TARGET>());
-            std::string chain(chain_str[CHAIN]);
-            std::string target(target_str[TARGET]);
-            return exec("-A", chain, rule, std::string("-j ").append(target).append(" ").append(opt));
+            return ACTUATOR::exec(command::APPEND, table_str[TABLE], chain_str[CHAIN], target_str[TARGET], rule, opt);
+        }
+        template <const char *TARGET>
+        static int append(const char *rule, const char * opt="") {
+            CTtable_check(int2type<TABLE>());
+            return ACTUATOR::exec(command::APPEND, table_str[TABLE], chain_str[CHAIN], TARGET, rule, opt);
         }
 
         template <target::val TARGET>
-        static int del(const std::string &rule, const std::string &opt="") {
+        static int del(const char *rule, const char * opt="") {
             CTtable_check(int2type<TABLE>());
             CTtarget_check(int2type<TARGET>());
-            std::string chain(chain_str[CHAIN]);
-            std::string target(target_str[TARGET]);
-            return exec("-D", chain, rule, std::string("-j ").append(target).append(" ").append(opt));
+            return ACTUATOR::exec(command::DELETE, table_str[TABLE], chain_str[CHAIN], target_str[TARGET], rule, opt);
         }
-
-        static int del(unsigned int rulenum, const std::string &opt="") {
+        template <const char * TARGET>
+        static int del(const char *rule, const char * opt="") {
             CTtable_check(int2type<TABLE>());
-            std::string chain(chain_str[CHAIN]);
-            return exec("-D", chain, more::sprint("%d", rulenum), opt);
+            return ACTUATOR::exec(command::DELETE, table_str[TABLE], chain_str[CHAIN], TARGET, rule, opt);
         }
 
         template <target::val TARGET>
-        static int insert(const std::string &rule, const std::string &opt="") {
+        static int insert(const char *rule, const char * opt="") {
             CTtable_check(int2type<TABLE>());
             CTtarget_check(int2type<TARGET>());
-            std::string chain(chain_str[CHAIN]);
-            std::string target(target_str[TARGET]);
-            return exec("-I", chain, rule, std::string("-j ").append(target).append(" ").append(opt));
+            return ACTUATOR::exec(command::INSERT, table_str[TABLE], chain_str[CHAIN], target_str[TARGET], rule, opt);
+        }        
+        template <const char *TARGET>
+        static int insert(const char *rule, const char * opt="") {
+            CTtable_check(int2type<TABLE>());
+            return ACTUATOR::exec(command::INSERT, table_str[TABLE], chain_str[CHAIN], TARGET, rule, opt);
         }
 
         template <target::val TARGET>
-        static int insert(const std::string &rule, unsigned int rulenum, const std::string &opt="") {
+        static int insert(const char *rule, unsigned int rulenum, const char * opt="") {
             CTtable_check(int2type<TABLE>());
             CTtarget_check(int2type<TARGET>());
-            std::string chain(chain_str[CHAIN]);
-            std::string target(target_str[TARGET]);
-            std::string ruln( rulenum ? more::sprint("%d",rulenum) : std::string("") );
-            return exec("-I", chain , ruln.append(" ").append(rule), 
-                        std::string("-j ").append(target).append(" ").append(opt));
+            return ACTUATOR::exec(command::INSERT, table_str[TABLE], chain_str[CHAIN], target_str[TARGET], rule, opt, rulenum);
         }
 
         template <target::val TARGET>
-        static int replace(const std::string &rule, unsigned int rulenum, const std::string &opt="") {
+        static int replace(const char *rule, unsigned int rulenum, const char * opt="") {
             CTtable_check(int2type<TABLE>());
             CTtarget_check(int2type<TARGET>());
-            std::string chain(chain_str[CHAIN]);
-            std::string target(target_str[TARGET]);
-            std::string ruln( rulenum ? more::sprint("%d",rulenum) : std::string("") );
-            return exec("-R", chain, ruln.append(" ").append(rule), 
-                        std::string("-j ").append(target).append(" ").append(opt));
+            return ACTUATOR::exec(command::REPLACE, table_str[TABLE], chain_str[CHAIN], target_str[TARGET], rule, opt, rulenum);
+        }
+        template <const char * TARGET>
+        static int replace(const char *rule, unsigned int rulenum, const char * opt="") {
+            CTtable_check(int2type<TABLE>());
+            return ACTUATOR::exec(command::REPLACE, table_str[TABLE], chain_str[CHAIN], TARGET, rule, opt, rulenum);
         }
 
-        static int list(const std::string &opt="") {
-            std::string c( CHAIN == 0 ? "" : chain_str[CHAIN]);
-            return exec("-L", c, opt);
+        static int list(const char *opt="")
+        {
+            return ACTUATOR::exec(command::LIST, table_str[TABLE], chain_str[CHAIN], "", "", opt);
         }
 
-        static int flush(const std::string &opt="") {
-            std::string c( CHAIN == 0 ? "" : chain_str[CHAIN]);
-            return exec("-F", c, opt);
+        static int flush(const char *opt="")
+        {
+            return ACTUATOR::exec(command::FLUSH, table_str[TABLE], chain_str[CHAIN], "", "", opt);
         }
 
-        static int zero(const std::string &opt="" ) {
-            std::string c( CHAIN == 0 ? "" : chain_str[CHAIN]);
-            return exec("-Z", c, opt);
+        static int zero(const char *opt="")
+        {
+            return ACTUATOR::exec(command::ZERO, table_str[TABLE], chain_str[CHAIN], "", "", opt);
         }
 
-        static int policy(const std::string &target, const std::string &opt="") {
+        template <target::val TARGET>
+        static int policy(const char *opt="") {
+            CTtable_check(int2type<TABLE>());
+            CTtarget_check(int2type<TARGET>());
             CTassert<CHAIN != chain::NONE> chain;
-            std::string c( CHAIN == 0 ? "" : chain_str[CHAIN]);
-            return exec("-P", c, target, opt); 
+            CTassert< TARGET == target::ACCEPT ||
+                      TARGET == target::DROP   ||
+                      TARGET == target::QUEUE  ||
+                      TARGET == target::RETURN 
+                    > policy_target __attribute__((unused));
+
+            return ACTUATOR::exec(command::POLICY, table_str[TABLE], chain_str[CHAIN], target_str[TARGET], "", opt ); 
         }
 
     };
-
 }
 
 #endif /* IPTABLES_HH */
