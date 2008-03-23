@@ -11,32 +11,37 @@
 #define SPRINT_HH
 
 #include <string>
+#include <iostream>
 #include <cstdlib>
 #include <macro_template.h>
 
-namespace more {
+namespace more 
+{
+    static const int SPRINT_BUFFSIZE = 1024;
 
     static inline std::string sprint(const char *fmt) __attribute__((unused));
     static inline std::string sprint(const char *fmt) 
     {
-        char *strp;
-        if ( asprintf(&strp, fmt) == -1 )
+        char strp[SPRINT_BUFFSIZE];
+        int n = snprintf(strp, SPRINT_BUFFSIZE, fmt);
+        if ( n < 0 )
             return std::string();
-        std::string ret(strp); 
-        free(strp);
-        return ret;
+        if ( n >= SPRINT_BUFFSIZE )
+             std::clog << "warning: sprint truncated output\n";
+        return std::string(strp);
     }
 
-#define aFunction(n)                                \
-template < MT_REPEAT_ARG(typename T,n) >            \
-static inline std::string sprint(const char *fmt, MT_REPEAT_ARG2(T,arg_,n)) \
-{                                                   \
-        char *strp; \
-        if ( asprintf(&strp, fmt, MT_REPEAT_ARG(arg_,n)) == -1 )  \
-            return std::string();   \
-        std::string ret(strp); \
-        free(strp); \
-        return ret; \
+#define aFunction(N) \
+template < MT_REPEAT_ARG(typename T,N) > \
+static inline std::string sprint(const char *fmt, MT_REPEAT_ARG2(T,arg_,N)) \
+{ \
+        char strp[SPRINT_BUFFSIZE]; \
+        int n = snprintf(strp, SPRINT_BUFFSIZE, fmt, MT_REPEAT_ARG(arg_,N)); \
+        if ( n < 0) \
+            return std::string(); \
+        if ( n >= SPRINT_BUFFSIZE )  \
+             std::clog << "warning: sprint truncated output\n"; \
+        return std::string(strp); \
 }
  
 MT_REPEAT_FUNCTION(aFunction,15);
