@@ -102,15 +102,17 @@
 #define MT_REPEAT_ARG2(x,y,n) MT_REPEAT_ARG2_ ## n(x,y)
 #define MT_REPEAT_FUNCTION(x,n)  MT_REPEAT_FUNCTION_ ## n(x)
 
-// example:
-//
-// #define aFunction(n)                                \
-// template < MT_REPEAT_ARG(typename T,n) >            \
-// int test ()                                         \
-// {                                                   \
-// }
-// 
-// MT_REPEAT_FUNCTION(aCLASS,5);
+/* example:
+
+  #define aFunction(n)                                \
+  template < MT_REPEAT_ARG(typename T,n) >            \
+  int test ()                                         \
+  {                                                   \
+  }
+  
+  MT_REPEAT_FUNCTION(aCLASS,5);
+
+*/
 
 #endif /* _MACRO_TEMPLATE_H_ */
 
