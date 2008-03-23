@@ -8,7 +8,7 @@
  * ----------------------------------------------------------------------------
  */
 
-#include "minidb.hh"
+#include <cache.hh>
 
 #include <iostream>
 #include <stdexcept>
@@ -17,21 +17,18 @@ struct record {
     int val;
 };
 
+generic::cache<std::string,record> cc;
 
-minidb<std::string,record> db;
-
-
-void db_find(const std::string &key) 
+void cc_find(const std::string &key) 
 {
     record * f;
 
     try {
-        f = db.find(key);
+        f = cc.find(key);
     }
     catch(record &e) {
-        std::cout << "  record expired@" << &e << ": {" << e.val << "} (note expired is thrown)" << std::endl;
-
-        db.update(key,10);  // update the timeout for the next search...
+        std::cout << "  record expired@" << &e << ": {" << e.val << "} (expired has thrown)" << std::endl;
+        cc.update(key,10);  // update the timeout for the next search...
         return;
     }
     catch(std::runtime_error &r) {
@@ -50,25 +47,24 @@ main(int argc, char *argv[])
     record *q;
 
     std::cout << "create the record: {" << r.val << "} ...\n";
-    q = db.insert("test", r, 1);
+    q = cc.insert("test", r, 1);
 
     std::cout << "   record@" << std::hex << q << std::dec << std::endl;
 
-    
     std::cout << "search the record...\n";
-    db_find("test");
+    cc_find("test");
 
     std::cout << "sleep 2 sec...\n";
     sleep(2);
 
     std::cout << "research the expired record...\n";
-    db_find("test");
+    cc_find("test");
 
     std::cout << "research the record, again...\n";
-    db_find("test");
+    cc_find("test");
 
     std::cout << "search with invalid key...\n";
-    db_find("unknown");
+    cc_find("unknown");
 
     return 0;
 }
