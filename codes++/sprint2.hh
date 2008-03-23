@@ -15,6 +15,13 @@
 #include <cstdlib>
 #include <macro_template.h>
 
+#ifndef likely
+#define likely(x)   __builtin_expect(!!(x), 1)
+#endif
+#ifndef unlikely
+#define unlikely(x) __builtin_expect(!!(x), 0)
+#endif
+
 namespace more 
 {
     static const int SPRINT_BUFFSIZE = 1024;
@@ -24,9 +31,9 @@ namespace more
     {
         char strp[SPRINT_BUFFSIZE];
         int n = snprintf(strp, SPRINT_BUFFSIZE, fmt);
-        if ( n < 0 )
+        if (unlikely(n < 0))
             return std::string();
-        if ( n >= SPRINT_BUFFSIZE )
+        if (unlikely(n >= SPRINT_BUFFSIZE))
              std::clog << "warning: sprint truncated output\n";
         return std::string(strp);
     }
@@ -37,9 +44,9 @@ static inline std::string sprint(const char *fmt, MT_REPEAT_ARG2(T,arg_,N)) \
 { \
         char strp[SPRINT_BUFFSIZE]; \
         int n = snprintf(strp, SPRINT_BUFFSIZE, fmt, MT_REPEAT_ARG(arg_,N)); \
-        if ( n < 0) \
+        if (unlikely(n < 0)) \
             return std::string(); \
-        if ( n >= SPRINT_BUFFSIZE )  \
+        if (unlikely(n >= SPRINT_BUFFSIZE))  \
              std::clog << "warning: sprint truncated output\n"; \
         return std::string(strp); \
 }
