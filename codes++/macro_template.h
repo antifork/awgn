@@ -114,7 +114,7 @@
 
 */
 
-/* other useful macros and __VA_NARG__ thread at 
+/* the so-called __VA_NARG__ (PP_NARG) macro from the thread at 
    http://groups.google.com/group/comp.std.c/browse_frm/thread/77ee8c8f92e4a3fb 
  */
 
@@ -138,6 +138,9 @@
          29,28,27,26,25,24,23,22,21,20, \
          19,18,17,16,15,14,13,12,11,10, \
          9,8,7,6,5,4,3,2,1,0 
+
+/* XCAT and XSTR macros in "overloading" fashion ...
+ */
 
 #define PASTE(a,b)  a ## b
 #define XPASTE(a,b) PASTE(a,b)
