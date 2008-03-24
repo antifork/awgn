@@ -114,5 +114,77 @@
 
 */
 
+/* other useful macros and __VA_NARG__ thread at 
+   http://groups.google.com/group/comp.std.c/browse_frm/thread/77ee8c8f92e4a3fb 
+ */
+
+#define PP_NARG(...) \
+         PP_NARG_(__VA_ARGS__,PP_RSEQ_N())
+#define PP_NARG_(...) \
+         PP_ARG_N(__VA_ARGS__)
+#define PP_ARG_N( \
+          _1, _2, _3, _4, _5, _6, _7, _8, _9,_10, \
+         _11,_12,_13,_14,_15,_16,_17,_18,_19,_20, \
+         _21,_22,_23,_24,_25,_26,_27,_28,_29,_30, \
+         _31,_32,_33,_34,_35,_36,_37,_38,_39,_40, \
+         _41,_42,_43,_44,_45,_46,_47,_48,_49,_50, \
+         _51,_52,_53,_54,_55,_56,_57,_58,_59,_60, \
+         _61,_62,_63,N,...) N
+#define PP_RSEQ_N() \
+         63,62,61,60,                   \
+         59,58,57,56,55,54,53,52,51,50, \
+         49,48,47,46,45,44,43,42,41,40, \
+         39,38,37,36,35,34,33,32,31,30, \
+         29,28,27,26,25,24,23,22,21,20, \
+         19,18,17,16,15,14,13,12,11,10, \
+         9,8,7,6,5,4,3,2,1,0 
+
+#define PASTE(a,b)  a ## b
+#define XPASTE(a,b) PASTE(a,b)
+
+#define XSTR_1(a)       #a " "
+#define XSTR_2(a,...)   #a " " XSTR_1(__VA_ARGS__)
+#define XSTR_3(a,...)   #a " " XSTR_2(__VA_ARGS__)
+#define XSTR_4(a,...)   #a " " XSTR_3(__VA_ARGS__)
+#define XSTR_5(a,...)   #a " " XSTR_4(__VA_ARGS__)
+#define XSTR_6(a,...)   #a " " XSTR_5(__VA_ARGS__)
+#define XSTR_7(a,...)   #a " " XSTR_6(__VA_ARGS__)
+#define XSTR_8(a,...)   #a " " XSTR_7(__VA_ARGS__)
+#define XSTR_9(a,...)   #a " " XSTR_8(__VA_ARGS__)
+#define XSTR_10(a,...)  #a " " XSTR_9(__VA_ARGS__)
+#define XSTR_11(a,...)  #a " " XSTR_10(__VA_ARGS__)
+#define XSTR_12(a,...)  #a " " XSTR_11(__VA_ARGS__)
+#define XSTR_13(a,...)  #a " " XSTR_12(__VA_ARGS__)
+#define XSTR_14(a,...)  #a " " XSTR_13(__VA_ARGS__)
+#define XSTR_15(a,...)  #a " " XSTR_14(__VA_ARGS__)
+#define XSTR_16(a,...)  #a " " XSTR_15(__VA_ARGS__)
+#define XSTR_17(a,...)  #a " " XSTR_16(__VA_ARGS__)
+#define XSTR_18(a,...)  #a " " XSTR_17(__VA_ARGS__)
+#define XSTR_19(a,...)  #a " " XSTR_18(__VA_ARGS__)
+#define XSTR_20(a,...)  #a " " XSTR_19(__VA_ARGS__)
+#define XSTR(...)       XPASTE(XSTR_ ,PP_NARG(__VA_ARGS__)) ( __VA_ARGS__) 
+
+#define XCAT_2(a,b)     a ## b
+#define XCAT_3(a,...)   XPASTE(a, XCAT_2(__VA_ARGS__))
+#define XCAT_4(a,...)   XPASTE(a, XCAT_3(__VA_ARGS__))
+#define XCAT_5(a,...)   XPASTE(a, XCAT_4(__VA_ARGS__))
+#define XCAT_6(a,...)   XPASTE(a, XCAT_5(__VA_ARGS__))
+#define XCAT_7(a,...)   XPASTE(a, XCAT_6(__VA_ARGS__))
+#define XCAT_8(a,...)   XPASTE(a, XCAT_7(__VA_ARGS__))
+#define XCAT_9(a,...)   XPASTE(a, XCAT_8(__VA_ARGS__))
+#define XCAT_10(a,...)  XPASTE(a, XCAT_9(__VA_ARGS__))
+#define XCAT_11(a,...)  XPASTE(a, XCAT_10(__VA_ARGS__))
+#define XCAT_12(a,...)  XPASTE(a, XCAT_11(__VA_ARGS__))
+#define XCAT_13(a,...)  XPASTE(a, XCAT_12(__VA_ARGS__))
+#define XCAT_14(a,...)  XPASTE(a, XCAT_13(__VA_ARGS__))
+#define XCAT_15(a,...)  XPASTE(a, XCAT_14(__VA_ARGS__))
+#define XCAT_16(a,...)  XPASTE(a, XCAT_15(__VA_ARGS__))
+#define XCAT_17(a,...)  XPASTE(a, XCAT_16(__VA_ARGS__))
+#define XCAT_18(a,...)  XPASTE(a, XCAT_17(__VA_ARGS__))
+#define XCAT_19(a,...)  XPASTE(a, XCAT_18(__VA_ARGS__))
+#define XCAT_20(a,...)  XPASTE(a, XCAT_19(__VA_ARGS__))
+#define XCAT(...)       XPASTE(XCAT_ ,PP_NARG(__VA_ARGS__)) ( __VA_ARGS__) 
+
+
 #endif /* _MACRO_TEMPLATE_H_ */
 
