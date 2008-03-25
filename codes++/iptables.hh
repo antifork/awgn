@@ -72,7 +72,7 @@ namespace ipt {
             char num[21];
 
             sprintf(num, "%d",rulenum);
-            sprintf(com, "/bin/iptables -t %s -%c %s %s %s %s %s %s", table,
+            sprintf(com, "/sbin/iptables -t %s -%c %s %s %s %s %s %s", table,
                                                        command_char[c], chain,
                                                        ( rulenum ? num : "" ), rule, opt,
                                                        ( c == command::LIST  || 
@@ -81,6 +81,7 @@ namespace ipt {
                                                          c == command::POLICY ? "" : "-j" ), target 
                                                        );
             std::cout << "DummyActuator .:[" << com << "]:.\n";
+            return 0;
         }
 
     };
@@ -98,7 +99,7 @@ namespace ipt {
             char num[21];
 
             sprintf(num, "%d",rulenum);
-            sprintf(com, "/bin/iptables -t %s -%c %s %s %s %s %s %s", table,
+            sprintf(com, "/sbin/iptables -t %s -%c %s %s %s %s %s %s", table,
                                                        command_char[c], chain,
                                                        ( rulenum ? num : "" ), rule, opt,
                                                        ( c == command::LIST  ||
