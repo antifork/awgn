@@ -31,19 +31,28 @@ template <>
         sockaddr_un _addr;
 
         public:
-        sockaddress(const std::string &name) :
-        _addr()
+        sockaddress(const std::string &name) 
+        : _addr()
         {
             _addr.sun_family = AF_UNIX;
             strncpy(_addr.sun_path, name.c_str(), UNIX_PATH_MAX-1);
             _addr.sun_path[UNIX_PATH_MAX-1]='\0';
         }
-        int family() const { return _addr.sun_family; }
-        operator std::string() const { return _addr.sun_path; }
-        sockaddr *operator &() {
-            return reinterpret_cast<sockaddr *>(&_addr);
-        }
-        const socklen_t len() const { return sizeof(sockaddr_un); }
+
+        const int 
+        family() const 
+        { return _addr.sun_family; }
+
+        operator std::string() const 
+        { return _addr.sun_path; }
+
+        sockaddr *
+        operator &() 
+        { return reinterpret_cast<sockaddr *>(&_addr); }
+
+        const socklen_t 
+        len() const 
+        { return sizeof(sockaddr_un); }
     };
 
 template <>
@@ -54,26 +63,28 @@ template <>
 
         public:
 
-        sockaddress() :
-        _addr(),
-        _len(sizeof(struct sockaddr_in))
+        sockaddress() 
+        : _addr(),
+          _len(sizeof(struct sockaddr_in))
         {
             _addr.sin_family = AF_INET;
             _addr.sin_port   = 0;
             _addr.sin_addr.s_addr = htonl(INADDR_ANY);
         }
-        sockaddress(const sockaddr_in *sa) :
-        _addr(),
-        _len()
+
+        sockaddress(const sockaddr_in *sa) 
+        : _addr(),
+          _len()
         {
             assert(sa->sin_family == AF_INET);
             _addr.sin_family = AF_INET;
             _addr.sin_port   = sa->sin_port;
             _addr.sin_addr   = sa->sin_addr;
         }
-        sockaddress(const std::string &host, unsigned short port ) :
-        _addr(),
-        _len(sizeof(struct sockaddr_in))
+        
+        sockaddress(const std::string &host, unsigned short port ) 
+        : _addr(),
+          _len(sizeof(struct sockaddr_in))
         { 
             _addr.sin_family = AF_INET;
             _addr.sin_port   = htons(port);
@@ -86,7 +97,9 @@ template <>
         }
 
         // set...
-        void set_host(const std::string &host) {
+        void 
+        set_host(const std::string &host) 
+        {
             if (host.empty()) {
                 _addr.sin_addr.s_addr = htonl(INADDR_ANY);
                 return;
@@ -95,26 +108,45 @@ template <>
                 throw std::runtime_error("inet_pton");
         }
 
-        void set_port(unsigned short port) {
+        void 
+        set_port(unsigned short port) 
+        {
             _addr.sin_port = htons(port);
         }
 
         // get...
-        std::string host() const {
+        const std::string 
+        host() const 
+        {
             char buf[64];
             if (inet_ntop(AF_INET, &_addr.sin_addr, buf, sizeof(buf)) <= 0)
                 throw std::runtime_error("inet_ntop");
             return buf;
         }
-        unsigned short port() const { return ntohs(_addr.sin_port); }
-        int family() const { return _addr.sin_family; }
+        
+        const unsigned short 
+        port() const 
+        { return ntohs(_addr.sin_port); }
+        
+        const int family() 
+        const 
+        { return _addr.sin_family; }
 
-        sockaddr *operator &() {
-            return (sockaddr *)&_addr;
-        }
+        sockaddr *
+        operator &() 
+        { return reinterpret_cast<sockaddr *>(&_addr); }
 
-        socklen_t &len() { return _len; }
-        const socklen_t &len() const { return _len; }
+        const sockaddr *
+        operator &() const 
+        { return reinterpret_cast<const sockaddr *>(&_addr); }
+
+        socklen_t &
+        len() 
+        { return _len; }
+
+        const socklen_t &
+        len() const 
+        { return _len; }
 
     };
 
@@ -126,26 +158,28 @@ template <>
 
         public:
 
-        sockaddress():
-        _addr(),
-        _len(sizeof(struct sockaddr_in6))
+        sockaddress()
+        : _addr(),
+          _len(sizeof(struct sockaddr_in6))
         {
             _addr.sin6_family = AF_INET6;
             _addr.sin6_port   = 0;
             memcpy(&_addr.sin6_addr.s6_addr, &in6addr_any, sizeof(struct in6_addr));
         }
-        sockaddress(const sockaddr_in6 *sa) :
-        _addr(),
-        _len(sizeof(struct sockaddr_in6))
+
+        sockaddress(const sockaddr_in6 *sa) 
+        : _addr(),
+          _len(sizeof(struct sockaddr_in6))
         {
             assert(sa->sin6_family == AF_INET6);
             _addr.sin6_family = AF_INET6;
             _addr.sin6_port   = sa->sin6_port;
             memcpy(_addr.sin6_addr.s6_addr, sa->sin6_addr.s6_addr, sizeof(struct in6_addr));
         }
-        sockaddress(const std::string &host, unsigned short port ) :
-        _addr(),
-        _len(sizeof(struct sockaddr_in6))
+
+        sockaddress(const std::string &host, unsigned short port ) 
+        : _addr(),
+          _len(sizeof(struct sockaddr_in6))
         { 
             _addr.sin6_family = AF_INET6;
             _addr.sin6_port   = htons(port);
@@ -158,7 +192,9 @@ template <>
         }
 
         // set...
-        void set_host(const std::string &host) {
+        void 
+        set_host(const std::string &host) 
+        {
             if (host.empty()) {
                 memcpy(&_addr.sin6_addr.s6_addr, &in6addr_any, sizeof(struct in6_addr));
                 return;
@@ -167,26 +203,44 @@ template <>
                 throw std::runtime_error("inet_pton");
         }
 
-        void set_port(unsigned short port) {
-            _addr.sin6_port = htons(port);
-        }
+        void 
+        set_port(unsigned short port) 
+        { _addr.sin6_port = htons(port); }
 
         // get...
-        std::string host() const {
+        const std::string 
+        host() const 
+        {
             char buf[64];
             if (inet_ntop(AF_INET6, &_addr.sin6_addr, buf, sizeof(buf)) <= 0)
                 throw std::runtime_error("inet_ntop");
             return buf;
         }
-        unsigned short port() const { return ntohs(_addr.sin6_port); }
-        int family() const { return _addr.sin6_family; }
+        
+        const unsigned short 
+        port() const 
+        { return ntohs(_addr.sin6_port); }
 
-        struct sockaddr *operator &() {
-            return (struct sockaddr *)&_addr;
-        }
+        const int 
+        family() const 
+        { return _addr.sin6_family; }
 
-        socklen_t &len() { return _len; }
-        const socklen_t &len() const { return _len; }
+        struct sockaddr *
+        operator &() 
+        { return reinterpret_cast<struct sockaddr *>(&_addr); }
+
+        const struct sockaddr *
+        operator &() const
+        { return reinterpret_cast<const struct sockaddr *>(&_addr); }
+
+        socklen_t &
+        len() 
+        { return _len; }
+
+        const socklen_t &
+        len() const 
+        { return _len; }
+
     };
 
 

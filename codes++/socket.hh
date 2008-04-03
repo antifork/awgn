@@ -20,7 +20,7 @@
 template <int FAMILY>
 class Socket {
 
-    int sockfd;
+    int _fd;
 
     bool _connected;
     bool _bound;
@@ -31,125 +31,146 @@ class Socket {
 public:
 
     Socket() 
-    : sockfd(-1), 
-    _connected(false), 
-    _bound(false), 
-    _listening(false),
-    _pathname()
+    : _fd(-1), 
+      _connected(false), 
+      _bound(false), 
+      _listening(false),
+      _pathname()
     {}
 
     Socket(int type, int protocol=0)
-    : sockfd(::socket(FAMILY, type, protocol)), 
-    _connected(false), 
-    _bound(false), 
-    _listening(false),
-    _pathname()
+    : _fd(::socket(FAMILY, type, protocol)), 
+      _connected(false), 
+      _bound(false), 
+      _listening(false),
+      _pathname()
     {
-        if ( sockfd == -1)
+        if ( _fd == -1)
             throw std::runtime_error("socket");
     }
 
+    Socket(const Socket<FAMILY> &);                         // noncopyable
+    Socket<FAMILY> &operator=(const Socket<FAMILY> &);      // noncopyable
     ~Socket();
 
-    void init(int type,int protocol=0) 
+    void 
+    init(int type,int protocol=0) 
     {
-        if (sockfd>2)
+        if (_fd>2)
             throw std::runtime_error("socket already open");
-        sockfd = ::socket(FAMILY, type, protocol);
-        if (sockfd == -1)
+        _fd = ::socket(FAMILY, type, protocol);
+        if (_fd == -1)
             throw std::runtime_error("socket");
     }
-
-    int send(const void *buf, size_t len, int flags) 
+    int 
+    send(const void *buf, size_t len, int flags) 
     {
-        int r = ::send(sockfd, buf, len, flags);
+        int r = ::send(_fd, buf, len, flags);
         if (r == -1)
             ::warn ("send");
         return r;
     }
-    int recv(void *buf, size_t len, int flags) 
+    int 
+    recv(void *buf, size_t len, int flags) 
     {
-        int r = ::recv(sockfd, buf, len, flags);
+        int r = ::recv(_fd, buf, len, flags);
         if (r == -1)
             ::warn("recv");
         return r;
     }
-    int sendto(const void *buf, size_t len, int flags, const sockaddress<FAMILY> &to) 
+    int 
+    sendto(const void *buf, size_t len, int flags, const sockaddress<FAMILY> &to) 
     {
-        int r = ::sendto(sockfd, buf, len, flags, (const struct sockaddr *)&to, to.len());
+        int r = ::sendto(_fd, buf, len, flags, (const struct sockaddr *)&to, to.len());
         if (r == -1)
             ::warn("sendto");
         return r;
     }
-    int recvfrom(void *buf, size_t len, int flags, sockaddress<FAMILY> &from) 
+    int 
+    recvfrom(void *buf, size_t len, int flags, sockaddress<FAMILY> &from) 
     {
-        int r = ::recvfrom(sockfd, buf, len, flags, &from, &from.len());
+        int r = ::recvfrom(_fd, buf, len, flags, &from, &from.len());
         if (r == -1)
             ::warn("recvfrom");
         return r;
     }
 
     int connect(const sockaddress<FAMILY> &addr); 
-    const bool connected() const { return _connected; }
+
+    const bool 
+    connected() const 
+    { return _connected; }
 
     int bind(const sockaddress<FAMILY> &my_addr);
-    const bool bound() const { return _bound; }
 
-    Socket accept(sockaddress<FAMILY> &addr) 
+    const bool 
+    bound() 
+    const { return _bound; }
+
+    int 
+    accept(sockaddress<FAMILY> &addr, Socket<FAMILY> &ret) 
     {
-        Socket ret;
-
-        int r = ::accept(sockfd, &addr, &addr.len());
+        int r = ::accept(_fd, &addr, &addr.len());
         if (r == -1) {
             ::warn("accept");
         }
         else {
-            ret.sockfd = r;
+            ret._fd = r;
             ret._connected = true;
         }
-        return ret;
+        return r;
     }
-    int listen(int backlog) 
+    int 
+    listen(int backlog) 
     {
-        int r = ::listen(sockfd, backlog);
+        int r = ::listen(_fd, backlog);
         if (r == -1)
             ::warn("listen");
         else
             _listening = true;
         return r;
     }
-    const bool listening() const { return _listening; }
 
-    int getsockname(sockaddress<FAMILY> &name) 
+    const bool 
+    listening() const 
+    { return _listening; }
+
+    int 
+    getsockname(sockaddress<FAMILY> &name) const
     {
-        int r = ::getsockname(sockfd, &name, &name.len());
+        int r = ::getsockname(_fd, &name, &name.len());
         if (r == -1)
             ::warn("getsockname");
         return r;
     }
-    int getpeername(sockaddress<FAMILY> &name) 
+    int 
+    getpeername(sockaddress<FAMILY> &name) const
     {
-        int r = ::getpeername(sockfd, &name, &name.len());
+        int r = ::getpeername(_fd, &name, &name.len());
         if (r == -1)
             ::warn("getpeername");
         return r;
     }
-    int setsockopt(int level, int optname, const void *optval, socklen_t optlen)
+    int 
+    setsockopt(int level, int optname, const void *optval, socklen_t optlen)
     {
-        int r = ::setsockopt(sockfd, level, optname, optval, optlen);
+        int r = ::setsockopt(_fd, level, optname, optval, optlen);
         if (r == -1)
             ::warn("setsockopt");
         return r;
     }
-    int getsockopt(int level, int optname, void *optval, socklen_t *optlen)
+    int 
+    getsockopt(int level, int optname, void *optval, socklen_t *optlen) const
     {
-        int r = ::getsockopt(sockfd, level, optname, optval, optlen);
+        int r = ::getsockopt(_fd, level, optname, optval, optlen);
         if (r == -1)
             ::warn("getsockopt");
         return r;
     }
 
-    const int fd() const { return sockfd; }
+    const int 
+    fd() const 
+    { return _fd; }
 };
 
 // destructor specializations...
@@ -157,13 +178,13 @@ public:
 template <int FAMILY>
 inline
 Socket<FAMILY>::~Socket<FAMILY>() {
-    if ( ::close(sockfd) == -1) 
+    if ( ::close(_fd) == -1) 
         ::warn("close"); 
 }
 template <>
 inline
 Socket<PF_UNIX>::~Socket<PF_UNIX>() { 
-    if ( ::close(sockfd) == -1) 
+    if ( ::close(_fd) == -1) 
         ::warn("close");
     if ( !_pathname.empty()) {
         if ( ::unlink(_pathname.c_str()) == -1)
@@ -177,7 +198,7 @@ template <int FAMILY>
 inline
 int Socket<FAMILY>::bind(const sockaddress<FAMILY> &my_addr) 
 {
-    int r = ::bind(sockfd,(const struct sockaddr *)&my_addr, my_addr.len());
+    int r = ::bind(_fd,(const struct sockaddr *)&my_addr, my_addr.len());
     if (r == -1)
         ::warn("bind");
     else
@@ -188,7 +209,7 @@ template <>
 inline
 int Socket<PF_UNIX>::bind(const sockaddress<PF_UNIX> &my_addr) 
 {
-    int r = ::bind(sockfd,(const struct sockaddr *)&my_addr, my_addr.len());
+    int r = ::bind(_fd,(const struct sockaddr *)&my_addr, my_addr.len());
     if (r == -1)
         ::warn("bind");
     else {
@@ -205,7 +226,7 @@ template <int FAMILY>
 inline
 int Socket<FAMILY>::connect(const sockaddress<FAMILY> &addr) 
 {
-    int r = ::connect(sockfd, (const struct sockaddr *)&addr, addr.len());
+    int r = ::connect(_fd, (const struct sockaddr *)&addr, addr.len());
     if (r == -1)
         ::warn("connect");
     else {
@@ -217,7 +238,7 @@ template <>
 inline
 int Socket<PF_UNIX>::connect(const sockaddress<PF_UNIX> &addr) 
 {
-    int r = ::connect(sockfd, (const struct sockaddr *)&addr, addr.len());
+    int r = ::connect(_fd, (const struct sockaddr *)&addr, addr.len());
     if (r == -1)
         ::warn("connect");
     else {
