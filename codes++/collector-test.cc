@@ -46,6 +46,9 @@ int main(int argc, char *argv[])
     test * x = new test("heap3");
     delete x;
 
+    test * y = generic::collector<std::string, test>::get("heap1");
+    delete y;
+
     std::cout << "main: epilog ------------------ \n";
     return 0;
 }

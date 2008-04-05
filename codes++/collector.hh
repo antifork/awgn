@@ -67,6 +67,14 @@ namespace generic
             return ret;
         }
 
+        static U *get(const T &key)
+        {
+            typename std::map<T, std::tr1::shared_ptr<U> >::iterator it = _M_map.find(key);
+            if ( it == _M_map.end())
+                throw std::runtime_error("key not found");
+            return it->second.get();
+        }
+
         static void *operator new(size_t n)
         {
             void *ret = ::operator new(n);
