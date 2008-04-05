@@ -31,10 +31,9 @@
 namespace more 
 {
 
-// note: this decaffeinated/lockless version of deque can be only 
+// note: this decaffeinated/lockless version of deque can be 
 //       used by a single producer and a single consumer. 
-//       Multiple consumers or producers are not allowed and 
-//       should be avoided.
+//       Multiple consumers or producers are not allowed.  
  
     template <typename T> class fast_deque;
     template <typename T>
@@ -47,7 +46,6 @@ namespace more
         private:
             fast_deque(fast_deque &);                   // uncopyable
             fast_deque& operator=(const fast_deque&);   // uncopyable
-
 
             int _M_head;
             int _M_tail;
@@ -92,8 +90,9 @@ namespace more
                 return 0;
             }
 
-            //  note: clear() is supposed to be called from the same context as 
-            //        that of the consumer, the thread that does pop_front().
+            //
+            //  note: clear() is supposed to be called from the 
+            //        consumer context (thread calling pop_front()).
 
             void 
             clear() volatile 
