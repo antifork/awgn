@@ -89,9 +89,8 @@ namespace generic
                 std::tr1::shared_ptr<U> t;
                 t.swap(_M_map.find(it->second)->second);
                 garbage()->insert(t);
-                return;
             }
-
+            // std::cout << __PRETTY_FUNCTION__ << std::endl;
             ::operator delete(p);
         }
 
