@@ -30,6 +30,7 @@ struct test : public generic::collector<std::string, test>
     const std::string id;
 };
 
+__attribute__((init_priority(65535)))
 test obj_0("bss");
 
 int main(int argc, char *argv[])
