@@ -24,12 +24,12 @@ struct probe
 
 int main(int argc, char *argv[])
 {
-    std::cout << "[*] - tuple<TLIST(int)> - \n";
-    tuple<TLIST(int)> test = make_tuple(1);
+    std::cout << "[*] - tuple<TYPELIST(int)> - \n";
+    tuple<TYPELIST(int)> test = make_tuple(1);
     std::cout <<  test.get<0>() << std::endl;    
 
-    std::cout << "[*] - tuple<TLIST(int,int)> - \n";
-    tuple<TLIST(int,int)> hello;    
+    std::cout << "[*] - tuple<TYPELIST(int,int)> - \n";
+    tuple<TYPELIST(int,int)> hello;    
 
     hello.get<0>() = 1;
     hello.get<1>() = 2;
@@ -37,15 +37,15 @@ int main(int argc, char *argv[])
     std::cout << hello.get<0>() << std::endl;
     std::cout << hello.get<1>() << std::endl;
 
-    std::cout << "[*] - tuple<TLIST(int,int, std::string)> - \n";
-    tuple<TLIST(int,int, std::string)> abc = make_tuple(1,2,std::string("3 (string)"));
+    std::cout << "[*] - tuple<TYPELIST(int,int, std::string)> - \n";
+    tuple<TYPELIST(int,int, std::string)> abc = make_tuple(1,2,std::string("3 (string)"));
     std::cout << abc.get<0>() << std::endl;
     std::cout << abc.get<1>() << std::endl;
     std::cout << abc.get<2>() << std::endl;
 
-    std::cout << "[*] - tuple<TLIST(probe)> - \n";
+    std::cout << "[*] - tuple<TYPELIST(probe)> - \n";
     {
-        tuple<TLIST(probe)> qwerty = make_tuple(probe(0));
+        tuple<TYPELIST(probe)> qwerty = make_tuple(probe(0));
     }
     std::cout << "[*] - done - \n";
     return 0;
