@@ -39,7 +39,12 @@ namespace Linux {
         std::string name;     /* Name. */ 
 
         Inotify_event(int _wd, uint32_t _mask, uint32_t _cookie, uint32_t _len, const char *_name) 
-            : wd(_wd), mask(_mask), cookie(_cookie), len(_len), name( _len ? std::string(_name) : std::string()) { }
+            : wd(_wd), 
+              mask(_mask), 
+              cookie(_cookie), 
+              len(_len), 
+              name( _len ? std::string(_name) : std::string()) 
+        {}
     }; 
 
     std::ostream &operator<<(std::ostream &o, const Inotify_event &i){
@@ -60,33 +65,34 @@ namespace Linux {
     template<int L=BUF_LEN>
         class Inotify {
 
-            char buf[L];
-            int fd;
+            char _M_buf[L];
+            int _M_fd;
 
             public:
 
             Inotify()
-            : fd(inotify_init())
+            :   _M_buf(),
+                _M_fd(inotify_init())
             {
-                if ( fd < 0 )
+                if ( _M_fd < 0 )
                     throw std::runtime_error(ERR("inotify_init")); 
             }
 
-            ~Inotify() { ::close(fd); }
+            ~Inotify() { ::close(_M_fd); }
 
             int add_watch(const char *pathname, uint32_t mask) {
-                return inotify_add_watch(fd, pathname, mask); 
+                return inotify_add_watch(_M_fd, pathname, mask); 
             }
 
             int rm_watch(uint32_t wd) {
-                return inotify_rm_watch(fd, wd);
+                return inotify_rm_watch(_M_fd, wd);
             }
 
             Inotify_list wait_events() 
             {
                 int len, i = 0;
                 for (;;) {
-                    len = read (fd, buf, L);
+                    len = read (_M_fd, _M_buf, L);
                     if (len < 0 && errno == EINTR )
                         continue;
                     if (len < 0)
@@ -100,7 +106,7 @@ namespace Linux {
 
                 for (; i < len ; i += EVENT_SIZE + event->len) {
 
-                    event = reinterpret_cast<struct inotify_event *> (&buf[i]);
+                    event = reinterpret_cast<struct inotify_event *> (&_M_buf[i]);
 
                     Inotify_event tmp (event->wd, event->mask, event->cookie, event->len, event->name);
                     ret.push_back(tmp);                 

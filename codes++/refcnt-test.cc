@@ -14,10 +14,10 @@
 #include "refcnt.hh"
 
 class test_single 
-: public more::refcnt<test_single, more::SingleThread> { };
+: public more::refcnt<test_single, more::refcnt_policy::SingleThread> { };
 
 class test_multi 
-: public more::refcnt<test_multi, more::MultiThread> { };
+: public more::refcnt<test_multi, more::refcnt_policy::MultiThread> { };
 
 void *thread_single(void *h)
 {

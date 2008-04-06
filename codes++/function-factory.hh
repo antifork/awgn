@@ -32,30 +32,26 @@ namespace generic
         typedef std::tr1::function<T> FactoryFunction;
         struct register_factory
         {
-            functionFactory<Key,T> & _ref_;
-            FactoryFunction   _elem_;
-            const std::string _name_;
+            functionFactory<Key,T> & _M_ref;
+            FactoryFunction   _M_elem;
+            const std::string _M_name;
 
             template <typename F>
             register_factory(functionFactory &ref, const std::string &name, const F &elem)
-            :
-            _ref_(ref),
-            _elem_(std::tr1::function<T>(elem)),
-            _name_(name)
+            : _M_ref(ref),
+              _M_elem(std::tr1::function<T>(elem)),
+              _M_name(name)
             {
-                _ref_.regist(_name_, _elem_);
+                _M_ref.regist(_M_name, _M_elem);
             }
 
             ~register_factory()
-            {
-                _ref_.unregist(_name_);
-            }
+            { _M_ref.unregist(_M_name); }
 
         };
 
         functionFactory()
-        :
-        theFactoryMap()
+        : _M_FactoryMap()
         {}
 
         ~functionFactory()
@@ -64,17 +60,18 @@ namespace generic
         FactoryFunction 
         operator()(const Key &k) const  
         {
-            typename FactoryMap::const_iterator it = theFactoryMap.find(k); 
-            if ( it == theFactoryMap.end() )
+            typename FactoryMap::const_iterator it = _M_FactoryMap.find(k); 
+            if ( it == _M_FactoryMap.end() )
                 throw std::runtime_error("factory: unknown producer!");    
 
             return it->second;
         }
 
-        bool has_key(const Key &k) const 
+        bool 
+        has_key(const Key &k) const 
         {
-            typename FactoryMap::const_iterator i = theFactoryMap.find(k);
-            if ( i == theFactoryMap.end() )
+            typename FactoryMap::const_iterator i = _M_FactoryMap.find(k);
+            if ( i == _M_FactoryMap.end() )
                 return false;
             return true;
         }
@@ -82,17 +79,17 @@ namespace generic
         template <typename E>
         bool regist(const Key &k, E &e) 
         {
-            return theFactoryMap.insert(typename FactoryMap::value_type(k, std::tr1::function<T>(e))).second;
+            return _M_FactoryMap.insert(typename FactoryMap::value_type(k, std::tr1::function<T>(e))).second;
         }
 
         bool unregist(const Key &k) 
         {
-            return theFactoryMap.erase(k) == 1;
+            return _M_FactoryMap.erase(k) == 1;
         }               
 
     private:
         typedef std::map<Key, FactoryFunction > FactoryMap;
-        FactoryMap theFactoryMap;
+        FactoryMap _M_FactoryMap;
 
     };
 

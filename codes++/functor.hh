@@ -36,29 +36,28 @@ namespace generic {
         struct wrapper : base_functor 
         {
             explicit wrapper(F f) 
-            : f(f) 
+            : _M_fun(f) 
             {}
 
             R 
             operator()(const P& x) const
-            { return this->f(x); }
+            { return this->_M_fun(x); }
 
         private:
-            F f;
+            F _M_fun;
         };
 
-        std::tr1::shared_ptr<base_functor> ptr;
+        std::tr1::shared_ptr<base_functor> _M_ptr;
 
     public:
         template <class F>
         explicit functor(const F &f) 
-        : 
-        ptr( new wrapper<F>(f) ) 
+        : _M_ptr( new wrapper<F>(f) ) 
         {}
 
         R 
         operator()(const P &p) const
-        { return (*ptr)(p); }
+        { return (*_M_ptr)(p); }
 
     };
 

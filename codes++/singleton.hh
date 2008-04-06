@@ -37,12 +37,13 @@ namespace generic {
     template <class T, template <class, class T = int> class Memory, class Atomicity = atomicity::NONE >
     class singleton {
 
-        singleton(const singleton &);
-        singleton &operator=(const singleton &);
+        singleton(const singleton &);                   // noncopyable
+        singleton &operator=(const singleton &);        // noncopyable
 
         enum Tristate {Uninitialized=-1,False=false,True=true};
 
-        static Tristate destroyed(Tristate action=Uninitialized) {
+        static Tristate _M_destroyed(Tristate action=Uninitialized) 
+        {
             static Tristate ret = False;
             if (action == False)
                 ret = False;
@@ -55,12 +56,12 @@ namespace generic {
         protected:
 
         virtual ~singleton() {
-            destroyed(True); 
+            _M_destroyed(True); 
             instance(false); 
         }
 
         singleton() {
-            if ( destroyed() == False ) {
+            if ( _M_destroyed() == False ) {
                 const std::type_info  &ti = typeid(T);
                 std::string cl = generic::demangle(ti.name());
                 throw std::runtime_error(
@@ -77,34 +78,34 @@ namespace generic {
         static T &instance(bool action=true) {
 
             static typename Atomicity::mutex mutex;
-            static T *__instance;
+            static T *_S_instance;
             
-            if ( !__instance || !action ) {
+            if ( !_S_instance || !action ) {
 
                 typename Atomicity::scoped_lock lock(mutex);
 
                 if (!action) {
-                    T *ret = __instance;
-                    __instance = NULL;
+                    T *ret = _S_instance;
+                    _S_instance = NULL;
                     return *ret;
                 }
 
-                if (!__instance)  {
+                if (!_S_instance)  {
 
-                    if (destroyed() == True) {
+                    if (_M_destroyed() == True) {
                         const std::type_info  &ti = typeid(T);
                         throw std::runtime_error(
                         std::string("singleton: instance of '").
                              append(generic::demangle(ti.name())).
                              append("' destroyed. (FIASCO problem!)"));
                     }
-                    destroyed(True);
-                    __instance = Memory<T>::alloc();
-                    destroyed(False);
+                    _M_destroyed(True);
+                    _S_instance = Memory<T>::alloc();
+                    _M_destroyed(False);
                 }
             }
 
-            return *__instance;
+            return *_S_instance;
         }
 
     };

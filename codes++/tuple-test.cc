@@ -13,24 +13,40 @@
 
 using namespace generic;
 
+struct probe 
+{
+    probe() { std::cout << __PRETTY_FUNCTION__ << std::endl; }
+    probe(int) { std::cout << __PRETTY_FUNCTION__ << std::endl; }
+    probe(const probe &) { std::cout << __PRETTY_FUNCTION__ << std::endl; }
+    probe &operator=(const probe &) { std::cout << __PRETTY_FUNCTION__ << std::endl; }
+    ~probe() { std::cout << __PRETTY_FUNCTION__ << std::endl; }
+};
+
 int main(int argc, char *argv[])
 {
-    tuple<TLIST_3(int,int,std::string)> hello;    
+    std::cout << "[*] - tuple<TLIST(int)> - \n";
+    tuple<TLIST(int)> test = make_tuple(1);
+    std::cout <<  test.get<0>() << std::endl;    
 
-    hello.get<0>() = 0;
-    hello.get<1>() = 1;
-    hello.get<2>() = "2 - hello world";
+    std::cout << "[*] - tuple<TLIST(int,int)> - \n";
+    tuple<TLIST(int,int)> hello;    
+
+    hello.get<0>() = 1;
+    hello.get<1>() = 2;
 
     std::cout << hello.get<0>() << std::endl;
     std::cout << hello.get<1>() << std::endl;
-    std::cout << hello.get<2>() << std::endl;
 
-    tuple<TLIST_1(int)> test = make_tuple(3);
-    std::cout <<  test.get<0>() << std::endl;    
-
-    tuple<TLIST_2(int,std::string)> abc = make_tuple(4,std::string("5 - std::string"));
+    std::cout << "[*] - tuple<TLIST(int,int, std::string)> - \n";
+    tuple<TLIST(int,int, std::string)> abc = make_tuple(1,2,std::string("3 (string)"));
     std::cout << abc.get<0>() << std::endl;
     std::cout << abc.get<1>() << std::endl;
+    std::cout << abc.get<2>() << std::endl;
 
+    std::cout << "[*] - tuple<TLIST(probe)> - \n";
+    {
+        tuple<TLIST(probe)> qwerty = make_tuple(probe(0));
+    }
+    std::cout << "[*] - done - \n";
     return 0;
 }

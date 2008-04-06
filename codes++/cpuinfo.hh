@@ -24,26 +24,29 @@ namespace proc
     {
         struct adaptor 
         {
-            std::string value;
-            adaptor(const std::string &x) : value(x) {}
+            std::string _M_value;
+
+            adaptor(const std::string &x) 
+            : _M_value(x) 
+            {}
 
             operator std::string()
             {
-                return value;
+                return _M_value;
             }
             operator int()
             {
-                int r = ::strtol(value.c_str(), NULL, 0);
+                int r = ::strtol(_M_value.c_str(), NULL, 0);
                 return r;
             }
             operator double()
             {
-                double r = ::strtod(value.c_str(), NULL);
+                double r = ::strtod(_M_value.c_str(), NULL);
                 return r;
             }
             operator long double()
             {
-                long double r = ::strtold(value.c_str(), NULL);
+                long double r = ::strtold(_M_value.c_str(), NULL);
                 return r;
             }
         };
@@ -51,7 +54,7 @@ namespace proc
         typedef std::map<std::string, adaptor> cpu_map;
 
         cpu_map _M_map[CPU_MAX];
-        int processor;
+        int _M_processor;
 
         static std::string trim (const std::string &orig)
         {
@@ -63,14 +66,14 @@ namespace proc
 
     public:
         cpuinfo()
-        : processor(0)
+        : _M_processor(0)
         {
             std::ifstream fin("/proc/cpuinfo");
             std::string s;
             while ( std::getline(fin,s) ) {
                 std::string::size_type p = s.find(':',0);
                 if (p == std::string::npos) {
-                    processor++;
+                    _M_processor++;
                     continue;
                 }
 
@@ -78,13 +81,13 @@ namespace proc
                 std::string val( trim(s.substr(p+1)) );
 
                 adaptor second(val);
-                _M_map[processor].insert( std::make_pair(tag, second) );
+                _M_map[_M_processor].insert( std::make_pair(tag, second) );
             }
         }
 
         adaptor operator()(int p, const std::string &v)
         {
-            if ( p >= CPU_MAX || p >= processor )
+            if ( p >= CPU_MAX || p >= _M_processor )
                 throw std::out_of_range("bad index");
 
             typename cpu_map::iterator it = _M_map[p].find(adaptor(v));

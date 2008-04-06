@@ -14,7 +14,7 @@ int main()
 {
     std::cout << "start...\n";
     {
-        ScopedFlock lock("/tmp/test", LOCK_EX|LOCK_NB);
+        more::ScopedFlock lock("/tmp/test", LOCK_EX|LOCK_NB);
         std::cout << "locked, sleeping...\n";
         sleep(10);
     }

@@ -52,14 +52,16 @@ namespace more {
 
     public:
         syscall_error(const std::string &m, int e) 
-        : _M_msg(std::string(m).append(": ").append(strerror(e))), _M_err(e) 
-        {}
-        syscall_error(int e) 
-        : _M_msg(strerror(e)), _M_err(e) 
+        : _M_msg(std::string(m).append(": ").append(strerror(e))), 
+          _M_err(e) 
         {}
 
-        virtual 
-        ~syscall_error() throw() 
+        syscall_error(int e) 
+        : _M_msg(strerror(e)), 
+          _M_err(e) 
+        {}
+
+        virtual ~syscall_error() throw() 
         {}
 
         virtual const char* 
@@ -68,7 +70,8 @@ namespace more {
             return _M_msg.c_str(); 
         }
 
-        int err() const  
+        int 
+        err() const  
         { return _M_err; }
 
     };

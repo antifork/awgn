@@ -30,13 +30,21 @@ namespace generic {
     template <class T, typename E, class factoryBase, template <class, class> class Memory = memory::New>
         class factoryElement : public factoryBase {
             public:
-                std::tr1::shared_ptr<factoryBase> alloc() {
+                std::tr1::shared_ptr<factoryBase> 
+                alloc() 
+                {
                     return std::tr1::shared_ptr<factoryBase>( Memory<T,int>::alloc(), factoryElement::dealloc );
                 }
-                std::tr1::shared_ptr<factoryBase> alloc(const E &e) {
+
+                std::tr1::shared_ptr<factoryBase> 
+                alloc(const E &e) 
+                {
                     return std::tr1::shared_ptr<factoryBase>( Memory<T,E>::alloc(e), factoryElement::dealloc );
                 }
-                static void dealloc(factoryBase *obj) {
+
+                static 
+                void dealloc(factoryBase *obj) 
+                {
                     Memory<T,E>::dealloc(static_cast<T *>(obj));
                 }
         };    
@@ -46,57 +54,57 @@ namespace generic {
         class factory<Key, factoryBase *> {
             typedef std::map<Key, factoryBase *> FactoryMap;
 
-            FactoryMap theFactoryMap;    
+            FactoryMap _M_factory_map;    
 
             public:
 
-            factory() :
-            theFactoryMap()
+            factory() 
+            : _M_factory_map()
             {}
 
             ~factory() {
-                typename FactoryMap::const_iterator i;
-                for ( i = theFactoryMap.begin() ; i != theFactoryMap.end() ; i++ )
-                    delete i->second;
+                typename FactoryMap::const_iterator it;
+                for ( it = _M_factory_map.begin() ; it != _M_factory_map.end() ; it++ )
+                    delete it->second;
             }
 
             template <typename E>
             std::tr1::shared_ptr<factoryBase> 
             operator()(const Key &k, const E &e) 
             {
-                typename FactoryMap::const_iterator i = theFactoryMap.find(k); 
-
-                if ( i == theFactoryMap.end() )
+                typename FactoryMap::const_iterator it = _M_factory_map.find(k); 
+                if ( it == _M_factory_map.end() )
                     throw std::runtime_error("factory: unknown producer!");    
 
-                return i->second->alloc(e);
+                return it->second->alloc(e);
             }
 
             std::tr1::shared_ptr<factoryBase> 
             operator()(const Key &k) 
             {
-                typename FactoryMap::const_iterator i = theFactoryMap.find(k); 
-
-                if ( i == theFactoryMap.end() )
+                typename FactoryMap::const_iterator it = _M_factory_map.find(k); 
+                if ( it == _M_factory_map.end() )
                     throw std::runtime_error("factory: unknown producer!");    
 
-                return i->second->alloc();
+                return it->second->alloc();
             }
 
-            bool has_key(const Key &k) const {
-                typename FactoryMap::const_iterator i = theFactoryMap.find(k);
-                if ( i == theFactoryMap.end() )
+            bool 
+            has_key(const Key &k) const 
+            {
+                typename FactoryMap::const_iterator it = _M_factory_map.find(k);
+                if ( it == _M_factory_map.end() )
                     return false;
                 return true;
             }
 
-            bool regist(const Key &k, factoryBase *e) {
-                return theFactoryMap.insert(typename FactoryMap::value_type(k, e)).second;
-            }
+            bool 
+            regist(const Key &k, factoryBase *e) 
+            { return _M_factory_map.insert(typename FactoryMap::value_type(k, e)).second; }
 
-            bool unregist(const Key &k) {
-                return theFactoryMap.erase(k) == 1;
-            }               
+            bool 
+            unregist(const Key &k) 
+            { return _M_factory_map.erase(k) == 1; }               
 
         };
 

@@ -22,22 +22,22 @@ namespace posix {
     class syslog
     {
         private:
-            mutable std::stringstream _buffer;
+            mutable std::stringstream _M_buffer;
 
-            int  _priority;
+            int  _M_priority;
 
-            int &_facility() {
+            int &_M_facility() {
                 static int fac;
                 return fac; 
             }
 
-            int &_level() {
+            int &_M_level() {
                 static int lev;
                 return lev; 
             }
 
-            syslog (const syslog &);
-            syslog & operator= (const syslog &);
+            syslog (const syslog &);                    // noncopyable
+            syslog & operator= (const syslog &);        // noncopyable
 
         public:
             // option: 	
@@ -75,78 +75,71 @@ namespace posix {
 
             // priority:    facility|level
 
-            syslog(const char *ident, int opt = LOG_CONS, int fac = LOG_USER, int lev = LOG_NOTICE ) throw() 
-            :
-            _buffer(),
-            _priority(0) 
+            explicit syslog(const char *ident, int opt = LOG_CONS, int fac = LOG_USER, int lev = LOG_NOTICE )  
+            : _M_buffer(),
+              _M_priority(0) 
             {
-                _facility() = fac;
-                _level()    = lev;
+                _M_facility() = fac;
+                _M_level()    = lev;
 
                 if (ident) 
-                    ::openlog(ident,opt,_facility());		
+                    ::openlog(ident,opt,_M_facility());		
             } 
             
-            syslog() : 
-            _buffer(),
-            _priority(0) 
+            syslog() 
+            : _M_buffer(),
+              _M_priority(0) 
             {}
 
-            ~syslog() throw() 
+            ~syslog()  
             {
-                if (!_buffer.str().empty()) {
-                    ::syslog( priority() , _buffer.str().c_str());
+                if (!_M_buffer.str().empty()) {
+                    ::syslog( priority() , _M_buffer.str().c_str());
                 }
             }
 
             syslog &
-            setfacility(int fac) throw() 
+            setfacility(int fac)  
             {
-                _facility() = fac;
-                _priority   = 0;
+                _M_facility() = fac;
+                _M_priority   = 0;
                 return *this;
             }
 
             syslog &
-            setlevel(int lev) throw() 
+            setlevel(int lev)  
             {
-                _level()  = lev;
-                _priority = 0;
+                _M_level()  = lev;
+                _M_priority = 0;
                 return *this;
             }
 
             syslog &
-            setlogmask(int mask) throw() 
+            setlogmask(int mask)  
             {
                 ::setlogmask(mask);
                 return *this;
             }
 
             const int 
-            facility() const throw() 
-            {
-                return const_cast<syslog *>(this)->_facility();
-            }
+            facility() const  
+            { return const_cast<syslog *>(this)->_M_facility(); }
 
             const int 
-            level() const throw() 
-            {
-                return const_cast<syslog *>(this)->_level();
-            }
+            level() const  
+            { return const_cast<syslog *>(this)->_M_level(); }
 
             const int 
-            priority() const throw() 
-            {
-                return _priority ? : const_cast<syslog *>(this)->_facility()| const_cast<syslog *>(this)->_level();
-            }
+            priority() const  
+            { return _M_priority ? : const_cast<syslog *>(this)->_M_facility() | const_cast<syslog *>(this)->_M_level(); }
 
             // change log level temporary 
             //
             syslog 
-            operator()(int lev) throw() 
+            operator()(int lev)  
             {
                 syslog ret;
-                ret._priority = _facility() | lev;
+                ret._M_priority = _M_facility() | lev;
                 return ret;
             }
 
@@ -154,9 +147,9 @@ namespace posix {
             //
             template<typename T>
                 const syslog &
-                operator<<(const T &_m) const throw() 
+                operator<<(const T &_m) const  
                 {
-                    _buffer << _m;
+                    _M_buffer << _m;
                     return *this;
                 }
 
@@ -164,9 +157,9 @@ namespace posix {
             //
             template<typename T>
                 syslog &
-                operator<<(const T &_m) throw() 
+                operator<<(const T &_m)  
                 {
-                    _buffer << _m;
+                    _M_buffer << _m;
                     return *this;
                 }
 
@@ -177,8 +170,8 @@ namespace posix {
             operator<<( std::ostream& (*_f)(std::ostream&) ) const
             {
                 if ( _f == static_cast <std::ostream &(*)(std::ostream &)> (std::endl) ) {
-                    ::syslog(priority(), _buffer.str().c_str());
-                    _buffer.str(std::string());  // flush the msg 
+                    ::syslog(priority(), _M_buffer.str().c_str());
+                    _M_buffer.str(std::string());  // flush the msg 
                 }
                 return *this;
             }
@@ -189,8 +182,8 @@ namespace posix {
             operator<<( std::ostream& (*_f)(std::ostream&) ) 
             {
                 if ( _f == static_cast <std::ostream &(*)(std::ostream &)> (std::endl) ) {
-                    ::syslog(priority(), _buffer.str().c_str());
-                    _buffer.str(std::string());  // flush the msg 
+                    ::syslog(priority(), _M_buffer.str().c_str());
+                    _M_buffer.str(std::string());  // flush the msg 
                 }
                 return *this;
             }

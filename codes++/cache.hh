@@ -28,16 +28,12 @@ namespace generic
 
         template <typename T>
         class proxy {
-            T _M_data;
-
-            unsigned int _M_timeout;
-            unsigned int _M_timestamp;
 
         public:
             proxy(const T &r = T(), int t=0) 
             : _M_data(r), 
-            _M_timeout(t),
-            _M_timestamp()
+              _M_timeout(t),
+              _M_timestamp()
             { ts_update(); }
 
             proxy & 
@@ -79,6 +75,11 @@ namespace generic
                 o << "data:" << _M_data << " timestamp:" << _M_timestamp << " timeout:" << _M_timeout << std::endl;
             }
 
+        private:
+            T _M_data;
+
+            unsigned int _M_timeout;
+            unsigned int _M_timestamp;
         };
 
         typedef std::map<KEY, proxy<VALUE> > db_T;
@@ -102,14 +103,16 @@ namespace generic
         }
 
         VALUE *
-        update(KEY k, VALUE v, int t = 0) {
+        update(KEY k, VALUE v, int t = 0) 
+        {
             db[k] = proxy<VALUE>(v, t);
             db[k].ts_update();
             return db[k];
         }
 
         VALUE *
-        update(KEY k, int t = 0) {
+        update(KEY k, int t = 0) 
+        {
             typename db_T::iterator it = db.find(k);
             if ( it == db.end() )
                 throw std::runtime_error("key not present!");

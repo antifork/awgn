@@ -26,24 +26,30 @@
 
 namespace more 
 {
-    struct SingleThread {
-        static _Atomic_word ref(int i)
+    namespace refcnt_policy 
+    {
+        struct SingleThread 
         {
-            static volatile _Atomic_word _ref;
-            _Atomic_word ret = _ref; _ref += i;
-            return ret;
-        }   
-    };
+            static _Atomic_word ref(int i)
+            {
+                static volatile _Atomic_word _ref;
+                _Atomic_word ret = _ref; _ref += i;
+                return ret;
+            }   
+        };
 
-    struct MultiThread {
-        static _Atomic_word ref(int i)
+        struct MultiThread 
         {
-            static _Atomic_word _ref;
-            return __gnu_cxx::__exchange_and_add(&_ref,i);
-        }   
-    };
+            static _Atomic_word ref(int i)
+            {
+                static _Atomic_word _ref;
+                return __gnu_cxx::__exchange_and_add(&_ref,i);
+            }   
+        };
 
-    template <typename T, typename PolicyThread = more::MultiThread>
+    } // namespace refcnt_policy
+
+    template <typename T, typename PolicyThread = refcnt_policy::MultiThread>
     class refcnt 
     {
     public:

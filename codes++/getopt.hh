@@ -25,27 +25,40 @@ namespace posix {
             const char *optstring;
 
         public:
-            __opt(const char *o=NULL) : optstring(o) { opterr=0;  }
-            virtual ~__opt() { }
+            __opt(const char *o=NULL) 
+            : optstring(o) 
+            { opterr=0;  }
+
+            virtual ~__opt() 
+            {}
+
             virtual int parseopt(int i, char *optarg)=0;
             virtual void parse(int &argc, char ** &argv)=0;
-
     };
 
     class getopt : protected __opt {
 
         public:
-            getopt(const char *o=NULL) : __opt(o) { opterr=0;  }
-            void init(const char *o) { __opt::optstring = o;   }
+            getopt(const char *o=NULL) 
+            : __opt(o) 
+            { opterr=0; }
 
-            virtual ~getopt() { }
+            void 
+            init(const char *o) 
+            { __opt::optstring = o; }
+
+            virtual ~getopt() 
+            {}
+
             virtual int parseopt(int i, char *optarg)=0;
 
-            int c_getopt(int & argc, char ** &argv) {
-                return ::getopt(argc,argv,optstring);
-            }
+            int 
+            c_getopt(int & argc, char ** &argv) 
+            { return ::getopt(argc,argv,optstring); }
 
-            void parse(int & argc, char ** &argv) {
+            void 
+            parse(int & argc, char ** &argv) 
+            {
                 int o;
                 while ( (o =::getopt(argc, argv, optstring)) != EOF ) {
                     if ( o == '?' )
@@ -66,19 +79,34 @@ namespace posix {
 
     class getopt_long : protected __opt {
 
-        const struct option *longopts;
-        int *longindex;
+        const struct option *_M_longopts;
+        int *_M_longindex;
 
         public:
 
-        getopt_long(const char *o=NULL, const struct option *lo=NULL, int *li=NULL) : __opt(o), longopts(lo), longindex(li) {  }
-        void init(const char *o, const struct option *lo, int *li) { __opt::optstring = o; longopts = lo; longindex = li; }
-        virtual ~getopt_long() { }
+        getopt_long(const char *o=NULL, const struct option *lo=NULL, int *li=NULL) 
+        : __opt(o), 
+          _M_longopts(lo), 
+          _M_longindex(li) 
+        {}
+
+        virtual ~getopt_long() 
+        {}
+
+        void init(const char *o, const struct option *lo, int *li) 
+        { 
+            __opt::optstring = o; 
+            _M_longopts = lo; 
+            _M_longindex = li; 
+        }
+
         virtual int parseopt(int i, char *optarg)=0;
 
-        void parse(int & argc, char ** &argv) {
+        void 
+        parse(int & argc, char ** &argv) 
+        {
             int o;
-            while ( (o =::getopt_long(argc, argv, optstring, longopts, longindex)) != EOF ) {
+            while ( (o =::getopt_long(argc, argv, optstring, _M_longopts, _M_longindex)) != EOF ) {
                 if ( o == '?' )
                     throw std::runtime_error( 
                             std::string("invalid option -- ") + char(optopt) );
