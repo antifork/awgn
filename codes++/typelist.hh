@@ -142,6 +142,25 @@ namespace generic
         {
             typedef typename append< typelist<H,T>, L>::value_type value_type;
         };
+
+        // indexof<TLIST,T>::value
+        //
+        template <typename L, typename E> struct indexof;
+        template <typename E>
+        struct indexof<null, E> 
+        {
+            enum { value = -1 };
+        };
+        template <typename T, typename E>
+        struct indexof< typelist<E, T>, E > 
+        {
+            enum { value = 0 };
+        };
+        template <typename H, typename T, typename E>
+        struct indexof< typelist <H, T> , E >
+        {
+            enum { value = indexof<T, E>::value == -1 ? -1 : 1 + indexof<T,E>::value };
+        };
     }
 };
 

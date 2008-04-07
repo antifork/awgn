@@ -48,4 +48,11 @@ int main()
     TL::at<g_list, 0>::value_type h ("hello world");
 
     std::cout << "string:" << h << std::endl;
+
+    // indexof
+
+    std::cout << "double:" << TL::indexof<g_list, double>::value << std::endl;
+    std::cout << "string:" << TL::indexof<g_list, std::string>::value << std::endl;
+    std::cout << "int   :" << TL::indexof<g_list, int>::value << std::endl;
+
 }
