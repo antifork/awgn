@@ -19,16 +19,16 @@ public:
     : priv(0) 
     {}
 
-    // to return a copy, only the const qualified
+    // when returning a copy, only the const qualified
     // method is required...
 
     const int 
     get() const
     { return priv; }
 
-    // to return a reference to an internal data,
-    // both methods are required -- the const one 
-    // makes use of the non-const implementation...
+    // when returning a reference to internal data,
+    // both const and non-const qualified methods are required -- 
+    // the const one makes use of the non-const implementation...
     //
 
     int &ref()
