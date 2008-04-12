@@ -9,7 +9,7 @@
  */
 
 #include <iostream>
-#include "meyers-singleton.hh"
+#include <singleton.hh>
 
 struct hello1: public generic::singleton<hello1> {
     SINGLETON_CTOR(hello1) {}
