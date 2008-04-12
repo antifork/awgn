@@ -82,7 +82,7 @@ public:
     int 
     sendto(const void *buf, size_t len, int flags, const sockaddress<FAMILY> &to) 
     {
-        int r = ::sendto(_M_fd, buf, len, flags, (const struct sockaddr *)&to, to.len());
+        int r = ::sendto(_M_fd, buf, len, flags, reinterpret_cast<const struct sockaddr *>(&to), to.len());
         if (r == -1)
             ::warn("sendto");
         return r;
@@ -90,7 +90,7 @@ public:
     int 
     recvfrom(void *buf, size_t len, int flags, sockaddress<FAMILY> &from) 
     {
-        int r = ::recvfrom(_M_fd, buf, len, flags, &from, &from.len());
+        int r = ::recvfrom(_M_fd, buf, len, flags, reinterpret_cast<const struct sockaddr *>(&from), &from.len());
         if (r == -1)
             ::warn("recvfrom");
         return r;
@@ -111,7 +111,7 @@ public:
     int 
     accept(sockaddress<FAMILY> &addr, Socket<FAMILY> &ret) 
     {
-        int r = ::accept(_M_fd, &addr, &addr.len());
+        int r = ::accept(_M_fd,reinterpret_cast<const struct sockaddr *>(&addr), &addr.len());
         if (r == -1) {
             ::warn("accept");
         }
@@ -139,7 +139,7 @@ public:
     int 
     getsockname(sockaddress<FAMILY> &name) const
     {
-        int r = ::getsockname(_M_fd, &name, &name.len());
+        int r = ::getsockname(_M_fd, reinterpret_cast<const struct sockaddr *>(&name), &name.len());
         if (r == -1)
             ::warn("getsockname");
         return r;
@@ -147,7 +147,7 @@ public:
     int 
     getpeername(sockaddress<FAMILY> &name) const
     {
-        int r = ::getpeername(_M_fd, &name, &name.len());
+        int r = ::getpeername(_M_fd, reinterpret_cast<const struct sockaddr *>(&name), &name.len());
         if (r == -1)
             ::warn("getpeername");
         return r;
@@ -199,7 +199,7 @@ template <int FAMILY>
 inline
 int Socket<FAMILY>::bind(const sockaddress<FAMILY> &my_addr) 
 {
-    int r = ::bind(_M_fd,(const struct sockaddr *)&my_addr, my_addr.len());
+    int r = ::bind(_M_fd,reinterpret_cast<const struct sockaddr *>(&my_addr), my_addr.len());
     if (r == -1)
         ::warn("bind");
     else
@@ -210,7 +210,7 @@ template <>
 inline
 int Socket<PF_UNIX>::bind(const sockaddress<PF_UNIX> &my_addr) 
 {
-    int r = ::bind(_M_fd,(const struct sockaddr *)&my_addr, my_addr.len());
+    int r = ::bind(_M_fd,reinterpret_cast<const struct sockaddr *>(&my_addr), my_addr.len());
     if (r == -1)
         ::warn("bind");
     else {
@@ -227,7 +227,7 @@ template <int FAMILY>
 inline
 int Socket<FAMILY>::connect(const sockaddress<FAMILY> &addr) 
 {
-    int r = ::connect(_M_fd, (const struct sockaddr *)&addr, addr.len());
+    int r = ::connect(_M_fd, reinterpret_cast<const struct sockaddr *>(&addr), addr.len());
     if (r == -1)
         ::warn("connect");
     else {
@@ -239,7 +239,7 @@ template <>
 inline
 int Socket<PF_UNIX>::connect(const sockaddress<PF_UNIX> &addr) 
 {
-    int r = ::connect(_M_fd, (const struct sockaddr *)&addr, addr.len());
+    int r = ::connect(_M_fd, reinterpret_cast<const struct sockaddr *>(&addr), addr.len());
     if (r == -1)
         ::warn("connect");
     else {
