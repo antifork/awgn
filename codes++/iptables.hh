@@ -74,11 +74,11 @@ namespace ipt {
             sprintf(num, "%d",rulenum);
             sprintf(com, "/sbin/iptables -t %s -%c %s %s %s %s %s %s", table,
                                                        command_char[c], chain,
-                                                       ( rulenum ? num : "" ), rule, opt,
+                                                       ( rulenum ? num : "" ), rule, 
                                                        ( c == command::LIST  || 
                                                          c == command::FLUSH ||
                                                          c == command::ZERO  ||
-                                                         c == command::POLICY ? "" : "-j" ), target 
+                                                         c == command::POLICY ? "" : "-j" ), target, opt 
                                                        );
             std::cout << "DummyActuator .:[" << com << "]:.\n";
             return 0;
@@ -101,11 +101,11 @@ namespace ipt {
             sprintf(num, "%d",rulenum);
             sprintf(com, "/sbin/iptables -t %s -%c %s %s %s %s %s %s", table,
                                                        command_char[c], chain,
-                                                       ( rulenum ? num : "" ), rule, opt,
+                                                       ( rulenum ? num : "" ), rule, 
                                                        ( c == command::LIST  ||
                                                          c == command::FLUSH ||
                                                          c == command::ZERO  ||
-                                                         c == command::POLICY ? "" : "-j" ), target
+                                                         c == command::POLICY ? "" : "-j" ), target, opt
                                                        );
             int ret = system(com);
             if (ret < 0 || WEXITSTATUS(ret) != 0  )
