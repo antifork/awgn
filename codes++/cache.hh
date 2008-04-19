@@ -24,15 +24,14 @@ namespace generic
     template <class KEY, class VALUE>
     class cache {
     public:
-
-        template <typename T>
+       template <typename T>
         class proxy {
 
         public:
             typedef T value_type;
 
-            proxy(const T &r = T(), int t=0) 
-            : _M_data(r), 
+            proxy(const T &r = T(), int t=0)
+            : _M_data(r),
               _M_timeout(t),
               _M_timestamp()
             { this->ts_update(); }
@@ -44,10 +43,10 @@ namespace generic
                 this->ts_update();
             }
 
-            proxy & 
+            proxy &
             operator=(const proxy &rhs)
             {
-                if ( &_M_data == &rhs ) 
+                if ( &_M_data == &rhs )
                     return *this;
                 this->_M_data = rhs._M_data;
                 this->_M_timeout = rhs._M_timeout;
@@ -55,12 +54,12 @@ namespace generic
                 return *this;
             }
 
-            proxy & 
-            operator=(const T &rhs) 
-            { 
-                _M_data = rhs; 
-                this->ts_update(); 
-                return *this; 
+            proxy &
+            operator=(const T &rhs)
+            {
+                _M_data = rhs;
+                this->ts_update();
+                return *this;
             }
 
             T *
@@ -71,11 +70,14 @@ namespace generic
             operator&() const
             { return &_M_data; }
 
-            operator T()
+            operator T &()
             { return _M_data; }
 
-            void 
-            ts_update(int timeo = -1) 
+            operator const T &() const
+            { return _M_data; }
+
+            void
+            ts_update(int timeo = -1)
             {
                 struct timeval now;
                 gettimeofday(&now,NULL);
@@ -83,12 +85,11 @@ namespace generic
                 _M_timeout = (timeo == -1 ? _M_timeout : timeo);
             }
 
-            bool 
-            expired() const 
+            bool
+            expired() const
             {
-                if (_M_timeout == 0) {
+                if (_M_timeout == 0)
                     return false;   // never expires
-                }
                 struct timeval now;
                 gettimeofday(&now,NULL);
                 return static_cast<unsigned int>(now.tv_sec) > (_M_timestamp + _M_timeout);
@@ -133,7 +134,7 @@ namespace generic
         {
             typename db_T::iterator it = _M_db.find(k);
             if ( it == _M_db.end() )
-                throw std::runtime_error("key not present!");
+                throw std::runtime_error("key not found!");
             it->second.ts_update(t);
             return & _M_db[k]; 
         }
@@ -143,7 +144,7 @@ namespace generic
         {
             typename db_T::iterator it = _M_db.find(k);
             if( it == _M_db.end()) 
-                throw std::runtime_error("key not present!");
+                throw std::runtime_error("key not found!");
             if (it->second.expired())
                 throw static_cast<VALUE>(it->second);
             if (ts_update)

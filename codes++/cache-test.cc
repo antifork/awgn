@@ -27,8 +27,9 @@ void cc_find(const std::string &key)
         f = cc.find(key);
     }
     catch(record &e) {
-        std::cout << "  record expired@" << &e << ": {" << e.val << "} (expired has thrown)" << std::endl;
-        cc.update(key,10);  // update the timeout for the next search...
+        std::cout << "  record expired@" << &e << ": {" << e.val << "} (expired record has been thrown)" << std::endl;
+        std::cout << "  update the timeout for further 10 sec...\n";
+        cc.update(key,10);  
         return;
     }
     catch(std::runtime_error &r) {
@@ -63,7 +64,7 @@ main(int argc, char *argv[])
     std::cout << "research the record, again...\n";
     cc_find("test");
 
-    std::cout << "search with invalid key...\n";
+    std::cout << "search with an invalid key...\n";
     cc_find("unknown");
 
     return 0;
