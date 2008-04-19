@@ -101,7 +101,7 @@ namespace generic
             unsigned int _M_timestamp;
         };
 
-        typedef std::map<KEY, proxy<VALUE> > db_T;
+        typedef std::map<KEY, proxy<VALUE> > cache_type;
         typedef typename std::map<KEY,proxy<VALUE> >::iterator iterator;
         typedef typename std::map<KEY,proxy<VALUE> >::const_iterator const_iterator;
 
@@ -114,7 +114,7 @@ namespace generic
         VALUE *
         insert(KEY k, VALUE v, int t = 0) 
         {
-            typename db_T::iterator it = _M_db.find(k);
+            typename cache_type::iterator it = _M_db.find(k);
             if ( it != _M_db.end() && !it->second.expired() ) 
                 throw std::runtime_error("key already in use!");
             _M_db[k] = proxy<VALUE>(v, t);
@@ -132,7 +132,7 @@ namespace generic
         VALUE *
         update(KEY k, int t = 0) 
         {
-            typename db_T::iterator it = _M_db.find(k);
+            typename cache_type::iterator it = _M_db.find(k);
             if ( it == _M_db.end() )
                 throw std::runtime_error("key not found!");
             it->second.ts_update(t);
@@ -142,7 +142,7 @@ namespace generic
         VALUE *
         find(KEY k, bool ts_update = false) 
         {
-            typename db_T::iterator it = _M_db.find(k);
+            typename cache_type::iterator it = _M_db.find(k);
             if( it == _M_db.end()) 
                 throw std::runtime_error("key not found!");
             if (it->second.expired())
@@ -155,7 +155,7 @@ namespace generic
         bool 
         has_key(KEY k, bool ts_update = false) 
         {
-            typename db_T::iterator it = _M_db.find(k);
+            typename cache_type::iterator it = _M_db.find(k);
             if ( it == _M_db.end())
                 return false;
             if (it->second.expired())
@@ -172,24 +172,24 @@ namespace generic
         // iterators...
         //
 
-        typename db_T::iterator 
+        typename cache_type::iterator 
         begin() 
         { return  _M_db.begin(); }
 
-        typename db_T::iterator 
+        typename cache_type::iterator 
         end() 
         { return _M_db.end(); }
 
-        typename db_T::const_iterator 
+        typename cache_type::const_iterator 
         begin() const 
         { return  _M_db.begin(); }
 
-        typename db_T::const_iterator 
+        typename cache_type::const_iterator 
         end() const 
         { return _M_db.end(); }
 
     private:
-        db_T _M_db;
+        cache_type _M_db;
     };
 
 } // namespace generic
