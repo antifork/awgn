@@ -12,48 +12,35 @@
 #define ENDIANLESS_HH
 
 #include <arpa/inet.h>
+#include <typelist.hh>
 
 namespace more {
-        
-    template <typename T> struct endianless_traits;
-    template <> struct endianless_traits<short unsigned int>
+
+    template <typename T>
+    struct endianless_traits
     {
-        typedef short unsigned int type;
-    };
-    template <> struct endianless_traits<short int>
-    {
-        typedef short int type;
-    };
-    template <> struct endianless_traits<unsigned int>
-    {
-        typedef unsigned int type;
-    };
-    template <> struct endianless_traits<int>
-    {
-        typedef int type;
-    };
-    template <> struct endianless_traits<long unsigned int>
-    {
-        typedef long unsigned int type;
-    };
-    template <> struct endianless_traits<long int>
-    {
-        typedef long int type;
-    };
-    template <> struct endianless_traits<long long unsigned int>
-    {
-        typedef long long unsigned int type;
-    };
-    template <> struct endianless_traits<long long int>
-    {
-        typedef long long int type;
+        typedef TYPELIST(short unsigned int, short int, 
+                         unsigned int, int, 
+                         unsigned long int, long int,
+                         unsigned long long int, long long int) valid_tlist;
+
+        template <typename V, int n>
+        struct valid_type 
+        {
+            typedef V value_type;
+        };
+
+        template <typename V>
+        struct valid_type<V,-1>
+        {};
+
+        typedef typename valid_type<T, generic::TL::indexof<valid_tlist,T>::value >::value_type value_type;
     };
 
     template <typename T> 
     class endianless
     {
     public:
-
         template <int n>
         struct size2type {
             enum { value = n };
@@ -92,7 +79,6 @@ namespace more {
         { return _M_data; }
 
     private:
-
         template <typename U>
         const U hton(const U n,size2type<2>) const
         { return htons(n); }
@@ -117,7 +103,7 @@ namespace more {
         const U ntoh(const U n,size2type<8>) const
         { return (static_cast<U>(ntohl (n)) << 32) + ntohl (n >> 32); }
 
-        typename endianless_traits<T>::type _M_data;
+        typename endianless_traits<T>::value_type _M_data;
 
     };
 
