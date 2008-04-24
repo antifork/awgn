@@ -93,54 +93,54 @@ namespace generic
             enum { value = 1 + length<U>::value };
         };
 
-        // at<TLIST>::value_type
+        // at<TLIST>::type
         //
         template <class TLIST, int N>
         struct at
         {
-            typedef typename at<typename TLIST::tail, N-1>::value_type value_type;
+            typedef typename at<typename TLIST::tail, N-1>::type type;
         };
         template <class TLIST>
         struct at<TLIST,0>
         {
-            typedef typename TLIST::head value_type;
+            typedef typename TLIST::head type;
         };
 
-        // append<TLIST,T>::value_type
+        // append<TLIST,T>::type
         //
         template <class TLIST, typename T> struct append;
         template <>
         struct append<null, null>
         {
-            typedef null value_type;
+            typedef null type;
         };
         template <typename U>
         struct append<null, U>
         {
-            typedef TYPELIST(U) value_type; 
+            typedef TYPELIST(U) type; 
         };
         template <typename H, typename T>
         struct append<null, typelist<H,T> >
         {
-            typedef typelist <H,T> value_type;
+            typedef typelist <H,T> type;
         };
         template <typename H, typename T, typename U>
         struct append<typelist<H,T> , U>
         {
-            typedef typelist<H, typename append<T, U>::value_type > value_type;
+            typedef typelist<H, typename append<T, U>::type > type;
         };
 
-        // insert<TLIST,T>::value_type
+        // insert<TLIST,T>::type
         //
         template <class L, typename E> 
         struct insert
         {
-            typedef typename append< typelist<E,null>, L>::value_type value_type;
+            typedef typename append< typelist<E,null>, L>::type type;
         };
         template <typename L, typename H, typename T>
         struct insert<L, typelist<H,T> >
         {
-            typedef typename append< typelist<H,T>, L>::value_type value_type;
+            typedef typename append< typelist<H,T>, L>::type type;
         };
 
         // indexof<TLIST,T>::value
@@ -160,6 +160,24 @@ namespace generic
         struct indexof< typelist <H, T> , E >
         {
             enum { value = indexof<T, E>::value == -1 ? -1 : 1 + indexof<T,E>::value };
+        };
+
+        // has_type<TLIST,T>::type or fail to compile
+        //
+        template <typename TLIST, typename T>
+        struct has_type 
+        {
+            template <typename V, int n>
+            struct valid_type
+            {
+                typedef V type;
+            };
+
+            template <typename V>
+            struct valid_type<V,-1>
+            {};
+
+            typedef typename valid_type<T, generic::TL::indexof<TLIST,T>::value >::type type;
         };
     }
 };

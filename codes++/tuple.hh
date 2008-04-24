@@ -26,12 +26,12 @@ namespace generic
     template <typename T>
     struct add_reference 
     {
-        typedef T &value_type;
+        typedef T &type;
     };
     template <typename T>
     struct add_reference<T&>
     {
-        typedef T &value_type; 
+        typedef T &type; 
     };
 
     // my tuple! (inspired to that of Thomas Becker)
@@ -132,17 +132,17 @@ namespace generic
         {}
 
         template <int n>
-        typename add_reference<typename TL::at<L,n>::value_type >::value_type
+        typename add_reference<typename TL::at<L,n>::type >::type
         get()
         { return __get(int2Type<n>()); }
 
         // __get is overloaded by means of int2Type
         template <int n>
-        typename add_reference<typename TL::at<L,n>::value_type >::value_type
+        typename add_reference<typename TL::at<L,n>::type >::type
         __get(int2Type<n>)
         { return _M_list.__get(int2Type<n-1>()); }
 
-        typename add_reference<elem_type>::value_type
+        typename add_reference<elem_type>::type
         __get(int2Type<0>)
         { return _M_elem; }
 

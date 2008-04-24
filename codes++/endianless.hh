@@ -16,27 +16,6 @@
 
 namespace more {
 
-    template <typename T>
-    struct endianless_traits
-    {
-        typedef TYPELIST(short unsigned int, short int, 
-                         unsigned int, int, 
-                         unsigned long int, long int,
-                         unsigned long long int, long long int) valid_tlist;
-
-        template <typename V, int n>
-        struct valid_type 
-        {
-            typedef V value_type;
-        };
-
-        template <typename V>
-        struct valid_type<V,-1>
-        {};
-
-        typedef typename valid_type<T, generic::TL::indexof<valid_tlist,T>::value >::value_type value_type;
-    };
-
     template <typename T> 
     class endianless
     {
@@ -103,7 +82,12 @@ namespace more {
         const U ntoh(const U n,size2type<8>) const
         { return (static_cast<U>(ntohl (n)) << 32) + ntohl (n >> 32); }
 
-        typename endianless_traits<T>::value_type _M_data;
+        typedef TYPELIST(short unsigned int, short int,
+                         unsigned int, int,
+                         unsigned long int, long int,
+                         unsigned long long int, long long int) valid_tlist;
+
+        typename generic::TL::has_type<valid_tlist, T>::type _M_data;
 
     };
 
