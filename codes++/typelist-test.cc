@@ -13,6 +13,31 @@
 
 using namespace generic;
 
+// example of unary function...
+//
+
+namespace generic
+{
+    template <int n>
+    struct int_
+    {
+        enum { value = n };
+    };
+
+    template <typename T>
+    struct sizeof_
+    {
+        typedef int_<sizeof(T)> type;
+    };
+
+    struct sizeof_f
+    {
+        template <typename T>
+        struct apply : sizeof_<T> {};
+    };
+
+}
+
 int main()
 {
     typedef TYPELIST(int) z_list; 
@@ -23,7 +48,7 @@ int main()
 
     // append...
 
-    typedef null a_list;
+    typedef TL::null a_list;
 
     typedef TL::append<a_list, bool>::type b_list;
 
@@ -38,7 +63,7 @@ int main()
 
     std::cout << "len:" << TL::length<d_list>::value << std::endl;
 
-    typedef TYPELIST(null) e_list;
+    typedef TYPELIST(TL::null) e_list;
     typedef TL::insert<e_list, int>::type f_list;
 
     TL::at<f_list,0>::type x4 = 1;
@@ -53,5 +78,11 @@ int main()
     std::cout << "double:" << TL::indexof<g_list, double>::value << std::endl;
     std::cout << "string:" << TL::indexof<g_list, std::string>::value << std::endl;
     std::cout << "int   :" << TL::indexof<g_list, int>::value << std::endl;
+
+    typedef TL::apply1<g_list, sizeof_f>::type h_list;
+
+    std::cout << "[0] sizeof= " << TL::at<h_list,0>::type::value << std::endl;
+    std::cout << "[1] sizeof= " << TL::at<h_list,1>::type::value << std::endl;
+    std::cout << "[2] sizeof= " << TL::at<h_list,2>::type::value << std::endl;
 
 }

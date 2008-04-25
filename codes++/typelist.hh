@@ -43,42 +43,42 @@
 // typelist macro helper ala loki...
 //
 
-#define TYPELIST_1(a)                  generic::typelist<a,generic::null>
-#define TYPELIST_2(a,...)              generic::typelist<a,TYPELIST_1(__VA_ARGS__) >
-#define TYPELIST_3(a,...)              generic::typelist<a,TYPELIST_2(__VA_ARGS__) >
-#define TYPELIST_4(a,...)              generic::typelist<a,TYPELIST_3(__VA_ARGS__) >
-#define TYPELIST_5(a,...)              generic::typelist<a,TYPELIST_4(__VA_ARGS__) >
-#define TYPELIST_6(a,...)              generic::typelist<a,TYPELIST_5(__VA_ARGS__) >
-#define TYPELIST_7(a,...)              generic::typelist<a,TYPELIST_6(__VA_ARGS__) >
-#define TYPELIST_8(a,...)              generic::typelist<a,TYPELIST_7(__VA_ARGS__) >
-#define TYPELIST_9(a,...)              generic::typelist<a,TYPELIST_8(__VA_ARGS__) >
-#define TYPELIST_10(a,...)             generic::typelist<a,TYPELIST_9(__VA_ARGS__) >
-#define TYPELIST_11(a,...)             generic::typelist<a,TYPELIST_10(__VA_ARGS__) >
-#define TYPELIST_12(a,...)             generic::typelist<a,TYPELIST_11(__VA_ARGS__) >
-#define TYPELIST_13(a,...)             generic::typelist<a,TYPELIST_12(__VA_ARGS__) >
-#define TYPELIST_14(a,...)             generic::typelist<a,TYPELIST_13(__VA_ARGS__) >
-#define TYPELIST_15(a,...)             generic::typelist<a,TYPELIST_14(__VA_ARGS__) >
-#define TYPELIST_16(a,...)             generic::typelist<a,TYPELIST_15(__VA_ARGS__) >
-#define TYPELIST_17(a,...)             generic::typelist<a,TYPELIST_16(__VA_ARGS__) >
-#define TYPELIST_18(a,...)             generic::typelist<a,TYPELIST_17(__VA_ARGS__) >
-#define TYPELIST_19(a,...)             generic::typelist<a,TYPELIST_18(__VA_ARGS__) >
-#define TYPELIST_20(a,...)             generic::typelist<a,TYPELIST_19(__VA_ARGS__) >
+#define TYPELIST_1(a)                  generic::TL::typelist<a,generic::TL::null>
+#define TYPELIST_2(a,...)              generic::TL::typelist<a,TYPELIST_1(__VA_ARGS__) >
+#define TYPELIST_3(a,...)              generic::TL::typelist<a,TYPELIST_2(__VA_ARGS__) >
+#define TYPELIST_4(a,...)              generic::TL::typelist<a,TYPELIST_3(__VA_ARGS__) >
+#define TYPELIST_5(a,...)              generic::TL::typelist<a,TYPELIST_4(__VA_ARGS__) >
+#define TYPELIST_6(a,...)              generic::TL::typelist<a,TYPELIST_5(__VA_ARGS__) >
+#define TYPELIST_7(a,...)              generic::TL::typelist<a,TYPELIST_6(__VA_ARGS__) >
+#define TYPELIST_8(a,...)              generic::TL::typelist<a,TYPELIST_7(__VA_ARGS__) >
+#define TYPELIST_9(a,...)              generic::TL::typelist<a,TYPELIST_8(__VA_ARGS__) >
+#define TYPELIST_10(a,...)             generic::TL::typelist<a,TYPELIST_9(__VA_ARGS__) >
+#define TYPELIST_11(a,...)             generic::TL::typelist<a,TYPELIST_10(__VA_ARGS__) >
+#define TYPELIST_12(a,...)             generic::TL::typelist<a,TYPELIST_11(__VA_ARGS__) >
+#define TYPELIST_13(a,...)             generic::TL::typelist<a,TYPELIST_12(__VA_ARGS__) >
+#define TYPELIST_14(a,...)             generic::TL::typelist<a,TYPELIST_13(__VA_ARGS__) >
+#define TYPELIST_15(a,...)             generic::TL::typelist<a,TYPELIST_14(__VA_ARGS__) >
+#define TYPELIST_16(a,...)             generic::TL::typelist<a,TYPELIST_15(__VA_ARGS__) >
+#define TYPELIST_17(a,...)             generic::TL::typelist<a,TYPELIST_16(__VA_ARGS__) >
+#define TYPELIST_18(a,...)             generic::TL::typelist<a,TYPELIST_17(__VA_ARGS__) >
+#define TYPELIST_19(a,...)             generic::TL::typelist<a,TYPELIST_18(__VA_ARGS__) >
+#define TYPELIST_20(a,...)             generic::TL::typelist<a,TYPELIST_19(__VA_ARGS__) >
 #define TYPELIST(...)                  XPASTE(TYPELIST_ ,PP_NARG(__VA_ARGS__)) ( __VA_ARGS__) 
 
 namespace generic
 {
-    class null {};
-    struct empty {};
-
-    // the typelist element
-    template <typename T, typename U>
-    struct typelist {
-        typedef T head;
-        typedef U tail;
-    };
-
     namespace TL 
     {
+        class null {};
+        struct empty {};
+
+        // the typelist element
+        template <typename T, typename U>
+        struct typelist {
+            typedef T head;
+            typedef U tail;
+        };
+
         // length<TLIST>::value
         //
         template <class TLIST> struct length;
@@ -179,6 +179,25 @@ namespace generic
 
             typedef typename valid_type<T, generic::TL::indexof<TLIST,T>::value >::type type;
         };
+
+        // TL::apply1<TLIST, UNARY_FUNCTION::type
+        //
+        template <typename TLIST, typename UF> struct apply1;
+        template <typename UF>
+        struct apply1<null, UF>
+        {
+            typedef null type;
+        };
+
+        template <typename H, typename T, typename UF>
+        struct apply1< typelist<H,T>, UF>
+        {
+            typedef typelist <
+                    typename UF::template apply<H>::type,
+                    typename apply1<T,UF>::type
+                    > type;
+        };
+    
     }
 };
 
