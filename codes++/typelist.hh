@@ -10,7 +10,7 @@
 
 #ifndef TYPELIST_HH
 #define TYPELIST_HH
-
+#include <tr1/type_traits>
 
 /* the so-called __VA_NARG__ (PP_NARG) macro from the thread at 
    http://groups.google.com/group/comp.std.c/browse_frm/thread/77ee8c8f92e4a3fb 
@@ -180,6 +180,30 @@ namespace generic
             typedef typename valid_type<T, generic::TL::indexof<TLIST,T>::value >::type type;
         };
 
+        // TL::is_same<TLIST1, TLIST2>::value
+        //
+        template <typename T1, typename T2> struct is_same;
+        template <>
+        struct is_same<null,null>
+        {
+            enum { value = true };
+        };
+        template <typename H1, typename T1, typename Q>
+        struct is_same< typelist<H1,T1>, Q>
+        {
+            enum { value = false };
+        };
+        template <typename H1, typename T1, typename Q>
+        struct is_same< Q, typelist<H1,T1> >
+        { 
+            enum { value = false };
+        };
+        template <typename H1, typename T1, typename H2, typename T2>
+        struct is_same < typelist<H1,T1>, typelist<H2,T2> >
+        {
+            enum { value = std::tr1::is_same<H1, H2>::value && is_same<T1, T2>::value };
+        };        
+
         // TL::apply1<TLIST, UNARY_FUNCTION::type
         //
         template <typename TLIST, typename UF> struct apply1;
@@ -197,7 +221,25 @@ namespace generic
                     typename apply1<T,UF>::type
                     > type;
         };
-    
+
+        // TL::transform<TLIST1, TLIST2, BINARY_FUNCTION>::type
+        //
+        template <typename T1, typename T2, typename BF> struct transform;
+        template <typename BF>
+        struct transform<null, null, BF>
+        {
+            typedef null type;
+        };
+
+        template <typename H1, typename T1, typename H2, typename T2, typename BF>
+        struct transform< typelist<H1,T1>, typelist<H2,T2>, BF>
+        {
+            typedef typelist <
+                    typename BF::template apply<H1,H2>::type,
+                    typename transform<T1,T2,BF>::type
+                    > type;
+        };
+
     }
 };
 
