@@ -16,6 +16,7 @@
    http://groups.google.com/group/comp.std.c/browse_frm/thread/77ee8c8f92e4a3fb 
  */
 
+#ifndef PP_NARG
 #define PP_NARG(...) \
          PP_NARG_(__VA_ARGS__,PP_RSEQ_N())
 #define PP_NARG_(...) \
@@ -36,13 +37,17 @@
          29,28,27,26,25,24,23,22,21,20, \
          19,18,17,16,15,14,13,12,11,10, \
          9,8,7,6,5,4,3,2,1,0 
+#endif /* PP_NARG */
 
+#ifndef PASTE
 #define PASTE(a,b)  a ## b
 #define XPASTE(a,b) PASTE(a,b)
+#endif /* PASTE */
 
 // typelist macro helper ala loki...
 //
 
+#ifndef TYPELIST
 #define TYPELIST_1(a)                  generic::TL::typelist<a,generic::TL::null>
 #define TYPELIST_2(a,...)              generic::TL::typelist<a,TYPELIST_1(__VA_ARGS__) >
 #define TYPELIST_3(a,...)              generic::TL::typelist<a,TYPELIST_2(__VA_ARGS__) >
@@ -64,6 +69,7 @@
 #define TYPELIST_19(a,...)             generic::TL::typelist<a,TYPELIST_18(__VA_ARGS__) >
 #define TYPELIST_20(a,...)             generic::TL::typelist<a,TYPELIST_19(__VA_ARGS__) >
 #define TYPELIST(...)                  XPASTE(TYPELIST_ ,PP_NARG(__VA_ARGS__)) ( __VA_ARGS__) 
+#endif /* TYPELIST */
 
 namespace generic
 {
