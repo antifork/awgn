@@ -16,17 +16,19 @@ extern char *__progname;
 
 int main(int argc, char **argv)
 {
-    sys::log.open("[log]");
-    sys::log << "1 - hello world" << std::endl;
-
-    sys::plog.open("[plog]");
+    sys::ctrl(sys::log)->open("sys::log");
+    sys::log << "1 - hello " << "world" << std::endl;
+    
+    sys::ctrl(sys::plog)->open("sys::plog");
     sys::plog << "2 - hello world" << std::endl;
 
-    sys::err.open("[err]");
+    sys::ctrl(sys::err)->open("sys::err");
     sys::err << "3 - hello world" << std::endl;
 
-    sys::perr.open("[perr]");
+    sys::ctrl(sys::perr)->open("sys::perr");
     sys::perr << "4 - hello world" << std::endl;
-    sys::perr(LOG_EMERG) << "5 - alert message!!!" << std::endl;
-    sys::perr << "6 - hello world" << std::endl;
+
+    sys::ctrl(sys::perr)->setlevel(LOG_EMERG);
+    sys::perr << "5 - emergency message!!!" << std::endl;
+
 }

@@ -12,9 +12,9 @@
 
 namespace sys
 {
-    sys::syslog<LOG_NDELAY>                     log;
-    sys::syslog<LOG_NDELAY|LOG_PID>             plog;
-    sys::syslog<LOG_NDELAY|LOG_PERROR>          err;
-    sys::syslog<LOG_NDELAY|LOG_PERROR|LOG_PID>  perr;
+    std::ostream log ( new sys::syslog(LOG_NDELAY) );                     
+    std::ostream plog( new sys::syslog(LOG_NDELAY|LOG_PID) );        
+    std::ostream err ( new sys::syslog(LOG_NDELAY|LOG_PERROR) );          
+    std::ostream perr( new sys::syslog(LOG_NDELAY|LOG_PERROR|LOG_PID) ); 
 }
 

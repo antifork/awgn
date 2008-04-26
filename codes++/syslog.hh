@@ -12,43 +12,23 @@
 #define SYSLOG_HH
 
 #include <iostream>
-#include <sstream>
-#include <string>
-
+#include <cassert>
+#include <stdexcept>
 #include <syslog.h>
 
 namespace sys 
 {
-    // option: 	
-    //      LOG_CONS	Write directly to system console
-    //		LOG_NDELAY	Open the connection immediately
-    //		LOG_NOWAIT	Don't wait for child processes
-    //		LOG_ODELAY	Connection  is  delayed	
-    //		LOG_PERROR	Print to stderr
-    //		LOG_PID		Include PID
-
-    template <int opt>
-    class syslog : public std::ostream 
+    class syslog : public std::streambuf 
     {
-    private:
-        mutable std::stringstream _M_buffer;
-
-        int  _M_priority;
-
-        int &_M_facility() {
-            static int fac;
-            return fac; 
-        }
-
-        int &_M_level() {
-            static int lev;
-            return lev; 
-        }
-
-        syslog (const syslog &);                    // noncopyable
-        syslog & operator= (const syslog &);        // noncopyable
 
     public:
+        // option: 	
+        //      LOG_CONS	Write directly to system console
+        //		LOG_NDELAY	Open the connection immediately
+        //		LOG_NOWAIT	Don't wait for child processes
+        //		LOG_ODELAY	Connection  is  delayed	
+        //		LOG_PERROR	Print to stderr
+        //		LOG_PID		Include PID
 
         // facility:	
         //      LOG_AUTH	sec/authorization messages (deprecated)
@@ -77,26 +57,24 @@ namespace sys
 
         // priority:    facility|level
 
-        explicit syslog(int fac = LOG_USER, int lev = LOG_NOTICE )  
-        : _M_buffer(),
-        _M_priority(0) 
+        explicit syslog(int opt, int fac = LOG_USER, int lev = LOG_NOTICE )  
+        : _M_priority(0),
+          _M_cursor(0),
+          _M_option(opt)
         {
             _M_facility() = fac;
             _M_level()    = lev;
         } 
 
         ~syslog()  
-        {
-            if (!_M_buffer.str().empty()) {
-                ::syslog( priority() , _M_buffer.str().c_str());
-            }
-        }
+        {}
 
         syslog &
         open(const char *ident)
         {
+            // std::cout << __PRETTY_FUNCTION__ << std::endl;
             if (ident)
-                ::openlog(ident,opt,_M_facility());
+                ::openlog(ident,_M_option,_M_facility());
             return *this;
         }
 
@@ -136,44 +114,57 @@ namespace sys
         { return _M_priority ? : const_cast<syslog *>(this)->_M_facility() | 
             const_cast<syslog *>(this)->_M_level(); }
 
-        // change log level temporary 
-        //
-        syslog 
-        operator()(int lev)  
-        {
-            syslog ret;
-            ret._M_priority = _M_facility() | lev;
-            return ret;
-        }
+    private:
+        char _M_buffer[1024];
+        int  _M_priority;
+        int  _M_cursor;
+        int  _M_option;
 
-        // log message 
+        // central output function...
         //
-        template<typename T>
-        syslog &
-        operator<<(const T &_m)  
+        virtual int_type
+        overflow (int_type c)
         {
-            _M_buffer << _m;
-            return *this;
-        }
-
-        // flush syslog with << std::endl;
-        //
-        syslog &
-        operator<<( std::ostream& (*_f)(std::ostream&) ) 
-        {
-            if ( _f == static_cast <std::ostream &(*)(std::ostream &)> (std::endl) ) {
-                ::syslog(priority(), _M_buffer.str().c_str());
-                _M_buffer.str(std::string());  // flush the msg 
+            if ( c != '\n' ) {
+                assert(_M_cursor < 1024);
+                _M_buffer[_M_cursor++] = static_cast<char>(c);
+                return c;
             }
-            return *this;
+            
+            _M_buffer[_M_cursor] = '\0';
+            _M_cursor = 0;
+            ::syslog(priority(), _M_buffer);
+            return c;
         }
+
+        int &_M_facility() {
+            static int fac;
+            return fac; 
+        }
+
+        int &_M_level() {
+            static int lev;
+            return lev; 
+        }
+
+        syslog (const syslog &);                    // noncopyable
+        syslog & operator= (const syslog &);        // noncopyable
 
     };
 
-    extern sys::syslog<LOG_NDELAY>                     log;
-    extern sys::syslog<LOG_NDELAY|LOG_PID>             plog;
-    extern sys::syslog<LOG_NDELAY|LOG_PERROR>          err;
-    extern sys::syslog<LOG_NDELAY|LOG_PERROR|LOG_PID>  perr;
+    static inline
+    syslog * ctrl(std::ostream &out)
+    {
+        syslog *ret = dynamic_cast<syslog *>(out.rdbuf());
+        if ( ret == NULL )
+            throw std::runtime_error("sys::ctrl(): bad ostream given");
+        return ret;
+    }
+
+    extern std::ostream log;
+    extern std::ostream plog;
+    extern std::ostream err;
+    extern std::ostream perr;
 }
 
 #endif /* SYSLOG_HH */
