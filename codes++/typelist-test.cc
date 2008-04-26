@@ -39,7 +39,7 @@ namespace example
     };
 
     // binary function..
-
+    //
     template <typename T1, typename T2>
     struct same_size
     {

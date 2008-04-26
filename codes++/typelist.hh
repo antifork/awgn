@@ -204,7 +204,7 @@ namespace generic
             enum { value = std::tr1::is_same<H1, H2>::value && is_same<T1, T2>::value };
         };        
 
-        // TL::apply1<TLIST, UNARY_FUNCTION::type
+        // TL::apply1<TLIST, UNARY_FUNCTION>::type
         //
         template <typename TLIST, typename UF> struct apply1;
         template <typename UF>
