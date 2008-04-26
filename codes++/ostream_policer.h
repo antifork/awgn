@@ -15,7 +15,7 @@
 
 namespace more {
 
-    // ostream control
+    // ostream policer class -  
     //
 
     template <typename T>
