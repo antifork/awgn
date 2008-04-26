@@ -157,7 +157,7 @@ namespace sys
     {
         syslog *ret = dynamic_cast<syslog *>(out.rdbuf());
         if ( ret == NULL )
-            throw std::runtime_error("sys::ctrl(): bad ostream given");
+            throw std::runtime_error("sys::ctrl(): bad ostream");
         return ret;
     }
 
