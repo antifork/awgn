@@ -9,9 +9,9 @@
  */
 
 #include <iostream>
-#include <ostream_policer.h>
+#include <ostream_diverter.h>
 
-class Test : protected more::osp<Test>
+class Test : protected more::osd<Test>
 {
     public:
     Test() 
@@ -19,7 +19,7 @@ class Test : protected more::osp<Test>
         cout() << "hello world\n";
     }
 
-    using more::osp<Test>::set_ostream; 
+    using more::osd<Test>::set_ostream; 
 };
 
 int main()

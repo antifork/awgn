@@ -8,18 +8,18 @@
  * ----------------------------------------------------------------------------
  */
 
-#ifndef OSTREAM_POLICER_H
-#define OSTREAM_POLICER_H
+#ifndef OSTREAM_DIVERTER_H
+#define OSTREAM_DIVERTER_H
 
 #include <iostream>
 
 namespace more {
 
-    // ostream policer class -  
+    // ostream diverter class -  
     //
 
     template <typename T>
-    struct osp
+    struct osd
     {
         static std::ostream *_M_out;
 
@@ -34,8 +34,8 @@ namespace more {
     };
 
     template <typename T>
-    std::ostream *osp<T>::_M_out = & std::cout;
+    std::ostream *osd<T>::_M_out = & std::cout;
 
 } // namespace more
 
-#endif /* OSTREAM_POLICER_H */
+#endif /* OSTREAM_DIVERTER_H */
