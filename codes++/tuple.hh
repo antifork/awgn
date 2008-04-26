@@ -149,7 +149,7 @@ namespace generic
     };
 
     template<>
-    class tuple<null> {};
+    class tuple<TL::null> {};
 
     template <typename T1>
     static inline tuple<TYPELIST(T1)> 
