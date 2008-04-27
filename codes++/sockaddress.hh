@@ -25,6 +25,8 @@
 #define UNIX_PATH_MAX 108
 #endif
 
+namespace net {
+
 template <int f> class sockaddress;
 
 template <>
@@ -259,10 +261,20 @@ template <>
     class sockaddress<AF_UNIX> {
 
         sockaddr_un _M_addr;
+        socklen_t _M_len;
 
         public:
+        sockaddress()
+        : _M_addr(),
+          _M_len(sizeof(struct sockaddr_un))
+        {
+            _M_addr.sun_family = AF_UNIX;
+            _M_addr.sun_path[0]= '\0';
+        }
+
         sockaddress(const std::string &name) 
-        : _M_addr()
+        : _M_addr(),
+          _M_len(sizeof(struct sockaddr_un))
         {
             _M_addr.sun_family = AF_UNIX;
             strncpy(_M_addr.sun_path, name.c_str(), UNIX_PATH_MAX-1);
@@ -270,6 +282,8 @@ template <>
         }
 
         sockaddress(const sockaddress<AF_UNIX> &so)
+        : _M_addr(),
+          _M_len(sizeof(struct sockaddr_un))
         {
             _M_addr.sun_family = AF_UNIX;
             strncpy(_M_addr.sun_path, (&so)->sun_path, UNIX_PATH_MAX-1);
@@ -295,6 +309,7 @@ template <>
         operator std::string() const 
         { return _M_addr.sun_path; }
 
+        // taking address..
         sockaddr_un *
         operator &() 
         { return reinterpret_cast<sockaddr_un *>(&_M_addr); }
@@ -303,9 +318,16 @@ template <>
         operator &() const 
         { return reinterpret_cast<const sockaddr_un *>(&_M_addr); }
 
-        const socklen_t 
-        len() const 
-        { return sizeof(sockaddr_un); }
+        socklen_t &
+        len()
+        { return _M_len; }
+
+        const socklen_t &
+        len() const
+        { return _M_len; }
+
     };
+
+} // namespace net
 
 #endif /* SOCKADDRESS_HH */

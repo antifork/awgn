@@ -13,241 +13,175 @@
 
 #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
+#include <errno.h>
 #include <err.h>
 
 #include <sockaddress.hh>
+#include <ostream_diverter.h>
 
-template <int FAMILY>
-class Socket {
+namespace net {
 
-    int _M_fd;
-
-    bool _M_connected;
-    bool _M_bound;
-    bool _M_listening;
-
-    std::string _M_pathname;   // unix socket
-
-public:
-
-    Socket() 
-    : _M_fd(-1), 
-      _M_connected(false), 
-      _M_bound(false), 
-      _M_listening(false),
-      _M_pathname()
-    {}
-
-    Socket(int type, int protocol=0)
-    : _M_fd(::socket(FAMILY, type, protocol)), 
-      _M_connected(false), 
-      _M_bound(false), 
-      _M_listening(false),
-      _M_pathname()
+    template <int FAMILY, bool LOG>
+    class base_socket : protected more::osd< base_socket<FAMILY, LOG> > 
     {
-        if ( _M_fd == -1)
-            throw std::runtime_error("socket");
-    }
+    public:
+        using more::osd<base_socket<FAMILY,LOG> >::cout_divert; 
+        using more::osd<base_socket<FAMILY,LOG> >::cerr_divert; 
+        using more::osd<base_socket<FAMILY,LOG> >::clog_divert; 
 
-    Socket(const Socket<FAMILY> &);                         // noncopyable
-    Socket<FAMILY> &operator=(const Socket<FAMILY> &);      // noncopyable
+        base_socket() 
+        : _M_fd(-1)
+        {}
 
-    ~Socket(); 
-
-    void 
-    init(int type,int protocol=0) 
-    {
-        if (_M_fd>2)
-            throw std::runtime_error("socket already open");
-        _M_fd = ::socket(FAMILY, type, protocol);
-        if (_M_fd == -1)
-            throw std::runtime_error("socket");
-    }
-    int 
-    send(const void *buf, size_t len, int flags) 
-    {
-        int r = ::send(_M_fd, buf, len, flags);
-        if (r == -1)
-            ::warn ("send");
-        return r;
-    }
-    int 
-    recv(void *buf, size_t len, int flags) 
-    {
-        int r = ::recv(_M_fd, buf, len, flags);
-        if (r == -1)
-            ::warn("recv");
-        return r;
-    }
-    int 
-    sendto(const void *buf, size_t len, int flags, const sockaddress<FAMILY> &to) 
-    {
-        int r = ::sendto(_M_fd, buf, len, flags, reinterpret_cast<const struct sockaddr *>(&to), to.len());
-        if (r == -1)
-            ::warn("sendto");
-        return r;
-    }
-    int 
-    recvfrom(void *buf, size_t len, int flags, sockaddress<FAMILY> &from) 
-    {
-        int r = ::recvfrom(_M_fd, buf, len, flags, reinterpret_cast<const struct sockaddr *>(&from), &from.len());
-        if (r == -1)
-            ::warn("recvfrom");
-        return r;
-    }
-
-    int connect(const sockaddress<FAMILY> &addr); 
-
-    const bool 
-    connected() const 
-    { return _M_connected; }
-
-    int bind(const sockaddress<FAMILY> &my_addr);
-
-    const bool 
-    bound() 
-    const { return _M_bound; }
-
-    int 
-    accept(sockaddress<FAMILY> &addr, Socket<FAMILY> &ret) 
-    {
-        int r = ::accept(_M_fd,reinterpret_cast<const struct sockaddr *>(&addr), &addr.len());
-        if (r == -1) {
-            ::warn("accept");
+        base_socket(__socket_type type, int protocol=0)
+        : _M_fd(::socket(FAMILY, type, protocol))
+        {
+            if ( _M_fd == -1)
+                throw std::runtime_error("base_socket");
         }
-        else {
-            ret._M_fd = r;
-            ret._M_connected = true;
+
+        base_socket(const base_socket &);                       // noncopyable
+        base_socket &operator=(const base_socket &);            // noncopyable
+
+        virtual ~base_socket()
+        {
+            if ( _M_fd != -1 ) {
+                _log("close",::close(_M_fd));
+            }
         }
-        return r;
-    }
-    int 
-    listen(int backlog) 
+
+        void 
+        init(int type,int protocol=0) 
+        {
+            if (_M_fd != -1)
+                throw std::runtime_error("socket already open");
+            _M_fd = ::socket(FAMILY, type, protocol);
+            if (_M_fd == -1)
+                throw std::runtime_error("socket");
+        }
+
+        int 
+        send(const void *buf, size_t len, int flags) 
+        { return _log("send", ::send(_M_fd, buf, len, flags)); }
+
+        int 
+        recv(void *buf, size_t len, int flags) 
+        { return _log("recv", ::recv(_M_fd, buf, len, flags)); }
+
+        int 
+        sendto(const void *buf, size_t len, int flags, const sockaddress<FAMILY> &to) 
+        { return _log("sendto",::sendto(_M_fd, buf, len, flags, 
+                                        reinterpret_cast<const struct sockaddr *>(&to), to.len())); }
+
+        int 
+        recvfrom(void *buf, size_t len, int flags, sockaddress<FAMILY> &from) 
+        { return _log("recvfrom", ::recvfrom(_M_fd, buf, len, flags, 
+                                             reinterpret_cast<const struct sockaddr *>(&from), &from.len())); }
+
+        virtual int 
+        connect(const sockaddress<FAMILY> &addr)
+        { return _log("connect", ::connect(_M_fd, reinterpret_cast<const struct sockaddr *>(&addr), addr.len())); }
+
+        virtual int 
+        bind(const sockaddress<FAMILY> &my_addr)
+        { return _log("bind", ::bind(_M_fd,reinterpret_cast<const struct sockaddr *>(&my_addr), my_addr.len()) ); }
+
+        int 
+        accept(sockaddress<FAMILY> &addr, base_socket<FAMILY, LOG> &ret) 
+        {
+            int r = _log("accept", ::accept(_M_fd,reinterpret_cast<struct sockaddr *>(&addr), &addr.len()));
+            if (r != -1) 
+                ret._M_fd = r;
+            return r;
+        }
+
+        int 
+        listen(int backlog) 
+        { return _log("listen", ::listen(_M_fd, backlog)); }
+
+        int 
+        getsockname(sockaddress<FAMILY> &name) const
+        { return _log("getsockname", ::getsockname(_M_fd, reinterpret_cast<const struct sockaddr *>(&name), &name.len())); }
+
+        int 
+        getpeername(sockaddress<FAMILY> &name) const
+        { return _log("getpeername", ::getpeername(_M_fd, reinterpret_cast<const struct sockaddr *>(&name), &name.len())); }
+
+        int 
+        setsockopt(int level, int optname, const void *optval, socklen_t optlen)
+        { return _log("setsockopt", ::setsockopt(_M_fd, level, optname, optval, optlen)); }
+
+        int 
+        getsockopt(int level, int optname, void *optval, socklen_t *optlen) const
+        { return _log("getsockopt", ::getsockopt(_M_fd, level, optname, optval, optlen)); }
+
+        const int 
+        fd() const 
+        { return _M_fd; }        
+        
+    protected:
+        int _M_fd;
+
+        int _log(const char *prefix, int ret)
+        {
+            if ( LOG && ret == -1) 
+                more::osd< base_socket<FAMILY, LOG> >::cerr << prefix << ": " << strerror(errno) << std::endl;
+            return ret;
+        }
+    };
+
+    // generic socket PF_INET/PF_INET6
+    //
+
+    template <int FAMILY, bool LOG = true> 
+    struct socket : public base_socket<FAMILY, LOG> 
     {
-        int r = ::listen(_M_fd, backlog);
-        if (r == -1)
-            ::warn("listen");
-        else
-            _M_listening = true;
-        return r;
-    }
+        socket(__socket_type type, int protocol=0)
+        : base_socket<FAMILY,LOG>(type,protocol) 
+        {}
 
-    const bool 
-    listening() const 
-    { return _M_listening; }
+    };
 
-    int 
-    getsockname(sockaddress<FAMILY> &name) const
+    // PF_UNIX specializations...
+    //
+    template <bool LOG>
+    struct socket<PF_UNIX, LOG> : public base_socket<PF_UNIX, LOG>   
     {
-        int r = ::getsockname(_M_fd, reinterpret_cast<const struct sockaddr *>(&name), &name.len());
-        if (r == -1)
-            ::warn("getsockname");
-        return r;
-    }
-    int 
-    getpeername(sockaddress<FAMILY> &name) const
-    {
-        int r = ::getpeername(_M_fd, reinterpret_cast<const struct sockaddr *>(&name), &name.len());
-        if (r == -1)
-            ::warn("getpeername");
-        return r;
-    }
-    int 
-    setsockopt(int level, int optname, const void *optval, socklen_t optlen)
-    {
-        int r = ::setsockopt(_M_fd, level, optname, optval, optlen);
-        if (r == -1)
-            ::warn("setsockopt");
-        return r;
-    }
-    int 
-    getsockopt(int level, int optname, void *optval, socklen_t *optlen) const
-    {
-        int r = ::getsockopt(_M_fd, level, optname, optval, optlen);
-        if (r == -1)
-            ::warn("getsockopt");
-        return r;
-    }
+        socket(__socket_type type, int protocol=0)
+        : base_socket<PF_UNIX,LOG>(type,protocol),
+          _M_pathname(),
+          _M_bound(false)
+        {}
 
-    const int 
-    fd() const 
-    { return _M_fd; }
-};
+       ~socket() 
+        {
+            if (!_M_pathname.empty() && _M_bound) {
+                base_socket<PF_UNIX,LOG>::_log("unlink", ::unlink(_M_pathname.c_str()));
+            }
+        }
 
-// destructor specializations...
-//
-template <int FAMILY>
-inline
-Socket<FAMILY>::~Socket<FAMILY>() {
-    if ( ::close(_M_fd) == -1) 
-        ::warn("close"); 
-}
-template <>
-inline
-Socket<PF_UNIX>::~Socket<PF_UNIX>() { 
-    if ( ::close(_M_fd) == -1) 
-        ::warn("close");
-    if ( !_M_pathname.empty()) {
-        if ( ::unlink(_M_pathname.c_str()) == -1)
-            ::warn("unlink");
-    }
-}
+        int bind(const sockaddress<PF_UNIX> &my_addr)
+        {
+            int r = _log("bind", ::bind(this->_M_fd,reinterpret_cast<const struct sockaddr *>(&my_addr), my_addr.len()));
+            if (r != -1)
+                _M_pathname = my_addr;
+            return r;
+        }
+    
+        int connect(const sockaddress<PF_UNIX> &addr)
+        {
+            int r = _log("connect", ::connect(this->_M_fd, reinterpret_cast<const struct sockaddr *>(&addr), addr.len()));
+            if (r != -1)
+                _M_pathname = addr;
+            return r;
+        }
 
-// bind specializations..
-//
-template <int FAMILY>
-inline
-int Socket<FAMILY>::bind(const sockaddress<FAMILY> &my_addr) 
-{
-    int r = ::bind(_M_fd,reinterpret_cast<const struct sockaddr *>(&my_addr), my_addr.len());
-    if (r == -1)
-        ::warn("bind");
-    else
-        _M_bound = true;
-    return r;
-}
-template <>
-inline
-int Socket<PF_UNIX>::bind(const sockaddress<PF_UNIX> &my_addr) 
-{
-    int r = ::bind(_M_fd,reinterpret_cast<const struct sockaddr *>(&my_addr), my_addr.len());
-    if (r == -1)
-        ::warn("bind");
-    else {
-        _M_bound = true;
-        _M_pathname = my_addr;
-    }
-    return r;
-}
+    private:
+        std::string _M_pathname;   // unix socket
+        bool _M_bound;
+    };
 
-// connect specializations...
-//
-
-template <int FAMILY>
-inline
-int Socket<FAMILY>::connect(const sockaddress<FAMILY> &addr) 
-{
-    int r = ::connect(_M_fd, reinterpret_cast<const struct sockaddr *>(&addr), addr.len());
-    if (r == -1)
-        ::warn("connect");
-    else {
-        _M_connected = true;
-    }
-    return r;
-}
-template <>
-inline
-int Socket<PF_UNIX>::connect(const sockaddress<PF_UNIX> &addr) 
-{
-    int r = ::connect(_M_fd, reinterpret_cast<const struct sockaddr *>(&addr), addr.len());
-    if (r == -1)
-        ::warn("connect");
-    else {
-        _M_connected = true;
-        _M_pathname = addr;
-    }
-    return r;
-}
+} // namespace net
 
 #endif /* SOCKET_HH */
 
