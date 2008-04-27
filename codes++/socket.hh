@@ -29,26 +29,6 @@ namespace net {
         using more::osd<base_socket<FAMILY,LOG> >::cerr_divert; 
         using more::osd<base_socket<FAMILY,LOG> >::clog_divert; 
 
-        base_socket() 
-        : _M_fd(-1)
-        {}
-
-        base_socket(__socket_type type, int protocol=0)
-        : _M_fd(::socket(FAMILY, type, protocol))
-        {
-            if ( _M_fd == -1)
-                throw std::runtime_error("base_socket");
-        }
-
-        base_socket(const base_socket &);                       // noncopyable
-        base_socket &operator=(const base_socket &);            // noncopyable
-
-        virtual ~base_socket()
-        {
-            if ( _M_fd != -1 ) {
-                _log("close",::close(_M_fd));
-            }
-        }
 
         void 
         init(int type,int protocol=0) 
@@ -121,6 +101,27 @@ namespace net {
         
     protected:
         int _M_fd;
+
+        base_socket() 
+        : _M_fd(-1)
+        {}
+
+        base_socket(__socket_type type, int protocol=0)
+        : _M_fd(::socket(FAMILY, type, protocol))
+        {
+            if ( _M_fd == -1)
+                throw std::runtime_error("base_socket");
+        }
+
+        base_socket(const base_socket &);                       // noncopyable
+        base_socket &operator=(const base_socket &);            // noncopyable
+
+        virtual ~base_socket()
+        {
+            if ( _M_fd != -1 ) {
+                _log("close",::close(_M_fd));
+            }
+        }
 
         int _log(const char *prefix, int ret)
         {
