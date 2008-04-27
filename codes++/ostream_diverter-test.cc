@@ -16,14 +16,16 @@ class Test : protected more::osd<Test>
     public:
     Test() 
     {
-        cout() << "hello world\n";
+        cout << "hello world\n";
     }
 
-    using more::osd<Test>::set_ostream; 
+    using more::osd<Test>::cout_divert; 
+    using more::osd<Test>::cerr_divert; 
+    using more::osd<Test>::clog_divert; 
 };
 
 int main()
 {
-    Test::set_ostream(std::cerr);
+    Test::cout_divert(std::cerr);
     Test x;
 }

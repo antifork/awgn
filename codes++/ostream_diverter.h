@@ -21,21 +21,40 @@ namespace more {
     template <typename T>
     struct osd
     {
-        static std::ostream *_M_out;
+        static std::ostream cout;
+        static std::ostream cerr;
+        static std::ostream clog;
 
-        static std::ostream &
-        cout()
-        { return *_M_out; }
-
-        static void
-        set_ostream(std::ostream &o)
-        { _M_out = &o; }
-
+        static inline void
+        cout_divert(std::ostream &o)
+        {
+            std::streambuf * r = o.rdbuf();
+            cout.rdbuf(r);
+        }
+        static inline void
+        cerr_divert(std::ostream &o)
+        {
+            std::streambuf * r = o.rdbuf();
+            cerr.rdbuf(r);
+        }
+        static inline void
+        clog_divert(std::ostream &o)
+        {
+            std::streambuf * r = o.rdbuf();
+            clog.rdbuf(r);
+        }
     };
 
     template <typename T>
-    std::ostream *osd<T>::_M_out = & std::cout;
+    std::ostream osd<T>::cout(std::cout.rdbuf());
+
+    template <typename T>
+    std::ostream osd<T>::cerr(std::cerr.rdbuf());
+
+    template <typename T>
+    std::ostream osd<T>::clog(std::clog.rdbuf());
 
 } // namespace more
+
 
 #endif /* OSTREAM_DIVERTER_H */
