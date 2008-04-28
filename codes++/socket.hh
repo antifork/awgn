@@ -126,7 +126,7 @@ namespace net {
         int _log(const char *prefix, int ret)
         {
             if ( LOG && ret == -1) 
-                more::osd< base_socket<FAMILY, LOG> >::cerr << prefix << ": " << strerror(errno) << std::endl;
+                this->cerr << prefix << ": " << strerror(errno) << std::endl;
             return ret;
         }
     };
