@@ -52,6 +52,9 @@ namespace more
         { return _M_status; }
 
     private:
+        ScopedFlock(const ScopedFlock&);
+        ScopedFlock &operator=(const ScopedFlock&);
+
         int  _M_fd;
         bool _M_status;
     };
