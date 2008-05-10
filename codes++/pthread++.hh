@@ -126,7 +126,7 @@ namespace posix
         base_lock()
         {}
 
-        virtual ~base_lock()
+        ~base_lock()
         {}
 
     private:
@@ -134,13 +134,13 @@ namespace posix
         base_lock& operator=(const base_lock&);             // disable operator= 
         void* operator new(std::size_t);                    // disable heap allocation
         void* operator new[](std::size_t);                  // disable heap allocation
-        // void operator delete(void*);                     // disable delete operation
-        // void operator delete[](void*);                   // disable delete operation
+        void operator delete(void*);                        // disable delete operation
+        void operator delete[](void*);                      // disable delete operation
         base_lock* operator&();                             // disable address taking
     };
 
     template <class M, int N=0>
-    class scoped_lock : public base_lock 
+    class scoped_lock : protected base_lock 
     {
     public:
         typedef M mutex_type;
