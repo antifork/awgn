@@ -57,6 +57,8 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <sys/uio.h>
+
 #include <string>
 
 namespace hash {
@@ -109,6 +111,45 @@ namespace hash {
             return _M_offset = hval;
         }
 
+        // iovec implementation...
+        //
+
+        uint32_t 
+        operator()(const struct iovec * vector, size_t count, uint32_t hval=0)
+        {
+            unsigned char *bp;  /* start of block */
+            unsigned char *be;  /* beyond end of buffer */
+
+            if (hval == 0)
+                hval = _M_offset;
+
+            for (unsigned int lcount = 0; lcount < count; lcount++) {
+                bp = (unsigned char *)vector[lcount].iov_base;
+                be = (unsigned char *)vector[lcount].iov_base + vector[lcount].iov_len;
+
+                /*
+                 * FNV-1a hash each octet in the buffer
+                 */
+                while (bp < be) {
+                    /* xor the bottom with the current octet */
+                    hval ^= (uint32_t) * bp++;
+
+                    /* multiply by the 32 bit FNV magic prime mod 2^32 */
+#if defined(NO_FNV_GCC_OPTIMIZATION)
+                    hval *= FNV_32_PRIME;
+#else
+                    hval += (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24);
+#endif
+                }
+
+            }
+
+            /* return our new hash value */
+            return _M_offset = hval;
+        }
+
+
+
     };
 
     template <>
@@ -157,6 +198,43 @@ namespace hash {
 
             return _M_offset = hval;
         }
+
+        uint64_t 
+        operator()(const struct iovec * vector, size_t count, uint64_t hval=0)
+        {
+            unsigned char *bp;  /* start of buffer */
+            unsigned char *be;  /* beyond end of buffer */
+
+            if (hval == 0)
+                hval = _M_offset;
+
+            for (unsigned int lcount = 0; lcount < count; lcount++) {
+                bp = (unsigned char *)vector[lcount].iov_base;
+                be = (unsigned char *)vector[lcount].iov_base + vector[lcount].iov_len;
+
+                /*
+                 * FNV-1a hash each octet of the buffer
+                 */
+                while (bp < be) {
+
+                    /* xor the bottom with the current octet */
+                    hval ^= (uint64_t) * bp++;
+
+                    /* multiply by the 64 bit FNV magic prime mod 2^64 */
+#if defined(NO_FNV_GCC_OPTIMIZATION)
+                    hval *= FNV_64_PRIME;
+#else
+                    hval += (hval << 1) + (hval << 4) + (hval << 5) +
+                    (hval << 7) + (hval << 8) + (hval << 40);
+#endif
+                }
+            }
+
+            /* return our new hash value */
+            return _M_offset = hval;
+        }
+
+
 
     };
 
