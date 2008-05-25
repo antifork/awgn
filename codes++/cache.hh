@@ -102,8 +102,8 @@ namespace generic
         };
 
         struct expired {
-            const VALUE * pimp;
-            expired(const VALUE &t)
+            VALUE * pimp;
+            expired(VALUE &t)
             : pimp(&t)
             {}
         };

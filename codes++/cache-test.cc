@@ -29,7 +29,7 @@ my_entry *cc_find(const std::string &key)
     }
     catch(generic::cache<std::string,my_entry>::expired &e) {
         std::cout << "   entry expired@" << e.pimp << ": {" << e.pimp->val << "} (cache<>::expired has been thrown)" << std::endl;
-        return f;
+        return e.pimp;
     }
     catch(std::runtime_error &r) {
         std::cout << "  " << r.what() << std::endl;
