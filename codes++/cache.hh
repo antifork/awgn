@@ -24,7 +24,7 @@ namespace generic
     template <class KEY, class VALUE>
     class cache {
     public:
-       template <typename T>
+        template <typename T>
         class proxy {
 
         public:
@@ -86,7 +86,7 @@ namespace generic
             }
 
             bool
-            expired() const
+            is_expired() const
             {
                 if (_M_timeout == 0)
                     return false;   // never expires
@@ -99,6 +99,13 @@ namespace generic
             T _M_data;
             unsigned int _M_timeout;
             unsigned int _M_timestamp;
+        };
+
+        struct expired {
+            const VALUE * pimp;
+            expired(const VALUE &t)
+            : pimp(&t)
+            {}
         };
 
         typedef std::map<KEY, proxy<VALUE> > cache_type;
@@ -115,7 +122,7 @@ namespace generic
         insert(KEY k, VALUE v, int t = 0) 
         {
             typename cache_type::iterator it = _M_db.find(k);
-            if ( it != _M_db.end() && !it->second.expired() ) 
+            if ( it != _M_db.end() && !it->second.is_expired() ) 
                 throw std::runtime_error("key already in use!");
             _M_db[k] = proxy<VALUE>(v, t);
             return & _M_db[k];
@@ -140,27 +147,28 @@ namespace generic
         }
 
         VALUE *
-        find(KEY k, bool ts_update = false) 
+        find(KEY k, bool update = false) 
         {
             typename cache_type::iterator it = _M_db.find(k);
             if( it == _M_db.end()) 
                 throw std::runtime_error("key not found!");
-            if (it->second.expired())
-                throw static_cast<VALUE>(it->second);
-            if (ts_update)
+            if (it->second.is_expired()) {
+                throw expired(it->second);
+            }
+            if (update)
                 it->second.ts_update();
             return & it->second;
         }
 
         bool 
-        has_key(KEY k, bool ts_update = false) 
+        has_key(KEY k, bool update = false) 
         {
             typename cache_type::iterator it = _M_db.find(k);
             if ( it == _M_db.end())
                 return false;
-            if (it->second.expired())
+            if (it->second.is_expired())
                 return false;
-            if (ts_update)
+            if (update)
                 it->second.ts_update();
             return true;
         }

@@ -14,21 +14,21 @@
 #include <stdexcept>
 #include <iomanip>
 
-struct record {
+struct my_entry {
     int val;
 };
 
-generic::cache<std::string,record> cc;
+generic::cache<std::string,my_entry> cc;
 
-record *cc_find(const std::string &key) 
+my_entry *cc_find(const std::string &key) 
 {
-    record * f;
+    my_entry * f;
 
     try {
         f = cc.find(key);
     }
-    catch(record &e) {
-        std::cout << "   record expired@" << &e << ": {" << e.val << "} (expired record has been thrown)" << std::endl;
+    catch(generic::cache<std::string,my_entry>::expired &e) {
+        std::cout << "   entry expired@" << e.pimp << ": {" << e.pimp->val << "} (cache<>::expired has been thrown)" << std::endl;
         return f;
     }
     catch(std::runtime_error &r) {
@@ -36,7 +36,7 @@ record *cc_find(const std::string &key)
         return NULL;
     }
 
-    std::cout << "   record found@" << std::hex << f << std::dec << ": {" << f->val << "}" << std::endl;
+    std::cout << "   entry found@" << std::hex << f << std::dec << ": {" << f->val << "}" << std::endl;
     return f;
 }
 
@@ -44,33 +44,33 @@ record *cc_find(const std::string &key)
 int 
 main(int argc, char *argv[])
 {
-    record r = { 1 };
-    record t = { 2 };
+    my_entry r = { 1 };
+    my_entry t = { 2 };
 
-    record *p , *q;
+    my_entry *p , *q;
 
-    std::cout << "create the record: {" << r.val << "} ...\n";
-    std::cout << "create the record: {" << t.val << "} ...\n";
+    std::cout << "create the entry: {" << r.val << "} ...\n";
+    std::cout << "create the entry: {" << t.val << "} ...\n";
 
     p = cc.insert("ephemeral", r, 1);
     q = cc.insert("everlasting", t, 1000);
 
-    std::cout << "   record@" << std::hex << p << std::dec << std::endl;
-    std::cout << "   record@" << std::hex << q << std::dec << std::endl;
+    std::cout << "   entry@" << std::hex << p << std::dec << std::endl;
+    std::cout << "   entry@" << std::hex << q << std::dec << std::endl;
 
-    std::cout << "search the record 'ephemeral'\n";
+    std::cout << "search the entry 'ephemeral'\n";
     p = cc_find("ephemeral");
 
     std::cout << "sleep 2 sec...\n";
     sleep(2);
 
-    std::cout << "research the record 'ephemeral' ...\n";
+    std::cout << "research the entry 'ephemeral' ...\n";
     q = cc_find("ephemeral");
 
-    std::cout << "update the timeout for the current record...\n";
+    std::cout << "update the timeout for the current entry...\n";
     cc.update("ephemeral", 1);
 
-    std::cout << "search the record again...\n";
+    std::cout << "search the entry again...\n";
     q = cc_find("ephemeral");
 
     std::cout << "search with an invalid key...\n";
@@ -79,11 +79,11 @@ main(int argc, char *argv[])
     sleep(2);
 
     std::cout << std::boolalpha << "dump the content of the cache...\n";
-    generic::cache<std::string, record>::iterator it = cc.begin();
+    generic::cache<std::string, my_entry>::iterator it = cc.begin();
     for(; it != cc.end(); ++it) 
     {
         std::cout << "   key:" << (*it).first <<  
-                     " value:" << static_cast<record>((*it).second).val << " expired:"  << (*it).second.expired() << std::endl;
+                     " value:" << static_cast<my_entry>((*it).second).val << " expired:"  << (*it).second.is_expired() << std::endl;
     }
 
     return 0;
