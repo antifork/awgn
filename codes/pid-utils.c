@@ -22,6 +22,7 @@
        ({typeof(a) _a = (a); typeof(b) _b = (b); _a < _b ? _a : _b; })
 #endif
 
+
 int
 pid_filter(const struct dirent *d)
 {
@@ -29,6 +30,7 @@ pid_filter(const struct dirent *d)
         return 1;
     return 0;
 }
+
 
 int 
 pid_sort(const void *a, const void *b)
@@ -109,8 +111,9 @@ get_sibling(pid_t pid, pid_t sib)
     return 0;
 }
 
+
 pid_t
-get_child(pid_t pid, pid_t sib)
+get_child(pid_t pid, pid_t child)
 {
     struct dirent **filelist;
 
@@ -120,7 +123,7 @@ get_child(pid_t pid, pid_t sib)
 
         pid_t p = atoi(filelist[i]->d_name);
 
-        if (p<= sib) 
+        if (p<= child) 
             continue;
 
         if ( p == pid )
@@ -136,6 +139,7 @@ get_child(pid_t pid, pid_t sib)
 
     return 0;
 }
+
 
 pid_t
 get_pid(const char *cmd, pid_t start)
@@ -189,18 +193,22 @@ next:
 
 
 int 
-get_process(pid_t pid, char *proc, size_t size)
+get_process(pid_t pid, char *target, char *proc, size_t size)
 {
     char lk[256];
 
-    snprintf(lk, sizeof(lk), "/proc/%d/exe",pid);
+    assert(!( strcmp(target, "cwd") &&
+              strcmp(target, "exe") &&
+              strcmp(target, "root") ) &&
+             "bad_target: exe, cwd, root");
+
+    snprintf(lk, sizeof(lk), "/proc/%d/%s",pid,target);
 
     int n;
-    if ( (n=readlink(lk,proc,size-1)) == -1) {
-        proc[0] = '\0';
+    if ( (n=readlink(lk,proc,size-1)) == -1) 
         return -1;
-    }
 
     proc[ MIN(n, size-1) ]='\0';
     return 0;
 }
+
