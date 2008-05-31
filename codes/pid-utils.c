@@ -178,3 +178,19 @@ next:
 }
 
 
+int 
+get_process(pid_t pid, char *proc, size_t size)
+{
+    char lk[256];
+
+    snprintf(lk, sizeof(lk), "/proc/%d/exe",pid);
+
+    int n;
+    if ( (n=readlink(lk,proc,size-1)) == -1) {
+        proc[0] = '\0';
+        return -1;
+    }
+
+    proc[ MIN(n, size-1) ]='\0';
+    return 0;
+}

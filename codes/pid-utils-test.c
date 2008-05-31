@@ -11,30 +11,27 @@
 
 int main(int argc, char *argv[])
 {
-    char process[256], lk[32];
+    char process[256];
 
     printf("get_pid(\"xterm\", ...) test:\n");
 
     pid_t pid = 0;
 
     for( ; (pid = get_pid("xterm",pid)) && pid != 0; ) {
-        printf("   xterm[%d]\n", pid); 
+        get_process(pid,process,256);
+        printf("   %s[%d]\n", process,pid); 
     }
 
     pid = getpid();
     printf("get_parent(%d) recursive test:\n", pid);
 
     do {
-         snprintf(lk, sizeof(lk), "/proc/%d/exe",pid);
-         int n = readlink(lk,process,sizeof(process)-1);
-         if ( n == -1)
-             perror("readlink");
 
-         process[ MIN(n, sizeof(process)-1) ]='\0';
-         printf("    %s[%d]\n",process, pid);
-         
+        if ( get_process(pid,process,256) == -1)
+            break;
+
+        printf("    %s[%d]\n",process, pid);
     }
-
     while ( (pid = get_parent(pid)) != 0); 
 
     pid = getpid();
@@ -43,7 +40,8 @@ int main(int argc, char *argv[])
     pid_t sib = 0;
     while ( (sib =get_sibling(pid,sib)) != 0 )
     {
-        printf("   sibling:%d\n",sib);
+        get_process(sib,process,256);
+        printf("   sibling: %s[%d]\n",process,sib);
     }
  
     pid = getppid();
@@ -52,7 +50,8 @@ int main(int argc, char *argv[])
     pid_t ch = 0;
     while ( (ch =get_child(pid,ch)) != 0 )
     {
-        printf("   child:%d\n",ch);
+        get_process(ch,process,256);
+        printf("   child: %s[%d]\n",process,ch);
     }
    
     return 0;
