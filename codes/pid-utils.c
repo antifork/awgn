@@ -12,6 +12,16 @@
 /* pid filter and sort callbacks
  */
 
+#ifndef MAX
+#define MAX(a,b) \
+       ({typeof(a) _a = (a); typeof(b) _b = (b); _a > _b ? _a : _b; })
+#endif
+
+#ifndef MIN
+#define MIN(a,b) \
+       ({typeof(a) _a = (a); typeof(b) _b = (b); _a < _b ? _a : _b; })
+#endif
+
 int
 pid_filter(const struct dirent *d)
 {
