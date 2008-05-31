@@ -68,3 +68,4 @@ namespace more
 }
 
 #endif /* REFCNT_HH */
+
