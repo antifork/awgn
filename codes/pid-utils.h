@@ -35,7 +35,7 @@ extern "C" {
     extern pid_t get_sibling(pid_t pid, pid_t sib);
     extern pid_t get_child(pid_t pid, pid_t ch);
     extern pid_t get_pid(const char *cmd, pid_t start);
-    extern int get_process(pid_t pid, char *target, char *proc, size_t size);
+    extern int get_process(pid_t pid, const char *target, char *proc, size_t size);
 
 #ifdef __cplusplus
 }   /* C++ */

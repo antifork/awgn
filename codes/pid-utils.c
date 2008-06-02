@@ -193,7 +193,7 @@ next:
 
 
 int 
-get_process(pid_t pid, char *target, char *proc, size_t size)
+get_process(pid_t pid, const char *target, char *proc, size_t size)
 {
     char lk[256];
 
