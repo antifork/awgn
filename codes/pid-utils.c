@@ -8,6 +8,7 @@
  */
 
 #include <pid-utils.h>
+#include <assert.h>
 
 /* pid filter and sort callbacks
  */
@@ -22,6 +23,16 @@
        ({typeof(a) _a = (a); typeof(b) _b = (b); _a < _b ? _a : _b; })
 #endif
 
+
+static inline
+void free_dirent(struct dirent **d, int n)
+{
+    assert(n>0);
+    int i;
+    for (i=0; i< n; i++)
+        free(d[i]);
+    free(d);
+}
 
 int
 pid_filter(const struct dirent *d)
@@ -47,49 +58,46 @@ pid_sort(const void *a, const void *b)
 pid_t 
 get_parent(pid_t p)
 {
-    char status[24];
-    snprintf(status,sizeof(status),"/proc/%d/status",p);
-
-    char *line=NULL;
+    char status[24], *line=NULL;
     size_t len = 0;
+    pid_t pid = 0;
+    FILE *fp;
     size_t n;
 
-    FILE *fp = fopen(status, "r");
-    if (fp == NULL)
+    snprintf(status,sizeof(status),"/proc/%d/status",p);
+
+    fp = fopen(status, "r");
+    if (fp == NULL) 
         return 0;
 
     while ( (n = getline(&line,&len,fp)) != -1 ) {
+
         if ( strstr( line, "PPid:") == line ) {
-
-            int pid;
-            if ( sscanf(line,"%*s %d\n",&pid) != 1 ) {
-                free(line);
-                return 0;
-            }
-
-            free(line);
-            return pid;
+            if ( sscanf(line,"%*s %d\n",&pid) != 1 ) 
+                pid = 0;
+            break;
         }
     }
 
-    if (line)
-        free(line);
+    fclose(fp);
+    free(line);
 
-    return 0;
+    return pid;
 }
 
 
 pid_t
 get_sibling(pid_t pid, pid_t sib)
 {
-    struct dirent **filelist;
+    struct dirent **filelist = NULL;
+    int n, i;
+    pid_t ret = 0;
 
     pid_t parent = get_parent(pid);
     if ( parent == 0 )
         return 0;
 
-    int n = scandir("/proc", &filelist, pid_filter , pid_sort);
-    int i;
+    n = scandir("/proc", &filelist, pid_filter , pid_sort);
     for(i=0; i<n; ++i) {
 
         pid_t p = atoi(filelist[i]->d_name);
@@ -104,21 +112,24 @@ get_sibling(pid_t pid, pid_t sib)
         if ( !q || q != parent)
             continue;
         
-        /* q == parent */
-        return p;
+     /* q == parent */
+        ret = p;
+        break;
     }
 
-    return 0;
+    free_dirent(filelist, n);
+    return ret;
 }
 
 
 pid_t
 get_child(pid_t pid, pid_t child)
 {
-    struct dirent **filelist;
+    struct dirent **filelist = NULL;
+    int n, i;
+    pid_t ret;
 
-    int n = scandir("/proc", &filelist, pid_filter , pid_sort);
-    int i;
+    n = scandir("/proc", &filelist, pid_filter , pid_sort);
     for(i=0; i<n; ++i) {
 
         pid_t p = atoi(filelist[i]->d_name);
@@ -133,10 +144,11 @@ get_child(pid_t pid, pid_t child)
         if ( !q || q != pid)
             continue;
         
-        /* q == parent */
-        return p;
+    /* q == parent */
+        ret = p;
     }
 
+    free_dirent(filelist, n);
     return 0;
 }
 
@@ -146,9 +158,10 @@ get_pid(const char *cmd, pid_t start)
 {
     char status[80], *line = NULL;
     struct dirent **filelist;
+    size_t size = 0;
     FILE *f;
     int i, n;
-    
+ 
     pid_t pid = 0;
     n = scandir("/proc", &filelist, pid_filter, pid_sort);
     for(i=0; i<n; i++) {
@@ -160,12 +173,12 @@ get_pid(const char *cmd, pid_t start)
         if ( sprintf(status,"/proc/%d/status", p) < 0 )
             continue;
         f = fopen(status,"r");
-        if ( f == NULL )
+        if ( f == NULL ) {
             continue;
-
-        line = NULL ; size_t size = 0;
-        if ( getline(&line, &size, f) < 0 )
+        }
+        if ( getline(&line, &size, f) < 0 ) {
             goto next;
+        }
 
         if ( sscanf(line,"Name: %s", status) != 1 )
             goto next;
@@ -179,15 +192,8 @@ next:
         fclose(f);
     }
 
-    // free the line...
-    if (line)
-        free(line);
-
-    // free filelist...
-    for(i=0; i<n; i++) {
-        free(filelist[i]);
-    }
-
+    free(line);
+    free_dirent(filelist, n);
     return pid;
 }
 
