@@ -108,6 +108,21 @@ namespace arch
     struct type<parisc>
     {
 #ifdef ARCH_PARISC
+        typedef unsigned long cycles_t;
+        static const cycles_t max = ULONG_MAX;
+
+#define mfctl(reg) ({ \
+        unsigned long cr;  \
+        __asm__ __volatile__( \
+                "mfctl " #reg ",%0" : \
+                 "=r" (cr) \
+        ); \
+        cr; \
+        })
+        static inline cycles_t get_cycles ()
+        {
+            return mfctl(16);
+        }
 #endif
     };
 
