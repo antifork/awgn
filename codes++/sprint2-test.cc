@@ -13,5 +13,5 @@
 
 int main()
 {
-    std::cout << more::sprint("hello %d", 10) << std::endl;
+    std::cout << more::sprint("hello %s", "world!") << std::endl;
 }

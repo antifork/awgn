@@ -51,7 +51,7 @@ static inline std::string sprint(const char *fmt, MT_REPEAT_ARG2(T,arg_,N)) \
         return std::string(strp); \
 }
  
-MT_REPEAT_FUNCTION(aFunction,15);
+MT_REPEAT_STATEMENT(aFunction,15);
 
 }
 
