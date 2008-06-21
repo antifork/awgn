@@ -25,7 +25,7 @@ namespace more
 }
 
 #ifndef __GXX_EXPERIMENTAL_CXX0X__
-#define static_assert(v,...) generic::CTassert<v> XTOKEN(__VA_ARGS__) __attribute__((unused))
+#define static_assert(v,...) more::CTassert<v> XTOKEN(__VA_ARGS__) __attribute__((unused))
 #else
 #define static_assert(v,...) static_assert(v, XSTR(__VA_ARGS__))
 #endif
