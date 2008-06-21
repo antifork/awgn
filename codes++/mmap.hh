@@ -159,7 +159,11 @@ namespace more {
 
             return const_cast<mmap *>(this)->operator()(); 
         }
-         
+        
+        size_t
+        length() const
+        { return _M_length; }
+
         ~mmap()
         {
             if ( _M_addr && _M_addr != MAP_FAILED )

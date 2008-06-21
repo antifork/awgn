@@ -16,6 +16,7 @@
 #include <cxxabi.h>
 #include <sysexits.h>
 #include <cstring>
+#include <errno.h>
 
 extern char *__progname;
 
@@ -51,7 +52,7 @@ namespace more {
         int _M_err;
 
     public:
-        syscall_error(const std::string &m, int e) 
+        syscall_error(const std::string &m, int e = errno) 
         : _M_msg(std::string(m).append(": ").append(strerror(e))), 
           _M_err(e) 
         {}
