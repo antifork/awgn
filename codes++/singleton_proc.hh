@@ -13,9 +13,9 @@
 
 #include <sys/file.h>
 #include <errno.h>
+#include <err.h>
 
 #include <iostream>
-#include <stdexcept>
 
 extern char *__progname;
 
@@ -28,25 +28,26 @@ namespace more
         singleton_proc(const char *filelock) 
         : _M_fd(open(filelock, O_RDONLY|O_CREAT))
         {
-            if (_M_fd == -1) 
-                throw std::runtime_error (std::string("couldn't open lockfile"));
+            if (_M_fd == -1)
+                errx(1, "couldn't open lockfile");
 
             if (flock(_M_fd, LOCK_EX|LOCK_NB) < 0 ) {
                 if (errno == EWOULDBLOCK)
-                    throw std::runtime_error(std::string("a session of '").append(__progname).append("' is already running."));
+                    errx(1, "a session of '%s' is already running", __progname);
                 else
-                    throw std::runtime_error(std::string("flock: " + std::string(strerror(errno))));
+                    err(1, "flock");
            }
         }
 
-        ~singleton_proc() {
+        ~singleton_proc() 
+        {
             if (flock(_M_fd, LOCK_UN) < 0 ) {
-                std::clog << "flock(...,LOCK_UN: " << strerror(errno) << std::endl;
+                warn("flock(...,LOCK_UN)");
                 return;
             }
             close(_M_fd);
-
         }
+    
     };
 
 }
