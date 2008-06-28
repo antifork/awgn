@@ -297,7 +297,7 @@ namespace more
         #define safe_assert(x) assert(x)
     #endif
 #else
-    #define safe_assert(x) if (!x) throw std::runtime_error( "Assertion `" #x "' failed.") 
+    #define safe_assert(x) if (!(x)) throw std::runtime_error( "Assertion `" #x "' failed.") 
 #endif
 
 
