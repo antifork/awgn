@@ -8,8 +8,11 @@
  * ----------------------------------------------------------------------------
  */
 
-#include "getopt.hh"
-#include "singleton.hh"
+#include <cstdlib>
+
+#include <getopt.hh>
+#include <singleton.hh>
+
 
 class opt_long : public posix::getopt_long {
 
@@ -37,13 +40,14 @@ class opt_classic : public posix::getopt {
 
 // options deriving from posix::getopt as singleton
 //
-struct opt_singleton : public posix::getopt, public generic::singleton<opt_singleton, memory::New> {
+struct opt_singleton : public posix::getopt, public generic::singleton<opt_singleton> {
 
     int a;
     int b;
     int c;
 
-    opt_singleton() : a(0), b(0), c(0) { }
+    SINGLETON_CTOR(opt_singleton), a(0), b(0), c(0) { }
+
     int parseopt(int i, char *arg) { 
         switch(i) {
             case 'a': a = atoi(arg); break;
