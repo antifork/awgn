@@ -20,6 +20,7 @@
 #include <iostream>
 #include <string>
 #include <list>
+#include <cstring>
 
 #include <sys/inotify.h>
 #include <sys/select.h>

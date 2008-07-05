@@ -12,7 +12,7 @@
 #ifndef ATOMICITY_HH
 #define ATOMICITY_HH
 
-#include "generic.hh"
+#include "mtp.hh"
 
 #if   __GNUC__ >= 4
 #include <tr1/memory>
@@ -46,8 +46,8 @@ namespace atomicity {
 
 
     struct NONE {
-        typedef generic::NullType mutex;
-        typedef generic::NullType scoped_lock;
+        typedef mtp::null mutex;
+        typedef mtp::null scoped_lock;
     };
 
     struct BOOST {

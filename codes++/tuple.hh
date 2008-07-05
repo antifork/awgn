@@ -13,7 +13,7 @@
 
 #include <typelist.hh>
 
-namespace generic 
+namespace mtp 
 {
     // int2Type
     template <int n>

@@ -11,7 +11,7 @@
 #include "typelist.hh"
 #include <iostream>
 
-using namespace generic;
+using namespace mtp;
 
 // example of unary function...
 //

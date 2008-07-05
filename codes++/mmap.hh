@@ -22,7 +22,7 @@
 #include <exception.hh>
 
 #include <static_assert.hh>
-#include <generic.hh>
+#include <mtp.hh>
 
 namespace more {
 
@@ -124,7 +124,7 @@ namespace more {
         set_addr(off_t a) const
         { _M_addr = a; return *this; }
 
-        typename generic::select<mapping_traits<P>::const_map, const void *, void *>::type 
+        typename mtp::select<mapping_traits<P>::const_map, const void *, void *>::type 
         operator()()
         {
             if (_M_mapped)

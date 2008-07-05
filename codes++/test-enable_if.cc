@@ -9,10 +9,10 @@
  */
 
 #include <iostream>
-#include "generic.hh"
+#include <mtp.hh>
 
 template <typename T>
-typename generic::enable_if< generic::is_class<T>::value ,int>::type 
+typename mtp::enable_if< traits::is_class<T>::value ,int>::type 
 fun(const T &v) 
 {
     std::cout << __PRETTY_FUNCTION__ << std::endl;
@@ -20,7 +20,7 @@ fun(const T &v)
 }
 
 template <typename T>
-typename generic::disable_if< generic::is_class<T>::value ,int>::type 
+typename mtp::disable_if< traits::is_class<T>::value ,int>::type 
 fun(T v) 
 {
     std::cout << __PRETTY_FUNCTION__ << std::endl;

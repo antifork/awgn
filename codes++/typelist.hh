@@ -48,30 +48,30 @@
 //
 
 #ifndef TYPELIST
-#define TYPELIST_1(a)                  generic::TL::typelist<a,generic::TL::null>
-#define TYPELIST_2(a,...)              generic::TL::typelist<a,TYPELIST_1(__VA_ARGS__) >
-#define TYPELIST_3(a,...)              generic::TL::typelist<a,TYPELIST_2(__VA_ARGS__) >
-#define TYPELIST_4(a,...)              generic::TL::typelist<a,TYPELIST_3(__VA_ARGS__) >
-#define TYPELIST_5(a,...)              generic::TL::typelist<a,TYPELIST_4(__VA_ARGS__) >
-#define TYPELIST_6(a,...)              generic::TL::typelist<a,TYPELIST_5(__VA_ARGS__) >
-#define TYPELIST_7(a,...)              generic::TL::typelist<a,TYPELIST_6(__VA_ARGS__) >
-#define TYPELIST_8(a,...)              generic::TL::typelist<a,TYPELIST_7(__VA_ARGS__) >
-#define TYPELIST_9(a,...)              generic::TL::typelist<a,TYPELIST_8(__VA_ARGS__) >
-#define TYPELIST_10(a,...)             generic::TL::typelist<a,TYPELIST_9(__VA_ARGS__) >
-#define TYPELIST_11(a,...)             generic::TL::typelist<a,TYPELIST_10(__VA_ARGS__) >
-#define TYPELIST_12(a,...)             generic::TL::typelist<a,TYPELIST_11(__VA_ARGS__) >
-#define TYPELIST_13(a,...)             generic::TL::typelist<a,TYPELIST_12(__VA_ARGS__) >
-#define TYPELIST_14(a,...)             generic::TL::typelist<a,TYPELIST_13(__VA_ARGS__) >
-#define TYPELIST_15(a,...)             generic::TL::typelist<a,TYPELIST_14(__VA_ARGS__) >
-#define TYPELIST_16(a,...)             generic::TL::typelist<a,TYPELIST_15(__VA_ARGS__) >
-#define TYPELIST_17(a,...)             generic::TL::typelist<a,TYPELIST_16(__VA_ARGS__) >
-#define TYPELIST_18(a,...)             generic::TL::typelist<a,TYPELIST_17(__VA_ARGS__) >
-#define TYPELIST_19(a,...)             generic::TL::typelist<a,TYPELIST_18(__VA_ARGS__) >
-#define TYPELIST_20(a,...)             generic::TL::typelist<a,TYPELIST_19(__VA_ARGS__) >
+#define TYPELIST_1(a)                  mtp::TL::typelist<a,mtp::TL::null>
+#define TYPELIST_2(a,...)              mtp::TL::typelist<a,TYPELIST_1(__VA_ARGS__) >
+#define TYPELIST_3(a,...)              mtp::TL::typelist<a,TYPELIST_2(__VA_ARGS__) >
+#define TYPELIST_4(a,...)              mtp::TL::typelist<a,TYPELIST_3(__VA_ARGS__) >
+#define TYPELIST_5(a,...)              mtp::TL::typelist<a,TYPELIST_4(__VA_ARGS__) >
+#define TYPELIST_6(a,...)              mtp::TL::typelist<a,TYPELIST_5(__VA_ARGS__) >
+#define TYPELIST_7(a,...)              mtp::TL::typelist<a,TYPELIST_6(__VA_ARGS__) >
+#define TYPELIST_8(a,...)              mtp::TL::typelist<a,TYPELIST_7(__VA_ARGS__) >
+#define TYPELIST_9(a,...)              mtp::TL::typelist<a,TYPELIST_8(__VA_ARGS__) >
+#define TYPELIST_10(a,...)             mtp::TL::typelist<a,TYPELIST_9(__VA_ARGS__) >
+#define TYPELIST_11(a,...)             mtp::TL::typelist<a,TYPELIST_10(__VA_ARGS__) >
+#define TYPELIST_12(a,...)             mtp::TL::typelist<a,TYPELIST_11(__VA_ARGS__) >
+#define TYPELIST_13(a,...)             mtp::TL::typelist<a,TYPELIST_12(__VA_ARGS__) >
+#define TYPELIST_14(a,...)             mtp::TL::typelist<a,TYPELIST_13(__VA_ARGS__) >
+#define TYPELIST_15(a,...)             mtp::TL::typelist<a,TYPELIST_14(__VA_ARGS__) >
+#define TYPELIST_16(a,...)             mtp::TL::typelist<a,TYPELIST_15(__VA_ARGS__) >
+#define TYPELIST_17(a,...)             mtp::TL::typelist<a,TYPELIST_16(__VA_ARGS__) >
+#define TYPELIST_18(a,...)             mtp::TL::typelist<a,TYPELIST_17(__VA_ARGS__) >
+#define TYPELIST_19(a,...)             mtp::TL::typelist<a,TYPELIST_18(__VA_ARGS__) >
+#define TYPELIST_20(a,...)             mtp::TL::typelist<a,TYPELIST_19(__VA_ARGS__) >
 #define TYPELIST(...)                  XPASTE(TYPELIST_ ,PP_NARG(__VA_ARGS__)) ( __VA_ARGS__) 
 #endif /* TYPELIST */
 
-namespace generic
+namespace mtp
 {
     namespace TL 
     {
@@ -183,7 +183,7 @@ namespace generic
             struct valid_type<V,-1>
             {};
 
-            typedef typename valid_type<T, generic::TL::indexof<TLIST,T>::value >::type type;
+            typedef typename valid_type<T, mtp::TL::indexof<TLIST,T>::value >::type type;
         };
 
         // TL::is_same<TLIST1, TLIST2>::value

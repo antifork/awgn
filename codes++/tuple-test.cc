@@ -11,7 +11,7 @@
 #include <iostream>
 #include "tuple.hh"
 
-using namespace generic;
+using namespace mtp;
 
 struct probe 
 {

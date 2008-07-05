@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <string>
+#include <cstdlib>
 
 template <bool val> struct CTassert;
 template <>

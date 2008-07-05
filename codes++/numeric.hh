@@ -13,6 +13,18 @@
 
 namespace numeric
 {
+    template <typename T, T a, T b>
+    struct max 
+    { 
+        static const T value = ( a > b ? a : b );
+    };
+
+    template <typename T, T a, T b>
+    struct min 
+    {
+        static const T value = ( a < b ? a : b );
+    };
+
     // factorial
     template <int N>
     struct factorial 
