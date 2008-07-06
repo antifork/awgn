@@ -39,17 +39,16 @@ namespace generic
         // exposing internals requires 
         // both const and non const methods
 
-#ifdef USE_EXPLICIT
         T & get()
         { return _M_val; }
 
         const T & get() const
         { return _M_val; }
-#else
+
+#ifndef USE_EXPLICIT
         operator T() const
         { return _M_val; }
 #endif
-
         T *
         operator &()
         { return &_M_val; }
