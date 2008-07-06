@@ -36,15 +36,19 @@ namespace generic
         proxy & operator=(const T &val)
         { _M_val = val; }
 
-#ifdef USE_EXPLICIT
-        const T get() const
-#else
-        operator T() const
-#endif
-        { return _M_val; }
-
         // exposing internals requires 
         // both const and non const methods
+
+#ifdef USE_EXPLICIT
+        T & get()
+        { return _M_val; }
+
+        const T & get() const
+        { return _M_val; }
+#else
+        operator T() const
+        { return _M_val; }
+#endif
 
         T *
         operator &()
