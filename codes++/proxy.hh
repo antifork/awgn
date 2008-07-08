@@ -13,11 +13,18 @@
 
 namespace generic 
 {
+    //
+    // to be used in place of pure typedef... 
+    // define USE_EXPLICIT to enforce typechecking
+    //
+    // usage: typedef proxy<int, 0> my_int;
+    //        typedef proxy<int, 1> your_int;
+    //
+
     template <typename T,int N>
     class proxy {
 
         T _M_val;
-
     public:
 
 #ifdef USE_EXPLICIT
@@ -57,6 +64,37 @@ namespace generic
         operator &() const
         { return &_M_val; }
     };
+
+    // to detect writers...
+    //
+
+    template <typename T, int N = 0>
+    class write_enable
+    {
+        T _M_val;
+    public:
+
+        explicit 
+        write_enable(T v = T())
+        : _M_val(v)
+        {}
+
+        write_enable &
+        operator=(const write_enable &rhs)
+        { 
+            _M_val = rhs._M_val; 
+            return *this;
+        }
+
+        const T *
+        operator &() const
+        { return &_M_val; }
+
+        operator const T &()
+        { return _M_val; }
+
+    };
+
 }
 
 #endif /* PROXY_HH */
