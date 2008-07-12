@@ -146,6 +146,9 @@ namespace mtp
         __get(int2Type<0>)
         { return _M_elem; }
 
+        size_t size() const 
+        { return TL::length<L>::value; }
+
     };
 
     template<>
