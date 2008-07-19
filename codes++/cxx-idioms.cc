@@ -16,6 +16,7 @@
 #include <vector>
 #include <list>
 #include <set>
+#include <algorithm>
 
 #include <getopt.h>
 #include <errno.h>
