@@ -17,87 +17,96 @@
 //
 
 #define SINGLETON_CTOR(x)  \
-    x(const VOID &abc) : generic::singleton<x>(abc)
+    x(const tag &abc) : generic::singleton<x>(abc)
 
 #define MULTITON_CTOR(x,...)  \
-    x(const VOID &abc, ## __VA_ARGS__) : generic::singleton<x>(abc)
+    x(const tag &abc, ## __VA_ARGS__) : generic::singleton<x>(abc)
 
 namespace generic
 {
     template <typename T>
     struct singleton
     {
-        struct VOID {
+
+    protected:
+        struct tag {
             friend class singleton<T>;
         private:
-            VOID() {}
-            ~VOID() {}
-            VOID(const VOID&) {}
-            const VOID& operator=(const VOID&) {}
+            tag() 
+            {}
+            ~tag() 
+            {}
+            tag(const tag&) 
+            {}
+            const tag& operator=(const tag&) 
+            {}
         };
 
+    public:
         // singleton instance...
         //
-        static T& instance()
+        static volatile T& instance()
         {
-            static T _one_((VOID()));
+            static volatile T _one_((tag()));
             return _one_;
         }
 
         // multitons...
         //
         template <int n>
-        static T& instance()
+        static volatile T& instance()
         {
-            static T _n_((VOID()));
+            static volatile T _n_((tag()));
             return _n_;
         }
         template <int n, typename U>
-        static T& instance(const U &u = U())
+        static volatile T& instance(const U &u = U())
         {
-            static T _n_((VOID()), u);
+            static volatile T _n_((tag()), u);
             return _n_;
         }
         template <int n, typename U, typename V>
-        static T& instance(const U &u = U(), const V &v = V())
+        static volatile T& instance(const U &u = U(), const V &v = V())
         {
-            static T _n_((VOID()), u, v);
+            static volatile T _n_((tag()), u, v);
             return _n_;
         }
         template <int n, typename U, typename V, typename W>
-        static T& instance(const U &u = U(), const V &v = V(), const W &w = W())
+        static volatile T& instance(const U &u = U(), const V &v = V(), const W &w = W())
         {
-            static T _n_((VOID()), u, v, w);
+            static volatile T _n_((tag()), u, v, w);
             return _n_;
         }
         template <int n, typename U, typename V, typename W, typename X>
-        static T& instance(const U &u = U(), const V &v = V(), const W &w = W(), 
+        static volatile T& instance(const U &u = U(), const V &v = V(), const W &w = W(), 
                            const X &x = X())
         {
-            static T _n_((VOID()), u, v, w, x);
+            static volatile T _n_((tag()), u, v, w, x);
             return _n_;
         }
         template <int n, typename U, typename V, typename W, typename X, typename Y>
-        static T& instance(const U &u = U(), const V &v = V(), const W &w = W(), 
+        static volatile T& instance(const U &u = U(), const V &v = V(), const W &w = W(), 
                            const X &x = X(), const Y &y = Y())
         {
-            static T _n_((VOID()), u, v, w, x, y);
+            static volatile T _n_((tag()), u, v, w, x, y);
             return _n_;
         }
         template <int n, typename U, typename V, typename W, typename X, typename Y, typename Z>
-        static T& instance(const U &u = U(), const V &v = V(), const W &w = W(), 
+        static volatile T& instance(const U &u = U(), const V &v = V(), const W &w = W(), 
                            const X &x = X(), const Y &y = Y(), const Z &z = Z())
         {
-            static T _n_((VOID()), u, v, w, x, y, z);
+            static volatile T _n_((tag()), u, v, w, x, y, z);
             return _n_;
         }
 
-        singleton(const VOID&) {}
+        singleton(const tag &) 
+        {}
 
         virtual ~singleton()
         {}
 
     private:
+        singleton();
         singleton(const singleton&);                // noncopyable
         singleton &operator=(const singleton &);    // noncopyable  
 
