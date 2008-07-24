@@ -69,7 +69,7 @@ static const struct option long_options[] = {
 
 void posteriori() {
 
-    opt_singleton &opts = opt_singleton::instance();
+    opt_singleton &opts = const_cast<opt_singleton &>(opt_singleton::instance());
 
     std::cout << "a=" << opts.a << std::endl;
     std::cout << "b=" << opts.b << std::endl;
@@ -81,7 +81,13 @@ int main(int argc, char **argv)
 {
     opt_long            X(":a:b:c:", long_options, NULL);
     opt_classic         Y(":a:b:c:");
-    opt_singleton      &Z = opt_singleton::instance();
+
+    //
+    // const_cast<> is required to loose the volatile attribute.
+    // It's just like saying: "Yes sir, I know this code is *not* multithread!"
+    //
+
+    opt_singleton &Z = const_cast<opt_singleton &>(opt_singleton::instance());
 
     Z.init(":a:b:c:");
     Z.parse(argc, argv);
