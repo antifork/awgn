@@ -21,7 +21,7 @@ namespace generic
     //        typedef proxy<int, 1> your_int;
     //
 
-    template <typename T,int N>
+    template <typename T,int N = 0>
     class proxy {
 
         T _M_val;
@@ -92,6 +92,55 @@ namespace generic
 
         operator const T &()
         { return _M_val; }
+
+    };
+
+    // reference_proxy...
+    //
+
+    template <typename T, int N>
+    struct reference 
+    {
+        T & _M_ref;
+        reference(T &ref)
+        : _M_ref(ref)
+        {}
+    };
+
+
+    template <typename T, int N = 0>
+    class ref_proxy {
+
+        T   _M_storage;
+        T & _M_value;
+
+    public:
+        explicit ref_proxy (const T &v)
+        : _M_storage(v),
+        _M_value(_M_storage)
+        {}
+
+        explicit ref_proxy (const reference<T,N> & pv)
+        : _M_storage(),
+        _M_value(const_cast<T &>(pv._M_ref))
+        {}
+
+        ref_proxy(const ref_proxy &rhs)
+        : _M_storage(rhs._M_value),
+        _M_value(_M_storage)
+        {}
+
+        ref_proxy & operator=(const ref_proxy &rhs)
+        { _M_value = rhs._M_value; }
+
+        ref_proxy & operator=(T val)
+        { _M_value = val; }
+
+        T & get()
+        { return _M_value; }
+
+        const T & get() const
+        { return _M_value; }
 
     };
 

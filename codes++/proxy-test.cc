@@ -22,6 +22,11 @@ void const_ref(const int &h)
 
 using namespace generic;
 
+void fun(const ref_proxy<int> &ref)
+{
+    std::cout << "ref_proxy<int>    ref: " << ref.get() << std::endl;
+}
+
 int main(int argc, char *argv[])
 {
     int a = 0;
@@ -51,7 +56,25 @@ int main(int argc, char *argv[])
     int c = val;                    // copy is enabled
     const int d = val;              // copy is enabled
 
-    std::cout << val << std::endl;
+    std::cout << "write_enable<int> val: " << val << std::endl;
+    
+    // ref_proxy at work:
+
+    ref_proxy<int> hello(10);
+    std::cout << "ref_proxy<int> hello : " << hello.get() << std::endl;
+    
+    int xxx = 0;
+    ref_proxy<int> world(xxx);
+
+    world.get() = 69;
+
+    std::cout << "ref_proxy<int> world : " << world.get() << std::endl;
+    std::cout << "                 xxx : " << world.get() << std::endl;
+
+    fun( ref_proxy<int>(111) );
+
+    int yyy = 72;
+    fun( ref_proxy<int>(yyy) );
 
     return 0;
 }
