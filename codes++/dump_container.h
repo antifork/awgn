@@ -14,7 +14,7 @@
 #include <iostream>
 #include <string>
 #include <mtp.hh>
-#include <gcc_version.hh>
+#include <gcc_version.h>
 
 namespace std {
     
