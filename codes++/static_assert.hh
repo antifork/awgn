@@ -286,19 +286,30 @@ namespace more
 #define static_assert(v,...) static_assert((v), XSTR(__VA_ARGS__))
 #endif
 
-#ifdef NO_EXCEPTIONS
-    #ifdef NDEBUG
-        #undef NDEBUG
-        #include <cassert>
-        #define safe_assert(x) assert(x)
-        #define NDEBUG
-    #else
-        #include <cassert>
-        #define safe_assert(x) assert(x)
-    #endif
-#else
-    #define safe_assert(x) if (!(x)) throw std::runtime_error( "Assertion `" #x "' failed.") 
-#endif
+#include <cassert>
 
+/* from glibc: This prints an "Assertion failed" message and aborts.  */
+
+__BEGIN_DECLS
+
+extern void __assert_fail (__const char *__assertion, __const char *__file, unsigned int __line, __const char *__function)
+     __THROW __attribute__ ((__noreturn__));
+
+__END_DECLS
+
+# define perm_assert(expr) \
+  (__ASSERT_VOID_CAST ((expr) ? 0 :                       \
+               (__assert_fail (__STRING(expr), __FILE__, __LINE__,    \
+                       __ASSERT_FUNCTION), 0)))
+
+# if defined __cplusplus ? __GNUC_PREREQ (2, 6) : __GNUC_PREREQ (2, 4)
+#   define __ASSERT_FUNCTION    __PRETTY_FUNCTION__
+# else
+#  if defined __STDC_VERSION__ && __STDC_VERSION__ >= 199901L
+#   define __ASSERT_FUNCTION    __func__
+#  else
+#   define __ASSERT_FUNCTION    ((__const char *) 0)
+#  endif
+# endif
 
 #endif /* STATIC_ASSERT_HH */
