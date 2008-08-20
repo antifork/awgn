@@ -78,18 +78,21 @@ namespace hash {
         : _M_offset(init) 
         {}
 
-        uint32_t operator()(const std::string &buf, uint32_t hval=0)
+        void offset(uint32_t init)
+        { _M_offset = init; }
+
+        uint32_t operator()(const std::string &_buf)
         {
-            return operator()(buf.c_str(), buf.length(), hval);
+            return operator()(_buf.c_str(), _buf.length());
         }
 
-        uint32_t operator()(const char *buf, size_t len, uint32_t hval=0)
+        uint32_t operator()(const char *_buf, size_t _len)
         {
-            const unsigned char *bp = reinterpret_cast<const unsigned char *>(buf); /* start of buffer */
-            const unsigned char *be = bp + len;                                /* beyond end of buffer */
+            const unsigned char *bp = reinterpret_cast<const unsigned char *>(_buf); /* start of buffer */
+            const unsigned char *be = bp + _len;                                     /* beyond end of buffer */
 
-            if (hval == 0)
-                hval = _M_offset;
+            uint32_t hval = _M_offset;
+
             /*
              * FNV-1a hash each octet in the buffer
              */
@@ -115,17 +118,16 @@ namespace hash {
         //
 
         uint32_t 
-        operator()(const struct iovec * vector, size_t count, uint32_t hval=0)
+        operator()(const struct iovec * _vector, size_t _count)
         {
             unsigned char *bp;  /* start of block */
             unsigned char *be;  /* beyond end of buffer */
 
-            if (hval == 0)
-                hval = _M_offset;
+            uint32_t hval = _M_offset;
 
-            for (unsigned int lcount = 0; lcount < count; lcount++) {
-                bp = (unsigned char *)vector[lcount].iov_base;
-                be = (unsigned char *)vector[lcount].iov_base + vector[lcount].iov_len;
+            for (unsigned int lcount = 0; lcount < _count; lcount++) {
+                bp = (unsigned char *)_vector[lcount].iov_base;
+                be = (unsigned char *)_vector[lcount].iov_base + _vector[lcount].iov_len;
 
                 /*
                  * FNV-1a hash each octet in the buffer
@@ -148,8 +150,6 @@ namespace hash {
             return _M_offset = hval;
         }
 
-
-
     };
 
     template <>
@@ -165,18 +165,20 @@ namespace hash {
         : _M_offset(init) 
         {}
 
-        uint64_t operator()(const std::string &buf, uint64_t hval=0)
+        void offset(uint64_t init)
+        { _M_offset = init; }
+
+        uint64_t operator()(const std::string &_buf)
         {
-            return operator()(buf.c_str(), buf.length(), hval);
+            return operator()(_buf.c_str(), _buf.length());
         }
 
-        uint64_t operator()(const char *buf, size_t len, uint64_t hval=0)
+        uint64_t operator()(const char *_buf, size_t _len)
         {
-            const unsigned char *bp = reinterpret_cast<const unsigned char *>(buf); /* start of buffer */
-            const unsigned char *be = bp + len;                                /* beyond end of buffer */
+            const unsigned char *bp = reinterpret_cast<const unsigned char *>(_buf); /* start of buffer */
+            const unsigned char *be = bp + _len;                                     /* beyond end of buffer */
 
-            if (hval == 0)
-                hval = _M_offset;
+            uint64_t hval = _M_offset;
 
             /*
              * FNV-1a hash each octet of the buffer
@@ -200,17 +202,17 @@ namespace hash {
         }
 
         uint64_t 
-        operator()(const struct iovec * vector, size_t count, uint64_t hval=0)
+        operator()(const struct iovec * _vector, size_t _count)
         {
             unsigned char *bp;  /* start of buffer */
             unsigned char *be;  /* beyond end of buffer */
 
-            if (hval == 0)
-                hval = _M_offset;
+            uint64_t hval = _M_offset;
 
-            for (unsigned int lcount = 0; lcount < count; lcount++) {
-                bp = (unsigned char *)vector[lcount].iov_base;
-                be = (unsigned char *)vector[lcount].iov_base + vector[lcount].iov_len;
+            for (unsigned int lcount = 0; lcount < _count; lcount++) {
+
+                bp = (unsigned char *)_vector[lcount].iov_base;
+                be = (unsigned char *)_vector[lcount].iov_base + _vector[lcount].iov_len;
 
                 /*
                  * FNV-1a hash each octet of the buffer
@@ -233,8 +235,6 @@ namespace hash {
             /* return our new hash value */
             return _M_offset = hval;
         }
-
-
 
     };
 

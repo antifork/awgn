@@ -18,10 +18,14 @@ int main()
 {
     hash::fnv<32> fnv_32;
 
+    std::cout << std::hex;
     std::cout << "\n32bits test:\n";
 
     std::cout << "init:  'hello world' => fnv-32a :" << fnv_32("hello world",5) << std::endl;
-    std::cout << "reset: 'hello world' => fnv-32a :" << fnv_32("hello world",5, hash::fnv<32>::INIT) << std::endl;
+
+    fnv_32.offset(hash::fnv<32>::INIT);
+
+    std::cout << "reset: 'hello world' => fnv-32a :" << fnv_32("hello world",5) << std::endl;
     std::cout << "       'hello world' => fnv-32a :" << fnv_32( std::string("hello world")) << std::endl;
     std::cout << "       'hello world' => fnv-32a :" << fnv_32( std::string("hello world")) << std::endl;
     std::cout << "       'hello world' => fnv-32a :" << fnv_32( std::string("hello world")) << std::endl;
@@ -31,7 +35,10 @@ int main()
     hash::fnv<64> fnv_64;
 
     std::cout << "init:  'hello world' => fnv-64a :" << fnv_64("hello world",5) << std::endl;
-    std::cout << "reset: 'hello world' => fnv-64a :" << fnv_64("hello world",5, hash::fnv<64>::INIT) << std::endl;
+
+    fnv_64.offset(hash::fnv<64>::INIT);
+
+    std::cout << "reset: 'hello world' => fnv-64a :" << fnv_64("hello world",5) << std::endl;
     std::cout << "       'hello world' => fnv-64a :" << fnv_64( std::string("hello world")) << std::endl;
     std::cout << "       'hello world' => fnv-64a :" << fnv_64( std::string("hello world")) << std::endl;
     std::cout << "       'hello world' => fnv-64a :" << fnv_64( std::string("hello world")) << std::endl;
@@ -61,29 +68,39 @@ int main()
 
     putchar('\n');
 
-    msg("-> 0x%x <-", fnv_32(buff_a, string_len(buff_a), hash::fnv<32>::INIT));
-    msg("-> 0x%x <-", fnv_32(buff_b, string_len(buff_b), hash::fnv<32>::INIT));
-    msg("-> 0x%x <-", fnv_32(buff_c, string_len(buff_c), hash::fnv<32>::INIT));
+    fnv_32.offset(hash::fnv<32>::INIT);
+    msg("-> 0x%x <-", fnv_32(buff_a, string_len(buff_a)));
+    fnv_32.offset(hash::fnv<32>::INIT);
+    msg("-> 0x%x <-", fnv_32(buff_b, string_len(buff_b)));
+    fnv_32.offset(hash::fnv<32>::INIT);
+    msg("-> 0x%x <-", fnv_32(buff_c, string_len(buff_c)));
 
     std::cout << "\niovec:\n";
-    msg(">> 0x%x <<", fnv_32(io_test, 2, hash::fnv<32>::INIT));
+    fnv_32.offset(hash::fnv<32>::INIT);
+    msg(">> 0x%x <<", fnv_32(io_test, 2));
 
     std::cout << "\n2-step test:\n";
 
-    msg("-> 0x%x <-", fnv_32(buff_a, string_len(buff_a), hash::fnv<32>::INIT));
+    fnv_32.offset(hash::fnv<32>::INIT);
+    msg("-> 0x%x <-", fnv_32(buff_a, string_len(buff_a)));
     msg(">> 0x%x <<", fnv_32(buff_b, string_len(buff_b)));
 
     putchar('\n');
 
-    msg("-> 0x%llx <-", fnv_64(buff_a, string_len(buff_a), hash::fnv<64>::INIT));
-    msg("-> 0x%llx <-", fnv_64(buff_b, string_len(buff_b), hash::fnv<64>::INIT));
-    msg("-> 0x%llx <-", fnv_64(buff_c, string_len(buff_c), hash::fnv<64>::INIT));
+    fnv_64.offset(hash::fnv<64>::INIT);
+    msg("-> 0x%llx <-", fnv_64(buff_a, string_len(buff_a)));
+    fnv_64.offset(hash::fnv<64>::INIT);
+    msg("-> 0x%llx <-", fnv_64(buff_b, string_len(buff_b)));
+    fnv_64.offset(hash::fnv<64>::INIT);
+    msg("-> 0x%llx <-", fnv_64(buff_c, string_len(buff_c)));
 
     std::cout << "\niovec:\n";
-    msg(">> 0x%llx <<", fnv_64(io_test, 2, hash::fnv<64>::INIT));
+    fnv_64.offset(hash::fnv<64>::INIT);
+    msg(">> 0x%llx <<", fnv_64(io_test, 2));
 
     std::cout << "\n2-step test:\n";
-    msg("-> 0x%llx <-", fnv_64(buff_a, string_len(buff_a), hash::fnv<64>::INIT));
+    fnv_64.offset(hash::fnv<64>::INIT);
+    msg("-> 0x%llx <-", fnv_64(buff_a, string_len(buff_a)));
     msg(">> 0x%llx <<", fnv_64(buff_b, string_len(buff_b)));
 
     return 0;
