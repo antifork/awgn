@@ -48,7 +48,7 @@ template <>
 
         sockaddress(const sockaddr_in &sa) 
         : _M_addr(),
-          _M_len()
+          _M_len(sizeof(struct sockaddr_in))
         {
             assert(sa.sin_family == AF_INET);
             _M_addr.sin_family = AF_INET;
