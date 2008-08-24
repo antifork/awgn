@@ -35,7 +35,7 @@ namespace mtp {
         typedef T type;
     };
 
-    // select type...
+    // select type... (ala loki)
     //
 
     template <bool v, typename U, typename V>
@@ -85,6 +85,38 @@ namespace mtp {
     };
     template <class T>
     struct disable_if<true, T> {};
+
+    // identity (yalob: yet another layer of abstraction)
+
+    template <typename T>
+    struct identity
+    {
+        typedef T type;
+    };
+
+    // if_ and eval_if ala boost
+
+    template <bool Cond, typename TrueType, typename FalseType>
+    struct if_
+    {
+        typedef TrueType type;
+    };
+    template <typename TrueType, typename FalseType>
+    struct if_<false,TrueType, FalseType> 
+    {
+        typedef FalseType type;
+    };
+
+    template <bool Cond, typename TrueType, typename FalseType>
+    struct eval_if
+    {
+        typedef typename TrueType::type type;
+    };
+    template <typename TrueType, typename FalseType>
+    struct eval_if<false,TrueType, FalseType> 
+    {
+        typedef typename FalseType::type type;
+    };
 
 }
 

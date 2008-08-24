@@ -11,7 +11,7 @@
 #ifndef NUMERIC_HH
 #define NUMERIC_HH
 
-namespace numeric
+namespace mtp 
 {
     template <typename T, T a, T b>
     struct max 
