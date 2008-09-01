@@ -85,7 +85,7 @@ namespace more {
     static 
     #endif
     inline
-    const dump_mangling_traits<unsigned char>::type 
+    std::tr1::add_const<dump_mangling_traits<unsigned char>::type>::type 
     type_mangling<unsigned char>(const unsigned char &c)
     {
         char buf[8];
