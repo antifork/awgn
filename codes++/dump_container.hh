@@ -65,7 +65,7 @@ namespace more {
     //
 
     template <typename T>
-    static inline typename std::tr1::add_const< typename dump_mangling_traits<T>::type >::type  type_mangling(const T &t)
+    static inline typename std::tr1::add_const< typename dump_mangling_traits<T>::type >::type  dump_type_mangling(const T &t)
     { return t; }
 
     template <>
@@ -74,7 +74,7 @@ namespace more {
     #endif
     inline
     std::tr1::add_const<dump_mangling_traits<char>::type>::type 
-    type_mangling<char>(const char &c)
+    dump_type_mangling<char>(const char &c)
     {
         char buf[8];
         sprintf(buf, (c > 31 && c < 127) ? "%c" : "0x%x", c);
@@ -85,8 +85,8 @@ namespace more {
     static 
     #endif
     inline
-    std::tr1::add_const<dump_mangling_traits<unsigned char>::type>::type 
-    type_mangling<unsigned char>(const unsigned char &c)
+    const dump_mangling_traits<unsigned char>::type 
+    dump_type_mangling<unsigned char>(const unsigned char &c)
     {
         char buf[8];
         sprintf(buf, (c > 31 && c < 127) ? "%c" : "0x%x", c);
@@ -106,7 +106,7 @@ namespace std {
     {
         typename T::const_iterator it = v.begin();
         for(; it != v.end()  ; ++it, more::dump_container::sep(out, it != v.end()) )
-            out << more::type_mangling(*it);
+            out << more::dump_type_mangling(*it);
         return out;
     };
 
