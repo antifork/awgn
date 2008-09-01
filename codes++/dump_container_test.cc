@@ -23,7 +23,7 @@ main(int argc, char *argv[])
     v1.push_back(1);
     v1.push_back(2);
 
-    std::cout << std::dump_container_sep(',');
+    std::cout << more::dump_separator(',');
     std::cout << "vector<int> :" << v1 << std::endl;
 
     std::vector<unsigned char> l1;
@@ -32,7 +32,7 @@ main(int argc, char *argv[])
     l1.push_back('B');
     l1.push_back('C');
 
-    std::cout << std::dump_container_sep();
+    std::cout << more::dump_separator();
     std::cout << "list<char>  :" << l1 << std::endl;
 
     return 0;
