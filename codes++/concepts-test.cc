@@ -18,6 +18,9 @@ struct test_class {
     bool operator==(const test_class &b)
     { return true; }
 
+    bool operator!=(const test_class &b)
+    { return !this->operator==(b); }
+
     test_class &
     operator++(int)
     {

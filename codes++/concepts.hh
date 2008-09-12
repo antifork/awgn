@@ -52,7 +52,7 @@ namespace more { namespace basic_concepts {
         void constraints()
         {
             T b(a);
-            TT *c = &a;
+            T *c = &a;
         }
     };
 
