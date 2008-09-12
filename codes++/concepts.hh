@@ -8,8 +8,11 @@
  * ----------------------------------------------------------------------------
  */
 
-#ifndef _CONCEPT_HH_
-#define _CONCEPT_HH_ 
+#ifndef _CONCEPTS_HH_
+#define _CONCEPTS_HH_ 
+
+// Yet another boost::concepts implementation...
+//
 
 #define FUNCTION_REQUIRES_CONCEPT(t,C)    \
     void (C<t>::*ptr_ ## C)() __attribute__((unused)) = &C<t>::constraints
@@ -24,18 +27,37 @@
 namespace more { namespace basic_concepts {
 
     template <class T>
-    struct EqualityComparableConcept
+    struct DefaultConstructible
     {
-        T a, b;
-
         void constraints()
         {
-            a == b;
+            T a __attribute__((unused));
+        };
+    };
+
+    template <class T>
+    struct Assignable
+    {
+        T x;
+        void constraints()
+        {
+            x = x;
+        };
+    };
+
+    template <class T>
+    struct CopyConstructible
+    {
+        T a;
+        void constraints()
+        {
+            T b(a);
+            TT *c = &a;
         }
     };
 
     template <class T>
-    struct PreIncrementableConcept
+    struct PreIncrementable
     {
         T a;
         void constraints()
@@ -45,7 +67,7 @@ namespace more { namespace basic_concepts {
     };
 
     template <class T>
-    struct PostIncrementableConcept
+    struct PostIncrementable
     {
         T a;
         void constraints()
@@ -54,6 +76,27 @@ namespace more { namespace basic_concepts {
         }
     };
 
+    template <class T>
+    struct EqualityComparable
+    {
+        T a, b;
+        void constraints()
+        {
+            a == b;
+            a != b;
+        }
+    };
+
+    template <class T>
+    struct LessThanComparable
+    {
+        T a, b;
+        void constraints()
+        {
+            a < b;
+        }
+    };
+
 }}
 
-#endif /* _CONCEPT_HH_ */
+#endif /* _CONCEPTS_HH_ */

@@ -8,7 +8,7 @@
  * ----------------------------------------------------------------------------
  */
 
-#include <concept.hh>
+#include <concepts.hh>
 #include <iostream>
 
 using namespace more::basic_concepts;
@@ -28,16 +28,16 @@ struct test_class {
 template <typename T>
 bool test_template_function(T x, T y)
 {
-    FUNCTION_REQUIRES_CONCEPT(T, PostIncrementableConcept);
+    FUNCTION_REQUIRES_CONCEPT(T, PostIncrementable);
     return true;
 }
 
 template <typename T>
 struct test_template_class 
 {
-    CLASS_REQUIRES_CONCEPT(T, EqualityComparableConcept);
-    CLASS_REQUIRES_CONCEPT(T, PostIncrementableConcept);
-    // CLASS_REQUIRES_CONCEPT(T, PreIncrementableConcept);
+    CLASS_REQUIRES_CONCEPT(T, EqualityComparable);
+    CLASS_REQUIRES_CONCEPT(T, PostIncrementable);
+    // CLASS_REQUIRES_CONCEPT(T, PreIncrementable);
 
     void hello_world() 
     { std::cout << __PRETTY_FUNCTION__  << std::endl; } 

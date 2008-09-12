@@ -31,7 +31,7 @@ add_executable(refcnt-test refcnt-test.cc)
 add_executable(endianless-test endianless-test.cc)
 add_executable(proxy-test proxy-test.cc)
 add_executable(buffer-test buffer-test.cc)
-add_executable(concept-test concept-test.cc)
+add_executable(concepts-test concepts-test.cc)
 
 target_link_libraries(atomic_test -pthread)
 target_link_libraries(fast_deque-test -pthread)
