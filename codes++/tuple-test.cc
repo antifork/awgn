@@ -18,7 +18,7 @@ struct probe
     probe() { std::cout << __PRETTY_FUNCTION__ << std::endl; }
     probe(int) { std::cout << __PRETTY_FUNCTION__ << std::endl; }
     probe(const probe &) { std::cout << __PRETTY_FUNCTION__ << std::endl; }
-    probe &operator=(const probe &) { std::cout << __PRETTY_FUNCTION__ << std::endl; }
+    probe &operator=(const probe &) { std::cout << __PRETTY_FUNCTION__ << std::endl; return *this; }
     ~probe() { std::cout << __PRETTY_FUNCTION__ << std::endl; }
 };
 

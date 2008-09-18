@@ -327,7 +327,7 @@ namespace ipt {
         static int policy(const char *opt="") {
             CTtable_check(int2type<TABLE>());
             CTtarget_check(int2type<TARGET>());
-            CTassert<CHAIN != chain::NONE> chain;
+            CTassert<CHAIN != chain::NONE> chain __attribute((unused));
             CTassert< TARGET == target::ACCEPT ||
                       TARGET == target::DROP   ||
                       TARGET == target::QUEUE  ||
