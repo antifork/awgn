@@ -12,6 +12,7 @@
 #define TYPE_TRAITS_HH
 
 #include <tr1/type_traits>
+#include <tr1/tuple>
 
 namespace traits 
 {
@@ -49,6 +50,19 @@ namespace traits
         typedef char one;
         typedef long two;
         template <typename C> static one test(typename C::iterator *);
+        template <typename C> static two test(...);
+
+    public:
+        enum { value = sizeof(test<T>(0)) == sizeof(char) };
+    };
+
+    // the is_tuple (using SFINAE... Vandevoorde/Josuttis)
+    template <typename T>
+    class is_tuple
+    {
+        typedef char one;
+        typedef long two;
+        template <typename C> static one test(typename std::tr1::tuple_element<0,C>::type *);
         template <typename C> static two test(...);
 
     public:
