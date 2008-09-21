@@ -98,7 +98,7 @@ namespace generic
     // reference_proxy...
     //
 
-    template <typename T, int N>
+    template <typename T, int N = 0>
     struct reference 
     {
         T & _M_ref;
@@ -106,7 +106,6 @@ namespace generic
         : _M_ref(ref)
         {}
     };
-
 
     template <typename T, int N = 0>
     class ref_proxy {
@@ -120,9 +119,9 @@ namespace generic
         _M_value(_M_storage)
         {}
 
-        explicit ref_proxy (const reference<T,N> & pv)
+        explicit ref_proxy (reference<T,N> pv)
         : _M_storage(),
-        _M_value(const_cast<T &>(pv._M_ref))
+        _M_value(pv._M_ref)
         {}
 
         ref_proxy(const ref_proxy &rhs)

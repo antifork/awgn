@@ -22,9 +22,10 @@ void const_ref(const int &h)
 
 using namespace generic;
 
-void fun(const ref_proxy<int> &ref)
+void fun(ref_proxy<int> ref, int n)
 {
-    std::cout << "ref_proxy<int>    ref: " << ref.get() << std::endl;
+    std::cout << "      : fun(): ref_proxy<int> ref_value: " << ref.get() << ". set reference to -> " << n << std::endl;
+    ref.get() = n;
 }
 
 int main(int argc, char *argv[])
@@ -68,13 +69,21 @@ int main(int argc, char *argv[])
 
     world.get() = 69;
 
-    std::cout << "ref_proxy<int> world : " << world.get() << std::endl;
-    std::cout << "                 xxx : " << world.get() << std::endl;
+    std::cout << "ref_proxy<int> world  : " << world.get() << std::endl;
+    std::cout << "               ref_val: " << world.get() << std::endl;
 
-    fun( ref_proxy<int>(111) );
+    std::cout << "fun() test:" << std::endl;
+    fun( ref_proxy<int>(0) , 0);
 
-    int yyy = 72;
-    fun( ref_proxy<int>(yyy) );
+    int yyy = 1;
+    std::cout << "before: yyy=" << yyy << std::endl;
+    fun( ref_proxy<int>(yyy), 12345 );
+    std::cout << "after : yyy=" << yyy << std::endl;
+
+    int zzz = 2;
+    std::cout << "before: zzz=" << zzz << std::endl;
+    fun( ref_proxy<int>(reference<int>(zzz)), 12345 );
+    std::cout << "after : zzz=" << zzz << std::endl;
 
     return 0;
 }
