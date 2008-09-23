@@ -14,14 +14,14 @@
 #include <iostream>
 #include <string>
 #include <mtp.hh>
-#include <gcc_version.h>
+#include <gcc_version.hh>
 
 namespace more {
 
     struct dump_container 
     {
         static char & 
-        instance(const char _sep = char())
+        instance()
         {
             static __thread char sep;
             return sep;
@@ -30,7 +30,7 @@ namespace more {
         static std::ostream &
         sep(std::ostream &out, bool v)
         {
-            if (v)
+            if (v && instance() )
                 out << instance();
             return out;
         }
@@ -77,7 +77,7 @@ namespace more {
     dump_type_mangling<char>(const char &c)
     {
         char buf[8];
-        sprintf(buf, (c > 31 && c < 127) ? "%c" : "0x%x", c);
+        sprintf(buf, (c > 31 && c < 127) ? "%c" : "0x%x", static_cast<unsigned char>(c));
         return buf;
     }
     template <>
@@ -89,7 +89,7 @@ namespace more {
     dump_type_mangling<unsigned char>(const unsigned char &c)
     {
         char buf[8];
-        sprintf(buf, (c > 31 && c < 127) ? "%c" : "0x%x", c);
+        sprintf(buf, (c > 31 && c < 127) ? "%c" : "0x%x", static_cast<unsigned char>(c));
         return buf;
     }
 
