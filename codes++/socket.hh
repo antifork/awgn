@@ -102,7 +102,7 @@ namespace more {
         const int 
         fd() const 
         { return _M_fd; }        
-        
+
     protected:
         int _M_fd;
 
@@ -131,7 +131,7 @@ namespace more {
         int _log(const char *prefix, int ret)
         {
             if ( LOG && ret == -1) 
-               std::clog  << prefix << ": " << strerror(errno) << std::endl;
+                std::clog  << prefix << ": " << strerror(errno) << std::endl;
             return ret;
         }
     };
@@ -155,11 +155,11 @@ namespace more {
     {
         socket(__socket_type type, int protocol=0)
         : base_socket<PF_UNIX,LOG>(type,protocol),
-          _M_pathname(),
-          _M_bound(false)
+        _M_pathname(),
+        _M_bound(false)
         {}
 
-       ~socket() 
+        ~socket() 
         {
             if (!_M_pathname.empty() && _M_bound) {
                 base_socket<PF_UNIX,LOG>::_log("unlink", ::unlink(_M_pathname.c_str()));
@@ -173,7 +173,7 @@ namespace more {
                 _M_pathname = my_addr;
             return r;
         }
-    
+
         int connect(const sockaddress<PF_UNIX> &addr)
         {
             int r = _log("connect", ::connect(this->_M_fd, reinterpret_cast<const struct sockaddr *>(&addr), addr.len()));
