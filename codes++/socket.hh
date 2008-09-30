@@ -17,28 +17,32 @@
 #include <err.h>
 
 #include <sockaddress.hh>
-#include <ostream_diverter.h>
 
-namespace net {
+namespace more {
 
     template <int FAMILY, bool LOG>
-    class base_socket : protected more::osd< base_socket<FAMILY, LOG> > 
+    class base_socket  
     {
     public:
-        using more::osd<base_socket<FAMILY,LOG> >::cout_divert; 
-        using more::osd<base_socket<FAMILY,LOG> >::cerr_divert; 
-        using more::osd<base_socket<FAMILY,LOG> >::clog_divert; 
 
-
-        void 
+        int 
         init(int type,int protocol=0) 
         {
-            if (_M_fd != -1)
-                throw std::runtime_error("socket already open");
+            if (_M_fd != -1) {
+                std::clog  << "init: socket already open" << std::endl;
+                return -1;
+            }
+
             _M_fd = ::socket(FAMILY, type, protocol);
-            if (_M_fd == -1)
-                throw std::runtime_error("socket");
+            if (_M_fd == -1) {
+                std::clog  << "init: " << strerror(errno) << std::endl;
+            }
+
+            return _M_fd  == -1 ? -1 : 0;
         }
+
+        operator bool()
+        { return _M_fd  == -1 ? false : true; }
 
         int 
         send(const void *buf, size_t len, int flags) 
@@ -109,8 +113,9 @@ namespace net {
         base_socket(__socket_type type, int protocol=0)
         : _M_fd(::socket(FAMILY, type, protocol))
         {
-            if ( _M_fd == -1)
-                throw std::runtime_error("base_socket");
+            if ( _M_fd == -1) {
+                std::clog  << "socket: " << strerror(errno) << std::endl;
+            }
         }
 
         base_socket(const base_socket &);                       // noncopyable
@@ -126,7 +131,7 @@ namespace net {
         int _log(const char *prefix, int ret)
         {
             if ( LOG && ret == -1) 
-                this->cerr << prefix << ": " << strerror(errno) << std::endl;
+               std::clog  << prefix << ": " << strerror(errno) << std::endl;
             return ret;
         }
     };

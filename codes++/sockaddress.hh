@@ -25,7 +25,7 @@
 #define UNIX_PATH_MAX 108
 #endif
 
-namespace net {
+namespace more {
 
     struct sockaddress_base 
     {

@@ -17,9 +17,9 @@ int main()
     // simple echo server
     //
 
-    net::sockaddress<AF_INET> addr("127.0.0.1",31337);
-    net::sockaddress<AF_INET> peer;
-    net::socket<AF_INET> l(SOCK_STREAM);
+    more::sockaddress<AF_INET> addr("127.0.0.1",31337);
+    more::sockaddress<AF_INET> peer;
+    more::socket<AF_INET> l(SOCK_STREAM);
 
     l.bind(addr);
     l.listen(1);
@@ -27,7 +27,7 @@ int main()
     for(;;) {
         std::cout << "waiting for a client... ";
         std::cout.flush();
-        net::socket<AF_INET> r(SOCK_STREAM);
+        more::socket<AF_INET> r(SOCK_STREAM);
         l.accept(peer, r);
         std::cout << "[" << peer.host() << ":" << peer.port() << "]" << std::endl; 
         int n = r.recv(buffer, sizeof(buffer), 0);
