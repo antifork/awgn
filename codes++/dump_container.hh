@@ -117,6 +117,13 @@ namespace std {
         return out;
     }
 
+    template <typename U, typename V>
+    inline std::ostream &
+    operator<< (std::ostream &out, const std::pair<U,V> &r)
+    {
+        out << '<' << r.first << ',' << r.second << '>';
+        return out;
+    }
 }
 
 #endif /* DUMP_CONTAINER_HH */
