@@ -17,6 +17,7 @@
 
 #include <pthread.h>
 #include <signal.h>
+#include <err.h>
 
 namespace posix 
 {
@@ -31,7 +32,7 @@ namespace posix
     public: 
         explicit pthread(pthread_attr_t *a = NULL) 
         : _M_thread(),
-          _M_attr(a)
+        _M_attr(a)
         {};
 
         virtual ~pthread() 
@@ -48,10 +49,13 @@ namespace posix
             return that->operator()();
         }
 
-        void start() 
+        bool start() 
         {
-            if (::pthread_create(&_M_thread, _M_attr, start_routine, this ) != 0)
-                throw std::runtime_error("pthread_create");
+            if (::pthread_create(&_M_thread, _M_attr, start_routine, this ) != 0) {
+                std::clog << __PRETTY_FUNCTION__  << " pthread_create error!\n";
+                return false;
+            }
+            return true;
         }
 
         void cancel()
@@ -64,7 +68,7 @@ namespace posix
                 usleep(1000000);
             }
 #else
-            throw std::runtime_error("compile pthread++ with -DENABLE_CANCEL");
+            err(1,"cancel: compile pthread++ with -DENABLE_CANCEL");
 #endif
         }
 
@@ -116,28 +120,28 @@ namespace posix
 
     };
 
-    class base_lock
+    template <int n>
+    class __base_lock
     {
     public:
         enum { reader = 1, writer = 2 };
-
         static __thread int _M_lock_cnt;
 
-        base_lock()
-        {}
-
-        ~base_lock()
-        {}
+        __base_lock() {}
+        ~__base_lock() {}
 
     private:
-        base_lock(const base_lock&);                        // disable copy constructor
-        base_lock& operator=(const base_lock&);             // disable operator= 
+        __base_lock(const __base_lock&);                        // disable copy constructor
+        __base_lock& operator=(const __base_lock&);             // disable operator= 
         void* operator new(std::size_t);                    // disable heap allocation
         void* operator new[](std::size_t);                  // disable heap allocation
         void operator delete(void*);                        // disable delete operation
         void operator delete[](void*);                      // disable delete operation
-        base_lock* operator&();                             // disable address taking
+        __base_lock* operator&();                             // disable address taking
     };
+
+    typedef __base_lock<0> base_lock;
+
 
     template <class M, int N=0>
     class scoped_lock : protected base_lock 
@@ -147,7 +151,7 @@ namespace posix
 
         scoped_lock(mutex_type &m) 
         : _M_cs_old(0),
-          _M_mutex(m)
+        _M_mutex(m)
         {
 #ifdef ENABLE_CANCEL
             if ( !base_lock::_M_lock_cnt++ ) {
@@ -182,7 +186,7 @@ namespace posix
 
         scoped_lock(mutex_type &m) 
         : _M_cs_old(0),
-          _M_mutex(m)
+        _M_mutex(m)
         {
 #ifdef ENABLE_CANCEL
             if ( !base_lock::_M_lock_cnt++ ) {
@@ -217,7 +221,7 @@ namespace posix
 
         scoped_lock(mutex_type &m) 
         : _M_cs_old(0),
-          _M_mutex(m)
+        _M_mutex(m)
         {
 #ifdef ENABLE_CANCEL
             if ( !base_lock::_M_lock_cnt++ ) {
@@ -249,63 +253,96 @@ namespace posix
     {
     public:
         explicit mutex(pthread_mutexattr_t *attr = NULL) 
-        : _M_pm()
-        {
-            if (pthread_mutex_init(&_M_pm,attr) != 0)
-                throw std::runtime_error("pthread_mutex_init");
-        }
-        ~mutex()
-        {
-            if (pthread_mutex_destroy(&_M_pm) != 0)
-                throw std::runtime_error("pthread_mutex_destroy");
-        }
-        void lock()
-        {
-            if (::pthread_mutex_lock(&_M_pm) !=0) 
-                throw std::runtime_error("pthread_mutex_lock");
-        }
-        void unlock()
+        : _M_pm(), _M_state(false)
         { 
-            if ( ::pthread_mutex_unlock(&_M_pm) != 0)
-                throw std::runtime_error("pthread_mutex_unlock");
+            if (pthread_mutex_init(&_M_pm,attr) != 0) {
+                std::clog << __PRETTY_FUNCTION__ << " pthread_mutex_init error!\n"; 
+                return;
+            }
+            _M_state = true;
         }
+
+        operator bool()
+        { return _M_state; }
+
+        ~mutex()
+        { if (pthread_mutex_destroy(&_M_pm) != 0) 
+                std::clog << __PRETTY_FUNCTION__  << " pthread_mutex_destroy error!\n";  }
+
+        bool lock()
+        { if (::pthread_mutex_lock(&_M_pm) !=0) { 
+                std::clog << __PRETTY_FUNCTION__  << " pthread_mutex_lock error!\n";
+                return false;
+            }
+            return true; }
+
+        bool unlock()
+        { if ( ::pthread_mutex_unlock(&_M_pm) != 0) {
+                std::clog << __PRETTY_FUNCTION__  << " pthread_mutex_unlock error!\n";
+                return false;
+            }
+            return true; }
+
     private:
         pthread_mutex_t _M_pm;
+        bool _M_state;
     };
 
     class rw_mutex 
     {
     public:
         explicit rw_mutex(pthread_rwlockattr_t *attr = NULL) 
-        : _M_pm()
-        {
-            if ( pthread_rwlock_init(&_M_pm, attr) != 0 )
-                throw std::runtime_error("pthread_rwlock_init: ");
+        : _M_pm(), _M_state(false)
+        { 
+            if ( pthread_rwlock_init(&_M_pm, attr) != 0 ) { 
+                std::clog << __PRETTY_FUNCTION__  << " pthread_mutex_init error!\n"; 
+            }
+            _M_state = true;
         }
-        ~rw_mutex() {
+
+        operator bool()
+        { return _M_state; }
+
+        ~rw_mutex() 
+        { 
             if (pthread_rwlock_destroy(&_M_pm) != 0 )
-                throw std::runtime_error("pthread_rwlock_destroy");
+                std::clog << __PRETTY_FUNCTION__  << " pthread_rw_mutex_destroy error!\n"; 
         }
-        void rdlock()
-        {
-            if ( pthread_rwlock_rdlock(&_M_pm) != 0 )
-                throw std::runtime_error("pthread_rwlock_rdlock");
+
+        bool rdlock()
+        { 
+            if ( pthread_rwlock_rdlock(&_M_pm) != 0 ) {
+                std::clog << __PRETTY_FUNCTION__  << " pthread_rdlock error!\n";
+                return false;
+            }
+            return true; 
         }
-        void wrlock()
-        {
-            if ( pthread_rwlock_wrlock(&_M_pm) != 0 )
-                throw std::runtime_error("pthread_rwlock_unlock");
+
+        bool wrlock()
+        { 
+            if ( pthread_rwlock_wrlock(&_M_pm) != 0 ) {
+                std::clog << __PRETTY_FUNCTION__  << " pthread_wrlock error!\n";
+                return false;
+            }
+            return true; 
         }
-        void unlock() {
-            if ( pthread_rwlock_unlock(&_M_pm) != 0 )
-                throw std::runtime_error("pthread_rwlock_unlock");
+
+        bool unlock() 
+        { 
+            if ( pthread_rwlock_unlock(&_M_pm) != 0 ) {
+                std::clog << __PRETTY_FUNCTION__  << " pthread_wr_ulock error!\n";
+                return false;
+            }
+            return true; 
         }
 
     private:
         pthread_rwlock_t _M_pm;
+        bool _M_state;
     };
 
-    __thread int base_lock::_M_lock_cnt = 0;
+    template <int n>
+    __thread int __base_lock<n>::_M_lock_cnt = 0;
 
 } // namespace posix
 
