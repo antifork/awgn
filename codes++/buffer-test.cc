@@ -9,207 +9,161 @@
  */
 
 #include <iostream>
-#include <vector>
 #include <buffer.hh>
 
-#define BUFSIZE     65536
+#include <vector>
 
-template <int n>
-struct buffer : more::buffer<int,n> {};
+template <typename T>
+void dump_buff(const char *name, const more::buffer<T> &x, bool content = true)
+{
+    std::cout << "*** " << name << ": " << "size()=" << x.size() << " max_size()=" << x.max_size() << " capacity()=" << x.capacity()
+              << " reverse_capacity()=" << x.reverse_capacity() << " empty()=" << std::boolalpha << x.empty() << std::endl;
+
+    if (content) {
+        std::cout << " {";
+        typename more::buffer<T>::const_iterator it = x.begin();
+        for(; it != x.end(); ++it) {
+            std::cout << *it << ",";
+        }
+        std::cout << "}";
+    }
+
+    std::cout << std::endl;
+}
+
+
+struct object
+{
+    object() { std::cout << __PRETTY_FUNCTION__  << std::endl;}
+    object(const object &) { std::cout << __PRETTY_FUNCTION__  << std::endl;}
+    ~object() { std::cout << __PRETTY_FUNCTION__  << std::endl;}
+};
+
 
 int main()
 {
-    // more::buffer<int, BUFSIZE> x;
+    more::buffer<int> abc(10);
+
+    dump_buff("abc", abc);
+
+    std::cout << "    push_back(1,2,3,4)" << std::endl; abc.push_back(1); abc.push_back(2); abc.push_back(3); abc.push_back(4);
+    dump_buff("abc", abc);
+
+    more::buffer<int> xxx (abc); std::cout << "xxx(abc)\n";
+
+    dump_buff("xxx",xxx);
+    more::buffer<int> yyy(3); std::cout << "yyy = abc: (truncated)\n";
+
+    yyy = abc;
+    dump_buff("yyy",yyy);
+
+
+    std::cout << "abc[0]=" << abc[0] << std::endl;
+    dump_buff("abc", abc);
+
+    // discard()
+    std::cout << "abc.discard(2)\n";
+    abc.discard(2);
+
+    std::cout << "abc[0]=" << abc[0] << std::endl;
+    dump_buff("abc", abc);
+
+    // commit()
+    more::buffer<int>::iterator t = abc.end();
+
+    * t++ = 5;
+    * t++ = 6;
+
+    std::cout << "abc.commit(2)\n";
+    abc.commit(2);
+    dump_buff("abc", abc);
+
+    // clear()
+    std::cout << "abc.clear()\n";
+    abc.clear();
+    dump_buff("abc", abc);
+
+    // reset()
+    std::cout << "abc.reset()\n";
+    abc.reset();
+    dump_buff("abc", abc);
+
+    // swap()
+    std::cout << "abc.swap(xxx)\n";
+    abc.swap(xxx);
+    dump_buff("abc",abc);
+    dump_buff("xxx",xxx);
+
+    // push()
+    std::cout << "xxx.push_back(0,1,2)\n";
+    xxx.push_back(0);
+    xxx.push_back(1);
+    xxx.push_back(2);
+    dump_buff("xxx",xxx);
+
+    // push_front(): error 
+    std::cout << "xxx.push_front(-1): error\n";
+    xxx.push_front(-1);
+    dump_buff("xxx",xxx);
+
+    // pop_back()
+    std::cout << "xxx.pop_back()\n";
+    xxx.pop_back();
+    dump_buff("xxx",xxx);
+  
+    // pop_front()
+    std::cout << "xxx.pop_front()\n";
+    xxx.pop_front();
+    dump_buff("xxx",xxx);
+ 
+    // push_front(): ok
+    std::cout << "xxx.push_front(-1)\n";
+    xxx.push_front(-1);
+    dump_buff("xxx",xxx);
+   
+    // erase() test
+
+    xxx.push_back(2);
+    xxx.push_back(3);
+    xxx.push_back(4);
+
+    std::cout << "** erase test\n";
+    dump_buff("xxx",xxx);
+   
+    std::cout << "xxx.erase( xxx.begin(), xxx.begin()+1 )\n";
+    xxx.erase( xxx.begin(), xxx.begin()+1 );
+    dump_buff("xxx",xxx);
+
+    std::cout << "xxx.erase( xxx.begin()+2, xxx.begin()+4 )\n";
+    xxx.erase( xxx.begin()+2, xxx.begin()+ 4 );
+    dump_buff("xxx",xxx);
+
+    // operator=
+    std::cout << "operator== :\n";
+    std::cout << "    xxx==xxx: " << std::boolalpha << (xxx == xxx) << std::endl;
+    std::cout << "    xxx==abc: " << std::boolalpha << (xxx == abc) << std::endl;
+
+    // operator <
+    std::cout << "operator< :\n";
+    std::cout << "    xxx<xxx: " << std::boolalpha << (xxx < xxx) << std::endl;
+    std::cout << "    xxx<abc: " << std::boolalpha << (xxx < abc) << std::endl;
 
-    buffer<BUFSIZE> x;
 
-    std::cout << "size:" << x.size() << " static_size:" << x.static_size <<  " max_size:" << x.max_size() << std::endl;
-    std::cout << "empty:" << x.empty() << std::endl;
+    // shift operators...
 
-    x.pop_back();
-    x.pop_front();
+    std::cout << "__shift_begin:\n";
+    xxx.__shift_begin();
+    dump_buff("xxx",xxx);
 
-    x.commit(4);
+    std::cout << "__shift_end:\n";
+    xxx.__shift_end();
+    dump_buff("xxx",xxx);
 
-    std::cout << "size:" << x.size() << " static_size:" << x.static_size <<  std::endl;
-    std::cout << "empty:" << x.empty() << std::endl;
+    std::cout << "__shift_center:\n";
+    xxx.__shift_center();
+    dump_buff("xxx",xxx);
 
-    std::cout << "discarding 2 pods...\n";
-    x.discard(2);
-
-    std::cout << "size:" << x.size() << " static_size:" << x.static_size <<  std::endl;
-    std::cout << "empty:" << x.empty() << std::endl;
-
-    std::cout << "feeding...\n";
-
-    x.commit(5);
-
-    x[0] = 0;
-    x[1] = 1;
-    x[2] = 2;
-    x[3] = 3;
-    x[4] = 4;
-
-    std::cout << "size:" << x.size() << " static_size:" << x.static_size <<  std::endl;
-    std::cout << "empty:" << x.empty() << std::endl;
-
-    std::cout << "x[0] = " << x[0] << std::endl;
-    std::cout << "x[1] = " << x[1] << std::endl;
-    std::cout << "x[2] = " << x[2] << std::endl;
-    std::cout << "x[3] = " << x[3] << std::endl;
-    std::cout << "x[4] = " << x[4] << std::endl;
-
-    std::cout << "discarding 1 element...\n";
-
-    x.discard(1);
-
-    std::cout << "x[0] = " << x[0] << std::endl;
-    std::cout << "x[1] = " << x[1] << std::endl;
-    std::cout << "x[2] = " << x[2] << std::endl;
-    std::cout << "x[3] = " << x[3] << std::endl;
-
-    more::buffer<int, BUFSIZE> y; 
-
-    std::cout << "x.size()=" << x.size() << " y.size()=" << y.size() << std::endl;
-    std::cout << "swapping...\n";
-
-    y.swap(x);
-
-    std::cout << "x.size()=" << x.size() << " y.size()=" << y.size() << std::endl;
-
-    std::cout << "3 push_back to x...\n";
-
-    x.push_back(0);
-    x.push_back(1);
-    x.push_back(2);
-
-    std::cout << "x.size()=" << x.size() << std::endl;
-
-    std::cout << "3 pop_back from x...\n";
-
-    x.pop_back();
-    x.pop_back();
-    x.pop_back();
-
-    std::cout << "x.size()=" << x.size() << std::endl;
-
-    std::cout << "1 push_back to, 1 pop_front from  x...\n";
-    
-    x.push_back(10);
-    x.pop_front();
-
-    std::cout << "x.size()=" << x.size() << std::endl;
-
-    std::cout << "2 push_back, preparing x...\n";
-
-    x.push_back(100);
-    x.push_back(101);
-
-    std::cout << "x.size()=" << x.size() << std::endl;
-
-    more::buffer<int,BUFSIZE>::iterator it = x.begin();
-    for(; it != x.end(); it++) {
-        std::cout << "elem:" << *it << std::endl;
-    }
-
-    std::cout << "x == x ? " << (x == x) << std::endl;
-
-    more::buffer<int,65538> copy;
-
-    copy = x;
-
-    std::cout << "x == copy ? " << (x == copy) << std::endl;
-
-    // erase test
-
-    more::buffer<int, 10> erase_test;
-
-    erase_test[3] = 1;
-    erase_test[4] = 1;
-    erase_test[5] = 1;
-    erase_test[6] = 1;
-
-    erase_test.commit(7);
-    erase_test.discard(3);
-
-    std::cout << "erase_test.size()=" << erase_test.size() << std::endl;
-
-    std::cout << erase_test[0] << "," << erase_test[1] << "," << erase_test[2] << "," << erase_test[3] << std::endl;
-
-    // erase nothing 1)
-    std::cout << "erase nothing:\n";
-    erase_test.erase(&erase_test[0]-3, &erase_test[3]-3);
-    std::cout << "erase_test.size()=" << erase_test.size() << std::endl;
-
-    // erase the first... 2)
-
-    std::cout << "erase the first:\n";
-    erase_test.erase(&erase_test[0]-3, &erase_test[4]-3);
-    std::cout << "erase_test.size()=" << erase_test.size() << std::endl;
-
-    // push element...
-    std::cout << "push element:\n";
-    erase_test.push_front(1);
-    std::cout << "erase_test.size()=" << erase_test.size() << std::endl;
-
-    // erase in the middle  3)
-    std::cout << "erase in the middle:\n";
-    erase_test.erase(&erase_test[1], &erase_test[3]);
-    std::cout << "erase_test.size()=" << erase_test.size() << std::endl;
-
-    // erase in the end.. 4)
-
-    std::cout << "erase in the end:\n";
-    erase_test.erase( &erase_test[4]-3, &erase_test[5]-3);
-    std::cout << "erase_test.size()=" << erase_test.size() << std::endl;
-
-    // erase nothing 5)
-
-    std::cout << "erase nothing:\n";
-    erase_test.erase( &erase_test[7]-3, &erase_test[8]-3);
-    std::cout << "erase_test.size()=" << erase_test.size() << std::endl;
-
-    // erase everything...
-    std::cout << "erase everything:\n";
-    erase_test.erase(erase_test.begin(), erase_test.end());
-    std::cout << "erase_test.size()=" << erase_test.size() << std::endl;
-
-    // append test...
-
-    more::buffer<int,10> a;
-    more::buffer<int,10> b;
-
-    b.push_back(1);
-    b.push_back(2);
-    b.push_back(3);
-
-    a.append(b);
-    std::cout << "a.size()=" << a.size() << std::endl;
-
-    a.append(b);
-    std::cout << "a.size()=" << a.size() << std::endl;
-
-    a.append(b);
-    std::cout << "a.size()=" << a.size() << std::endl;
-
-    a.append(b);
-    std::cout << "a.size()=" << a.size() << std::endl;
-
-    a.append(b.begin(), b.end());
-    std::cout << "a.size()=" << a.size() << std::endl;
-
-    // builder test (from vector)
-
-    std::vector<int> abc;
-
-    abc.push_back(0);
-    abc.push_back(1);
-    abc.push_back(2);
-    abc.push_back(3);
-    abc.push_back(4);
-
-    more::buffer<int, 4> h(abc);
-
-    std::cout << "h.size()=" << h.size() << std::endl;
+    // std::cout << "with non-POD types..\n";
+    // more::buffer<object> o(2);
 
 }

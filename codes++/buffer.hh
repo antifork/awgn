@@ -11,376 +11,346 @@
 #ifndef _BUFFER_HH_
 #define _BUFFER_HH_ 
 
-#include <iostream>
-#include <static_assert.hh>
+#include <memory>
 
 namespace more { 
 
-    // buffer, a slightly modified version of
-    // boost::array written by Nico Josuttis
+    // a dynamic, fixed-size buffer container inspired to the GNU std::vector
+    //
 
-    template <typename T, std::size_t N>
+    template <typename _Tp, typename _Alloc = std::allocator<_Tp> > 
     class buffer
     {
+    private:
+        typedef typename _Alloc::template rebind<_Tp>::other _Tp_alloc_type;
+
+        struct _Vector_impl 
+        : public _Tp_alloc_type 
+        {
+            _Tp *       _M_buffer;
+            std::size_t _M_size;
+            _Tp *       _M_begin;
+            _Tp *       _M_end;
+            _Vector_impl(_Tp_alloc_type const& __a) 
+            : _Tp_alloc_type(__a), _M_buffer(0), _M_size(0), _M_begin(0), _M_end(0)
+            {}
+
+        } _M_Vector_impl;
 
     public:
-        typedef T                                       value_type;
-        typedef T *                                     iterator;
-        typedef const T *                               const_iterator;
+        typedef _Tp                                     value_type;
+        typedef _Tp *                                   iterator;
+        typedef const _Tp *                             const_iterator;
         typedef std::reverse_iterator<iterator>         reverse_iterator;
         typedef std::reverse_iterator<const_iterator>   const_reverse_iterator;
-        typedef T &                                     reference;
-        typedef const T &                               const_reference;
+        typedef _Tp &                                   reference;
+        typedef const _Tp &                             const_reference;
         typedef std::size_t                             size_type;
         typedef std::ptrdiff_t                          difference_type;
+        typedef _Alloc                                  allocator_type;
 
-        static const size_type  static_size = N;
+        // constructors
+        //
 
-        buffer()
-        : _M_buffer(),
-          _M_begin(_M_buffer),
-          _M_end(_M_buffer)
-        {}
+        buffer(size_type __n, const value_type& __value = value_type(), const allocator_type& __a = allocator_type())
+        : _M_Vector_impl(__a)
+        {
+            this->_M_Vector_impl._M_buffer = this->_M_Vector_impl.allocate(__n);
+            this->_M_Vector_impl._M_size = __n;
+
+            std::__uninitialized_fill_n_a(this->_M_Vector_impl._M_buffer, __n, __value, const_cast<allocator_type &>(__a));
+            _M_Vector_impl._M_begin = _M_Vector_impl._M_end = this->_M_Vector_impl._M_buffer; }
 
         ~buffer()
-        {}
+        {  std::_Destroy(this->_M_Vector_impl._M_buffer, 
+                         this->_M_Vector_impl._M_buffer + this->_M_Vector_impl._M_size, this->_M_Vector_impl); }
+
+        buffer(const buffer & rhs)
+        : _M_Vector_impl(rhs._M_Vector_impl)
+        {
+            _M_Vector_impl._M_buffer = _M_Vector_impl._M_begin = _M_Vector_impl._M_end = _M_Vector_impl.allocate(rhs.max_size());
+            _M_Vector_impl._M_size = rhs.max_size();
+            std::__uninitialized_copy_a(rhs.begin(), rhs.end(), this->_M_Vector_impl._M_begin, 
+                                        const_cast<typename buffer<_Tp,_Alloc>::_Vector_impl &>(rhs._M_Vector_impl));
+            this->commit(rhs.end()-rhs.begin());
+        }
 
         // assignments... and copy constructors 
         //
-        template <std::size_t M>
-        buffer<T,N>& operator= (const buffer<T,M>& rhs) {
+        buffer& operator= (const buffer& rhs) 
+        { buffer<_Tp, _Alloc> tmp(rhs);
+            this->swap(tmp); 
+            return *this; }
 
-            static_assert( N>=M , operator_eq, incongruence, between, buffer, sizes);
-        
-            _M_begin = const_cast<iterator>(rhs.begin());
-            _M_end = const_cast<iterator>(rhs.end());
-
-            // copy data available from rhs
-            //
-            std::copy(rhs.begin(),rhs.end(), begin());
-            return *this;
-        }
-
-        template <std::size_t M>
-        buffer(const buffer<T,M> & rhs)
-        : _M_buffer(),
-          _M_begin(rhs.begin()),
-          _M_end(rhs.end())
-        {
-            static_assert( N>=M , operator_eq, incongruence, between, buffer, sizes);
-
-            // copy data available from rhs
-            //
-            std::copy(rhs.begin(),rhs.end(), begin());
-        }
-
-        // builder from other containers
-        //
-
-        template <typename V>
-        buffer(const V &v)
-        : _M_buffer(),
-          _M_begin(_M_buffer),
-          _M_end(_M_buffer)
-        {
-            typename V::const_iterator it = v.begin();
-            for (; it != v.end(); ++it)
-                this->push_back(*it);
-        }
-
-        // Iterators of data...
-        //
+        // iterators of data...
+        // 
         iterator 
         begin() 
-        { return _M_begin; }
+        { return this->_M_Vector_impl._M_begin; }
 
         const_iterator 
         begin() const 
-        { return _M_begin; }
+        { return this->_M_Vector_impl._M_begin; }
 
         iterator 
         end() 
-        { return _M_end; }
+        { return this->_M_Vector_impl._M_end; }
 
         const_iterator 
         end() const 
-        { return _M_end; }
+        { return this->_M_Vector_impl._M_end; }
+
+        reverse_iterator
+        rbegin()
+        { return reverse_iterator(end()); }
+
+        const_reverse_iterator
+        rbegin() const
+        { return const_reverse_iterator(end()); }
+
+        reverse_iterator
+        rend()
+        { return reverse_iterator(begin()); }
+
+        const_reverse_iterator
+        rend() const
+        { return const_reverse_iterator(begin()); }
 
         // return the number of elements in the buffer
         //
         size_type size() const 
-        { return _M_end - _M_begin; }
+        { return this->_M_Vector_impl._M_end - this->_M_Vector_impl._M_begin; }
 
-        // return the max. size available for writing/appending data
+        // return the max. size available for appending data
         //
-        size_type max_size() const
-        { return _M_buffer + N - _M_end; } 
+        size_type capacity() const
+        { return this->_M_Vector_impl._M_buffer + this->_M_Vector_impl._M_size - this->_M_Vector_impl._M_end; } 
 
-        // commit n-elements after a raw-write...
+        // return the max. size available for inserting data 
+        //
+        size_type reverse_capacity() const
+        { return this->_M_Vector_impl._M_begin - this->_M_Vector_impl._M_buffer; } 
+
+        // return the max. size
+        size_type max_size() const
+        { return this->_M_Vector_impl._M_size; }
+
+        // commit n-elements after a raw-write... 
         //
         void commit(size_type n)
-        { _M_end += std::min(this->max_size(), n); }
-
-        // discard n-elements from the beginning...
-        //
-        void discard(size_type n)
-        { _M_begin += std::min(this->size(), n); }
-
-        // return true if buffer is empty
-        //
-        bool empty() const
-        { return !(_M_end-_M_begin); }
-
-        // erase data from buffer...
-        //
-        iterator
-        erase(iterator _start, iterator _end)
-        {
-            if ( _start <  _M_begin &&
-                 _end   <= _M_begin ) {
-                return _M_begin;
-            }
-            if ( _start <= _M_begin &&
-                 _end   <= _M_end ) {
-                _M_begin = _end;
-                return _M_begin;
-            }
-            if ( _start <  _M_end &&
-                 _end   <  _M_end ) {
-                std::copy(_end, _M_end, _start);
-                _M_end -= _end - _start;
-                return _end;
-            }
-            if ( _start <  _M_end &&
-                 _end   >= _M_end ) {
-                _M_end = _start;
-                return _M_end;
-            }
-
-            return _M_end;
-        }
-
-        iterator
-        erase(iterator _elem)
-        { return this->erase(_elem, _elem+1); }
+        { this->_M_Vector_impl._M_end += std::min(this->capacity(), n); }
 
         // flush data of buffer...
         //
         void clear()
-        { _M_end = _M_begin; }
+        {   // optimized away for trivial descrutors
+            std::_Destroy(this->_M_Vector_impl._M_begin, this->_M_Vector_impl._M_end, this->_M_Vector_impl);
+            this->_M_Vector_impl._M_end = this->_M_Vector_impl._M_begin; }
+
+        // discard n-elements from the beginning...
+        //
+        void discard(size_type n)
+        { n = std::min(this->size(),n);
+            // optimized away for trivial descrutors
+            std::_Destroy(this->_M_Vector_impl._M_begin, this->_M_Vector_impl._M_begin + n, this->_M_Vector_impl);
+            this->_M_Vector_impl._M_begin += n; }
 
         // flush the whole buffer, reset begin and end...
         //
         void reset()
-        { _M_begin = _M_buffer; _M_end = _M_buffer; }
+        { std::_Destroy(this->_M_Vector_impl._M_begin, this->_M_Vector_impl._M_begin + this->_M_Vector_impl._M_size, this->_M_Vector_impl);
+            this->_M_Vector_impl._M_begin = this->_M_Vector_impl._M_buffer; 
+            this->_M_Vector_impl._M_end = this->_M_Vector_impl._M_buffer; }
+
+        // return true if buffer is empty
+        //
+        bool empty() const
+        { return !(this->_M_Vector_impl._M_end-this->_M_Vector_impl._M_begin); }
 
         // operator[]: element access
         //
         reference
         operator[](size_type i)
-        { return _M_begin[i]; }
+        { return this->_M_Vector_impl._M_begin[i]; }
 
         const_reference
         operator[](size_type i) const
-        { return _M_begin [i]; }
+        { return this->_M_Vector_impl._M_begin[i]; }
 
         // front element
         //
         reference front()
-        { return _M_begin[0]; }
+        { return *begin(); }
 
         const_reference front() const
-        { return _M_begin[0]; }
+        { return *begin(); }
 
         // back element
         //
         reference back()
-        { return _M_end[-1]; }
+        { return *(end()-1); }
 
         const_reference back() const
-        { return _M_end[-1]; }
+        { return *(end()-1); }
 
-        // swap (note: linear complexity) (ala boost)
-        //
-        void 
-        swap (buffer<T,N>& rhs) {
-            std::swap_ranges(_M_buffer,_M_buffer+N,rhs._M_buffer);
-            std::swap(_M_begin, rhs._M_begin);
-            std::swap(_M_end, rhs._M_end);
-        }
-        
-        // move data inside the buffer
-        //
-        void shift_begin()
-        {
-            if (_M_begin == _M_buffer)
-                return;
-
-            size_type s = this->size();
-            std::copy(_M_begin, _M_end, _M_buffer);
-
-            _M_begin = _M_buffer;
-            _M_end = _M_buffer + s;
-        }
-        void shift_end()
-        {
-            if (_M_end == &_M_buffer[N])
-                return;
-
-            size_type s = this->size();
-            std::copy_backward(_M_begin, _M_end, _M_buffer + N );
-
-            _M_begin = _M_buffer + N - s;
-            _M_end   = _M_buffer + N;
-        }
-        void shift_middle()
-        {
-            size_type s = this->size();
-
-            if ( _M_begin == _M_buffer + ((N-s)/2) ) {
-                return;
-            }
-            if ( _M_begin > _M_buffer + ((N-s)/2) ) {
-                std::copy(_M_begin, _M_end, _M_buffer + (N-s)/2 );
-            }
-            else {
-                std::copy_backward(_M_begin, _M_end, _M_buffer + (N-s)/2 + s );
-            }
-
-            _M_begin = _M_buffer + (N-s)/2 ;
-            _M_end   = _M_buffer + (N-s)/2 + s;
-        }
-      
         // direct access to data 
         //
-        const T* 
-        data() const 
-        { return _M_begin; }
+        const _Tp* 
+        data_read() const 
+        { return this->_M_Vector_impl._M_begin; }
 
-        T* 
-        data() 
-        { return _M_begin; }
+        _Tp* 
+        data_write() 
+        { return this->_M_Vector_impl._M_end; }
 
-        // use array as C array (direct read/write access to raw buffer)
+        // swap 
         //
-        T* 
-        c_array() 
-        { return _M_buffer; }
-
-        const T* 
-        c_array() const 
-        { return _M_buffer; }
-
+        void 
+        swap (buffer& rhs) 
+        { std::swap(this->_M_Vector_impl._M_buffer, rhs._M_Vector_impl._M_buffer);
+            std::swap(this->_M_Vector_impl._M_size, rhs._M_Vector_impl._M_size);
+            std::swap(this->_M_Vector_impl._M_begin, rhs._M_Vector_impl._M_begin);
+            std::swap(this->_M_Vector_impl._M_end, rhs._M_Vector_impl._M_end); }
+ 
         // push/pop
         //
-        int push_back(const T &e)
-        {
-            if ( !(_M_end < _M_buffer+N) ) {
+        bool push_back(const _Tp &e)
+        { if ( !(this->_M_Vector_impl._M_end < this->_M_Vector_impl._M_buffer+this->_M_Vector_impl._M_size) ) {
                 std::clog << "push_back: no space available in buffer!\n";
-                return -1;
+                return false;
             }
-            *(_M_end++) = e; 
-            return 0;
-        }
+            *(this->_M_Vector_impl._M_end++) = e; 
+            return true; }
 
-        int push_front(const T &e)
-        { 
-            if ( !(_M_begin > _M_buffer) ) {
-                std::clog << "push_front: no space available in buffer!\n";
-                return -1;
-            }
-            *(--_M_begin) = e;
-            return 0;
-        }
-
-        int pop_back()
-        { 
-            if ( !(_M_end > _M_begin) ) {
+        bool pop_back()
+        { if ( !(this->_M_Vector_impl._M_end > this->_M_Vector_impl._M_begin) ) {
                 std::clog << "pop_back: empty buffer!\n";
-                return -1;
+                return false;
             }
-            _M_end--;
-            return 0;
-        }
+            --this->_M_Vector_impl._M_end;
+            this->_M_Vector_impl.destroy(this->_M_Vector_impl._M_end);
+            return true; }
 
-        int pop_front()
-        { 
-            if ( !(_M_begin < _M_end) ) {
+        bool push_front(const _Tp &e)
+        { if ( !(this->_M_Vector_impl._M_begin > this->_M_Vector_impl._M_buffer) ) {
+                std::clog << "push_front: no space available in buffer!\n";
+                return false;
+            }
+            *(--this->_M_Vector_impl._M_begin) = e;
+            return true; }
+
+        bool pop_front()
+        { if ( !(this->_M_Vector_impl._M_begin < this->_M_Vector_impl._M_end) ) {
                 std::clog << "pop_front: empty buffer!\n";
-                return -1;
+                return false; 
             }
-            _M_begin++;
-            return 0;
-        }   
+            this->_M_Vector_impl.destroy(this->_M_Vector_impl._M_begin++);
+            return true; }   
 
-        // append...
+        // erase data from buffer...
+        //
+        iterator
+        erase(iterator _start, iterator _end)
+        { if ( _start <  this->_M_Vector_impl._M_begin &&
+                 _end   <= this->_M_Vector_impl._M_begin ) {
+                return this->_M_Vector_impl._M_begin;
+            }
+            if ( _start <= this->_M_Vector_impl._M_begin &&
+                 _end   <= this->_M_Vector_impl._M_end ) {
+                std::_Destroy(this->_M_Vector_impl._M_begin, _end, this->_M_Vector_impl);
+                this->_M_Vector_impl._M_begin = _end;
+                return this->_M_Vector_impl._M_begin;
+            }
+            if ( _start <  this->_M_Vector_impl._M_end &&
+                 _end   <  this->_M_Vector_impl._M_end ) {
+                std::copy(_end, this->_M_Vector_impl._M_end, _start);
+                std::_Destroy(_end, this->_M_Vector_impl._M_end, this->_M_Vector_impl);
+                this->_M_Vector_impl._M_end -= _end - _start;
+                return _end;
+            }
+            if ( _start <  this->_M_Vector_impl._M_end &&
+                 _end   >= this->_M_Vector_impl._M_end ) {
+                std::_Destroy(_start, this->_M_Vector_impl._M_end, this->_M_Vector_impl);
+                this->_M_Vector_impl._M_end = _start;
+                return this->_M_Vector_impl._M_end;
+            }
+            return this->_M_Vector_impl._M_end; }
 
-        template <std::size_t M>
-        int append(const more::buffer<T,M> &buf)
-        {
-            if ( buf.size() > this->max_size() ) {
-                std::clog << "buffer::append: no space available!\n";
-                return -1;
+        iterator
+        erase(iterator _elem)
+        { return this->erase(_elem, _elem+1); }
+
+        // note: move data inside the buffer is O(n)
+        //
+        void __shift_begin()
+        { if (this->_M_Vector_impl._M_begin == this->_M_Vector_impl._M_buffer)
+                return;
+
+            size_type s = this->size();
+            std::copy(this->_M_Vector_impl._M_begin, this->_M_Vector_impl._M_end, this->_M_Vector_impl._M_buffer);
+
+            this->_M_Vector_impl._M_begin = this->_M_Vector_impl._M_buffer;
+            this->_M_Vector_impl._M_end = this->_M_Vector_impl._M_buffer + s; }
+        void __shift_end()
+        { if (this->_M_Vector_impl._M_end == this->_M_Vector_impl._M_buffer + this->_M_Vector_impl._M_size)
+                return;
+
+            size_type s = this->size();
+            std::copy_backward(this->_M_Vector_impl._M_begin, 
+                               this->_M_Vector_impl._M_end, this->_M_Vector_impl._M_buffer + this->_M_Vector_impl._M_size );
+
+            this->_M_Vector_impl._M_begin = this->_M_Vector_impl._M_buffer + this->_M_Vector_impl._M_size - s;
+            this->_M_Vector_impl._M_end   = this->_M_Vector_impl._M_buffer + this->_M_Vector_impl._M_size; }
+        void __shift_center()
+        { size_type s = this->size();
+
+            if ( this->_M_Vector_impl._M_begin == this->_M_Vector_impl._M_buffer + ((this->_M_Vector_impl._M_size-s)/2) ) {
+                return;
+            }
+            if ( this->_M_Vector_impl._M_begin > this->_M_Vector_impl._M_buffer + ((this->_M_Vector_impl._M_size-s)/2) ) {
+                std::copy(this->_M_Vector_impl._M_begin, 
+                          this->_M_Vector_impl._M_end, this->_M_Vector_impl._M_buffer + (this->_M_Vector_impl._M_size-s)/2 );
+            }
+            else {
+                std::copy_backward(this->_M_Vector_impl._M_begin, 
+                                   this->_M_Vector_impl._M_end, this->_M_Vector_impl._M_buffer + (this->_M_Vector_impl._M_size-s)/2 + s );
             }
 
-            std::copy(buf.begin(), buf.end(), _M_end);
-            _M_end += buf.end()-buf.begin();
-            return 0;
-        }
-
-        int append(iterator _begin, iterator _end)
-        {
-            if ( (_end - _begin) > this->max_size()) {
-                std::clog << "buffer::append: no space available!\n";
-                return -1;
-            }
-
-            std::copy(_begin, _end, _M_end);
-            _M_end += (_end - _begin);
-            return 0;
-        }
-
-    private:
-        T   _M_buffer[N];
-
-        T * _M_begin;
-        T * _M_end;
-    };
+            this->_M_Vector_impl._M_begin = this->_M_Vector_impl._M_buffer + (this->_M_Vector_impl._M_size-s)/2 ;
+            this->_M_Vector_impl._M_end   = this->_M_Vector_impl._M_buffer + (this->_M_Vector_impl._M_size-s)/2 + s; }
+   };
 
     // comparisons
 
-    template<class T, std::size_t N, std::size_t M >
-    bool operator== (const buffer<T,N>& x, const buffer<T,M>& y) {
-        if ( (x.end() - x.begin()) != (y.end()-y.begin()) )
-             return false;
-        return std::equal(x.begin(), x.end(), y.begin());
-    }
-    template<class T, std::size_t N, std::size_t M>
-    bool operator< (const buffer<T,N>& x, const buffer<T,M>& y) {
-        return std::lexicographical_compare(x.begin(),x.end(),y.begin(),y.end());
-    }
-    template<class T, std::size_t N, std::size_t M>
-    bool operator!= (const buffer<T,N>& x, const buffer<T,M>& y) {
-        return !(x==y);
-    }
-    template<class T, std::size_t N, std::size_t M>
-    bool operator> (const buffer<T,N>& x, const buffer<T,M>& y) {
-        return y<x;
-    }
-    template<class T, std::size_t N, std::size_t M>
-    bool operator<= (const buffer<T,N>& x, const buffer<T,M>& y) {
-        return !(y<x);
-    }
-    template<class T, std::size_t N, std::size_t M>
-    bool operator>= (const buffer<T,N>& x, const buffer<T,M>& y) {
-        return !(x<y);
-    }
+    template<class _Tp>
+    inline bool operator== (const buffer<_Tp>& x, const buffer<_Tp>& y) 
+    { return ( (x.end() - x.begin()) == (y.end()-y.begin()) &&
+        std::equal(x.begin(), x.end(), y.begin())); }
+
+    template<class _Tp>
+    inline bool operator< (const buffer<_Tp>& x, const buffer<_Tp>& y) 
+    { return std::lexicographical_compare(x.begin(),x.end(),y.begin(),y.end()); }
+
+    template<class _Tp>
+    inline bool operator!= (const buffer<_Tp>& x, const buffer<_Tp>& y) 
+    { return !(x==y); }
+
+    template<class _Tp>
+    inline bool operator> (const buffer<_Tp>& x, const buffer<_Tp>& y) 
+    { return y<x; }
+
+    template<class _Tp>
+    inline bool operator<= (const buffer<_Tp>& x, const buffer<_Tp>& y) 
+    { return !(y<x); }
+
+    template<class _Tp>
+    inline bool operator>= (const buffer<_Tp>& x, const buffer<_Tp>& y) 
+    { return !(x<y); }
 
     // global swap()
-    template<class T, std::size_t N>
-    inline void swap (buffer<T,N>& x, buffer<T,N>& y) {
-        x.swap(y);
-    }
+    template<class _Tp>
+    inline void swap (buffer<_Tp>& x, buffer<_Tp>& y) 
+    { x.swap(y); }
 
 } // namespace more
 
