@@ -12,13 +12,13 @@
 #ifndef ATOMICITY_HH
 #define ATOMICITY_HH
 
-#include "mtp.hh"
-
 #if   __GNUC__ >= 4
 #include <tr1/memory>
 #endif
 
 namespace atomicity {
+
+    struct null {};
 
     /// @brief  A template Scoped lock idiom (inspired to that of gnu_cxx).
     // Acquire the mutex here with a constructor call, then release with
@@ -46,8 +46,8 @@ namespace atomicity {
 
 
     struct NONE {
-        typedef mtp::null mutex;
-        typedef mtp::null scoped_lock;
+        typedef null mutex;
+        typedef null scoped_lock;
     };
 
     struct BOOST {

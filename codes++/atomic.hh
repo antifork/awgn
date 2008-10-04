@@ -12,14 +12,14 @@
 #define ATOMIC_HH
 
 #include <iostream>
-#include "atomicity-policy.hh"
+#include <atomicity-policy.hh>
 
 #if   __GNUC__ >= 4
 #include <tr1/memory>
 #elif (__GNUC__ == 3) && (__GNUC_MINOR__ == 4)
 #include <bits/atomicity.h>
 #else
-#error "g++ compiler not supported"
+#error "this compiler is not supported"
 #endif
 
 namespace more {
@@ -40,21 +40,27 @@ namespace more {
         { return _M_value; }
 
 #ifdef USE_GCC_BUILTIN
+#define __SYNC(builtin) const T builtin(T val) volatile { return __sync ## builtin(&_M_value, val); }
 
         const T 
         operator++(int) volatile
         { return __sync_fetch_and_add(&_M_value, 1); }        
         const T 
         operator--(int) volatile
-        {  return __sync_fetch_and_sub(&_M_value, 1); }
-        const T
+        { return __sync_fetch_and_sub(&_M_value, 1); }
+
+        __SYNC(fetch_and_or);
+        __SYNC(fetch_and_and);
+        __SYNC(fetch_and_xor);
+        __SYNC(fetch_and_nand);
+
+        const T 
         operator++() volatile 
         { return  __sync_add_and_fetch(&_M_value, 1); }        
         const T 
         operator--() volatile
         { return  __sync_sub_and_fetch(&_M_value, 1); }
-
-        const T 
+        const T
         operator &=(T v) volatile
         { return  __sync_and_and_fetch(&_M_value,v); }
         const T 
@@ -63,7 +69,9 @@ namespace more {
         const T 
         operator ^=(T v) volatile 
         { return  __sync_xor_and_fetch(&_M_value,v); }        
-        
+
+        __SYNC(nand_nad_fetch);
+
         const T 
         val_compare_and_swap(T oldval, T newval) volatile
         { return  __sync_val_compare_and_swap(&_M_value, oldval, newval); }
@@ -72,9 +80,14 @@ namespace more {
         bool_compare_and_swap(T oldval, T newval) volatile
         { return __sync_bool_compare_and_swap(&_M_value, oldval, newval); }
 
+        const T
+        swap(T val) volatile
+        { return __sync_lock_test_and_set(&_M_value, val); }
+
         static void memory_barrier()
         { __sync_synchronize(); }
 
+#undef __SYNC
 #else // USE__GNU_CXX
         _Atomic_word operator++(int) volatile
         { return __gnu_cxx::__exchange_and_add(&_M_value,1); }
