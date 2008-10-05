@@ -133,9 +133,10 @@ namespace sys
                 std::clog << "syslog: message overflows streambuf!\n" << std::endl;
                 b = SIZE - 1 - _M_cursor;
             }
-
-            std::copy(s, s + b, _M_buffer + _M_cursor);
-            _M_cursor += b;
+            if (b > 0) {
+                std::copy(s, s + b, _M_buffer + _M_cursor);
+                _M_cursor += b;
+            }
             return n; 
         }
 
@@ -150,6 +151,7 @@ namespace sys
             else {
                  _M_cursor = 0;
             }
+
             return c;
         }
 
