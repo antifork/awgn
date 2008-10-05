@@ -24,6 +24,23 @@
 
 namespace more {
 
+#ifdef USE_X86_FEATURE_XMM2
+    static inline
+    void mb()   { asm volatile("mfence" ::: "memory"); }
+    static inline
+    void rmb()  { asm volatile("lfence" ::: "memory"); }
+    static inline
+    void wmb()  { asm volatile("sfence" ::: "memory"); }
+#else
+#warning "compile with -DUSE_X86_FEATURE_XMM2 to have optimized memory barriers"
+    static inline
+    void mb()  { asm volatile("lock; addl $0,0(%%esp)" ::: "memory"); }
+    static inline
+    void rmb() { asm volatile("lock; addl $0,0(%%esp)" ::: "memory"); }
+    static inline
+    void wmb() { asm volatile("lock; addl $0,0(%%esp)" ::: "memory"); }
+#endif
+
     template <typename T = _Atomic_word>
     class atomic_word
     {

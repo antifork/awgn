@@ -136,7 +136,7 @@ void *thread_5(void *)
     return NULL;
 }
 
-const char *check(int n)
+const inline char *check(int n)
 {
     if (n == 0)
         return " [ok]";
@@ -187,6 +187,6 @@ int main()
         std::cout << "example_2: " << n << check(n) << std::endl;
     }
 
-    std::cout << "\nwonder why atomic_word is 3 times faster? ;-)" << std::endl;
+    std::cout << "\nDo you wonder why atomic_word increments/decrements are exactly 3 times faster? :)" << std::endl;
 }
 
