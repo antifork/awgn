@@ -163,8 +163,8 @@ namespace more {
         volatile_ptr(const volatile_ptr&);              // uncopyable
         volatile_ptr& operator=(const volatile_ptr&);   // uncopyable
 
-        typename Atomicity::scoped_lock _M_lock;
         T* _M_ptr;
+        typename Atomicity::scoped_lock _M_lock;
     };
 
     template <typename Atomicity>

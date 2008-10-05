@@ -11,22 +11,13 @@
 #ifndef FAST_DEQUE_HH
 #define FAST_DEQUE_HH
 
-#ifdef X86_FEATURE_XMM2
-#define mb()  asm volatile("mfence" ::: "memory")
-#define rmb() asm volatile("lfence" ::: "memory")
-#define wmb() asm volatile("sfence" ::: "memory")
-#else
-#warning "compile with -DX86_FEATURE_XMM2 to have optimized memory barriers"
-#define mb()  asm volatile("lock; addl $0,0(%%esp)" ::: "memory")
-#define rmb() asm volatile("lock; addl $0,0(%%esp)" ::: "memory")
-#define wmb() asm volatile("lock; addl $0,0(%%esp)" ::: "memory")
-#endif
+#include <iostream> 
+#include <stdexcept>
+#include <atomic.hh>
 
 #define likely(x)   __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
 
-#include <iostream> 
-#include <stdexcept>
 
 namespace more 
 {
