@@ -162,9 +162,9 @@ namespace sys
     }
 
     extern std::ostream log;
-    extern std::ostream logp;
+    extern std::ostream plog;
     extern std::ostream err;
-    extern std::ostream errp;
+    extern std::ostream perr;
 }
 
 #endif /* SYSLOG_HH */
