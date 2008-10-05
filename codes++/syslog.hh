@@ -115,25 +115,41 @@ namespace sys
             const_cast<syslog *>(this)->_M_level(); }
 
     private:
-        char _M_buffer[1024];
+        static const int SIZE = 1024;
+        char _M_buffer[SIZE];
+
         int  _M_priority;
         int  _M_cursor;
         int  _M_option;
 
-        // central output function...
+        // central output functions...
         //
+
+        virtual std::streamsize
+        xsputn (const char *s, std::streamsize n)
+        {
+            int b(n);
+            if ( _M_cursor+b > SIZE-1 ) {
+                std::clog << "syslog: message overflows streambuf!\n" << std::endl;
+                b = SIZE - 1 - _M_cursor;
+            }
+
+            std::copy(s, s + b, _M_buffer + _M_cursor);
+            _M_cursor += b;
+            return n; 
+        }
+
         virtual int_type
         overflow (int_type c)
         {
-            if ( c != '\n' ) {
-                assert(_M_cursor < 1024);
-                _M_buffer[_M_cursor++] = static_cast<char>(c);
-                return c;
+            if (_M_cursor < SIZE) {
+                _M_buffer[_M_cursor] = '\0';
+                _M_cursor = 0;
+                ::syslog(priority(), _M_buffer);
             }
-            
-            _M_buffer[_M_cursor] = '\0';
-            _M_cursor = 0;
-            ::syslog(priority(), _M_buffer);
+            else {
+                 _M_cursor = 0;
+            }
             return c;
         }
 
