@@ -52,7 +52,7 @@ namespace more {
         // constructors
         //
 
-        buffer(size_type __n, const value_type& __value = value_type(), const allocator_type& __a = allocator_type())
+        buffer(size_type __n = 4096, const value_type& __value = value_type(), const allocator_type& __a = allocator_type())
         : _M_Vector_impl(__a)
         {
             this->_M_Vector_impl._M_buffer = this->_M_Vector_impl.allocate(__n);
@@ -216,7 +216,6 @@ namespace more {
         //
         bool push_back(const _Tp &e)
         { if ( !(this->_M_Vector_impl._M_end < this->_M_Vector_impl._M_buffer+this->_M_Vector_impl._M_size) ) {
-                std::clog << "push_back: no space available in buffer!\n";
                 return false;
             }
             *(this->_M_Vector_impl._M_end++) = e; 
@@ -224,7 +223,6 @@ namespace more {
 
         bool pop_back()
         { if ( !(this->_M_Vector_impl._M_end > this->_M_Vector_impl._M_begin) ) {
-                std::clog << "pop_back: empty buffer!\n";
                 return false;
             }
             --this->_M_Vector_impl._M_end;
@@ -233,7 +231,6 @@ namespace more {
 
         bool push_front(const _Tp &e)
         { if ( !(this->_M_Vector_impl._M_begin > this->_M_Vector_impl._M_buffer) ) {
-                std::clog << "push_front: no space available in buffer!\n";
                 return false;
             }
             *(--this->_M_Vector_impl._M_begin) = e;
@@ -241,7 +238,6 @@ namespace more {
 
         bool pop_front()
         { if ( !(this->_M_Vector_impl._M_begin < this->_M_Vector_impl._M_end) ) {
-                std::clog << "pop_front: empty buffer!\n";
                 return false; 
             }
             this->_M_Vector_impl.destroy(this->_M_Vector_impl._M_begin++);
@@ -279,6 +275,67 @@ namespace more {
         iterator
         erase(iterator _elem)
         { return this->erase(_elem, _elem+1); }
+
+        // insert
+        template <typename _InputIterator>
+        bool insert(iterator position, _InputIterator first, _InputIterator last)
+        { int n = std::distance(first,last);
+
+            if ( position == this->begin() ) {
+                if ( n <= this->reverse_capacity() ) {
+                    std::copy(first,last, this->begin()-n);
+                    this->_M_Vector_impl._M_begin -= n;
+                    return true;
+                }     
+                int sh = n - this->reverse_capacity();
+                if (sh > this->capacity()) 
+                    return false; 
+                std::copy_backward(this->_M_Vector_impl._M_begin, this->_M_Vector_impl._M_end, 
+                                   this->_M_Vector_impl._M_end + sh );
+                this->_M_Vector_impl._M_end += sh;
+                std::copy(first,last, this->_M_Vector_impl._M_buffer);
+                this->_M_Vector_impl._M_begin = this->_M_Vector_impl._M_buffer;
+                return true;
+
+            }
+            if ( position < this->end()) {
+                if ( n <= this->capacity() ) {
+                    std::copy_backward(position, this->_M_Vector_impl._M_end, this->_M_Vector_impl._M_end + n );
+                    this->_M_Vector_impl._M_end += n;
+                    std::copy(first,last, position);
+                    return true; 
+                }
+                int sh = n - this->capacity();
+                if ( sh > this->reverse_capacity())
+                    return false;
+
+                std::copy_backward(position, this->_M_Vector_impl._M_end, 
+                                   this->_M_Vector_impl._M_buffer + this->_M_Vector_impl._M_size);
+                std::copy(this->_M_Vector_impl._M_begin, position, this->_M_Vector_impl._M_begin-sh);
+                this->_M_Vector_impl._M_end = this->_M_Vector_impl._M_buffer + this->_M_Vector_impl._M_size;
+                this->_M_Vector_impl._M_begin -= sh;
+                std::copy(first, last, position-sh);
+                return true;
+           }
+            if ( position == this->end()) {
+                if ( n <= this->capacity() ) {
+                    std::copy(first,last, this->end());
+                    this->_M_Vector_impl._M_end += n;
+                    return true;
+                }
+                int sh = n - this->capacity();
+                if ( sh > this->reverse_capacity() )
+                    return false;
+                std::copy(this->_M_Vector_impl._M_begin, this->_M_Vector_impl._M_end,
+                          this->_M_Vector_impl._M_begin-sh);
+                this->_M_Vector_impl._M_begin -= sh; 
+                std::copy_backward(first,last, this->_M_Vector_impl._M_buffer + this->_M_Vector_impl._M_size);
+                this->_M_Vector_impl._M_end = this->_M_Vector_impl._M_buffer + this->_M_Vector_impl._M_size;
+                return true;
+            }
+            // unreachable
+            return false;
+        }
 
         // note: move data inside the buffer is O(n)
         //
