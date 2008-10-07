@@ -65,6 +65,8 @@ namespace more {
         {  std::_Destroy(this->_M_Vector_impl._M_buffer, 
                          this->_M_Vector_impl._M_buffer + this->_M_Vector_impl._M_size, this->_M_Vector_impl); }
 
+        // assignment and copy constructor
+        //
         buffer(const buffer & rhs)
         : _M_Vector_impl(rhs._M_Vector_impl)
         {
@@ -75,9 +77,7 @@ namespace more {
             this->commit(rhs.end()-rhs.begin());
         }
 
-        // assignments... and copy constructors 
-        //
-        buffer& operator= (const buffer& rhs) 
+       buffer& operator= (const buffer& rhs) 
         { buffer<_Tp, _Alloc> tmp(rhs);
             this->swap(tmp); 
             return *this; }
@@ -131,7 +131,7 @@ namespace more {
         size_type reverse_capacity() const
         { return this->_M_Vector_impl._M_begin - this->_M_Vector_impl._M_buffer; } 
 
-        // return the max. size
+        // return the max. size of buffer
         size_type max_size() const
         { return this->_M_Vector_impl._M_size; }
 
@@ -147,7 +147,7 @@ namespace more {
             std::_Destroy(this->_M_Vector_impl._M_begin, this->_M_Vector_impl._M_end, this->_M_Vector_impl);
             this->_M_Vector_impl._M_end = this->_M_Vector_impl._M_begin; }
 
-        // discard n-elements from the beginning...
+        // discard n-elements from begin()
         //
         void discard(size_type n)
         { n = std::min(this->size(),n);
@@ -155,7 +155,7 @@ namespace more {
             std::_Destroy(this->_M_Vector_impl._M_begin, this->_M_Vector_impl._M_begin + n, this->_M_Vector_impl);
             this->_M_Vector_impl._M_begin += n; }
 
-        // flush the whole buffer, reset begin and end...
+        // flush the whole buffer, reset begin() and end()...
         //
         void reset()
         { std::_Destroy(this->_M_Vector_impl._M_begin, this->_M_Vector_impl._M_begin + this->_M_Vector_impl._M_size, this->_M_Vector_impl);
@@ -193,7 +193,7 @@ namespace more {
         const_reference back() const
         { return *(end()-1); }
 
-        // direct access to data 
+        // direct access to data, for reading and writing 
         //
         const _Tp* 
         data_read() const 
@@ -276,7 +276,8 @@ namespace more {
         erase(iterator _elem)
         { return this->erase(_elem, _elem+1); }
 
-        // insert
+        // insert data into the buffer
+        //
         template <typename _InputIterator>
         bool insert(iterator position, _InputIterator first, _InputIterator last)
         { size_type n = std::distance(first,last);
@@ -337,7 +338,7 @@ namespace more {
             return false;
         }
 
-        // note: move data inside the buffer is O(n)
+        // move data inside the buffer 
         //
         void __shift_begin()
         { if (this->_M_Vector_impl._M_begin == this->_M_Vector_impl._M_buffer)
