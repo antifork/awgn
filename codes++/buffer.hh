@@ -279,7 +279,7 @@ namespace more {
         // insert
         template <typename _InputIterator>
         bool insert(iterator position, _InputIterator first, _InputIterator last)
-        { int n = std::distance(first,last);
+        { size_type n = std::distance(first,last);
 
             if ( position == this->begin() ) {
                 if ( n <= this->reverse_capacity() ) {
@@ -287,7 +287,7 @@ namespace more {
                     this->_M_Vector_impl._M_begin -= n;
                     return true;
                 }     
-                int sh = n - this->reverse_capacity();
+                size_type sh = n - this->reverse_capacity();
                 if (sh > this->capacity()) 
                     return false; 
                 std::copy_backward(this->_M_Vector_impl._M_begin, this->_M_Vector_impl._M_end, 
@@ -305,7 +305,7 @@ namespace more {
                     std::copy(first,last, position);
                     return true; 
                 }
-                int sh = n - this->capacity();
+                size_type sh = n - this->capacity();
                 if ( sh > this->reverse_capacity())
                     return false;
 
@@ -323,7 +323,7 @@ namespace more {
                     this->_M_Vector_impl._M_end += n;
                     return true;
                 }
-                int sh = n - this->capacity();
+                size_type sh = n - this->capacity();
                 if ( sh > this->reverse_capacity() )
                     return false;
                 std::copy(this->_M_Vector_impl._M_begin, this->_M_Vector_impl._M_end,
