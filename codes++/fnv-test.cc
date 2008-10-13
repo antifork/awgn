@@ -88,20 +88,20 @@ int main()
     putchar('\n');
 
     fnv_64.offset(hash::fnv<64>::INIT);
-    msg("-> 0x%llx <-", fnv_64(buff_a, string_len(buff_a)));
+    msg("-> 0x%llx <-", static_cast<unsigned long long int>(fnv_64(buff_a, string_len(buff_a))));
     fnv_64.offset(hash::fnv<64>::INIT);
-    msg("-> 0x%llx <-", fnv_64(buff_b, string_len(buff_b)));
+    msg("-> 0x%llx <-", static_cast<unsigned long long int>(fnv_64(buff_b, string_len(buff_b))));
     fnv_64.offset(hash::fnv<64>::INIT);
-    msg("-> 0x%llx <-", fnv_64(buff_c, string_len(buff_c)));
+    msg("-> 0x%llx <-", static_cast<unsigned long long int>(fnv_64(buff_c, string_len(buff_c))));
 
     std::cout << "\niovec:\n";
     fnv_64.offset(hash::fnv<64>::INIT);
-    msg(">> 0x%llx <<", fnv_64(io_test, 2));
+    msg(">> 0x%llx <<", static_cast<unsigned long long int>(fnv_64(io_test, 2)));
 
     std::cout << "\n2-step test:\n";
     fnv_64.offset(hash::fnv<64>::INIT);
-    msg("-> 0x%llx <-", fnv_64(buff_a, string_len(buff_a)));
-    msg(">> 0x%llx <<", fnv_64(buff_b, string_len(buff_b)));
+    msg("-> 0x%llx <-", static_cast<unsigned long long int>(fnv_64(buff_a, string_len(buff_a))));
+    msg(">> 0x%llx <<", static_cast<unsigned long long int>(fnv_64(buff_b, string_len(buff_b))));
 
     return 0;
 }
