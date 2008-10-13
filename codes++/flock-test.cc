@@ -9,14 +9,25 @@
  */
 
 #include <flock.hh>
+#include <cstdlib>
 
 int main()
 {
-    std::cout << "start...\n";
+    std::cout << "test: LOCK_EX...\n";
     {
-        more::ScopedFlock lock("/tmp/test", LOCK_EX|LOCK_NB);
+        more::scoped_flock<LOCK_EX|LOCK_NB> l("/tmp/test-flock");
+        if (!l.is_open()) {
+            std::cout << "open;" << strerror(errno) << std::endl;
+            exit(1);
+        }
+        if (!l.is_locked()) {
+            std::cout << "scoped_flock: " << strerror(errno) << std::endl;
+            exit(1);
+        }
+
         std::cout << "locked, sleeping...\n";
         sleep(10);
+        std::cout << "unlocking...\n";
     }
     std::cout << "done\n";
 }
