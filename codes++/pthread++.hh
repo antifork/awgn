@@ -12,41 +12,54 @@
 #define PTHREADPP_HH
 
 #include <iostream>
-#include <stdexcept>
-#include <stdexcept>
 
 #include <pthread.h>
 #include <signal.h>
+#include <errno.h>
 #include <err.h>
 
 namespace posix 
 {
-    class pthread 
+    class thread 
     {
-        pthread_t _M_thread;
+        pthread_t       _M_thread;
         pthread_attr_t *_M_attr;
 
-        pthread(const pthread &);               // noncopyable
-        pthread &operator=(const pthread &);    // noncopyable
+        volatile bool   _M_running;
+
+        thread(const thread &);               // noncopyable
+        thread &operator=(const thread &);    // noncopyable
 
     public: 
-        explicit pthread(pthread_attr_t *a = NULL) 
+        explicit thread(pthread_attr_t *a = NULL) 
         : _M_thread(),
-        _M_attr(a)
+          _M_attr(a),
+          _M_running(false)
         {};
 
-        virtual ~pthread() 
-        {
-            // std::clog << __PRETTY_FUNCTION__ << std::endl;
-        }
+        virtual ~thread() 
+        {}
 
         virtual void *operator()() = 0;
 
+        friend void cleanup_handler(void *arg);
         friend void *start_routine(void *arg);
+        
+        static void thread_terminated(void *arg)
+        { reinterpret_cast<thread *>(arg)->_M_running = false; }
+
         static void *start_routine(void *arg)
         {
-            pthread *that = reinterpret_cast<pthread *>(arg);
-            return that->operator()();
+            thread *that = reinterpret_cast<thread *>(arg);
+           
+            pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL); 
+
+            pthread_cleanup_push(thread_terminated,arg);
+
+                that->operator()();
+
+            pthread_cleanup_pop(1);
+            return NULL;
         }
 
         bool start() 
@@ -55,21 +68,35 @@ namespace posix
                 std::clog << __PRETTY_FUNCTION__  << " pthread_create error!\n";
                 return false;
             }
-            return true;
+
+            return (_M_running = true);
         }
 
-        void cancel()
+        bool cancel()
         {
-            // std::clog << __PRETTY_FUNCTION__ << std::endl;
-#ifdef ENABLE_CANCEL
-            ::pthread_cancel(_M_thread);
-            while (::pthread_cancel(_M_thread)==0) {
-                std::clog << "pthread_cancel(" << _M_thread << ") spinning...\n";
-                usleep(1000000);
+            if ( !_M_running || ::pthread_cancel(_M_thread) == ESRCH )
+                return false;
+
+            void *status = (void *)0; 
+            for(;;) {
+
+                // on joinable thread, pthread_join waits for the thread to be canceled
+                //
+
+                if ( ::pthread_join(_M_thread,&status)  == ESRCH ) {
+                    _M_running = false;
+                    return true;
+                }
+
+                if (status == PTHREAD_CANCELED || _M_running == false)
+                    break;
+
+                std::clog << __PRETTY_FUNCTION__ << "(" << std::hex << _M_thread << ") spinning while thread terminates...\n";
+                usleep(200000);
             }
-#else
-            err(1,"cancel: compile pthread++ with -DENABLE_CANCEL");
-#endif
+
+            _M_running = false;
+            return true;
         }
 
         int 
@@ -96,6 +123,14 @@ namespace posix
         id() const 
         { return _M_thread; }
 
+        bool
+        is_running() const
+        { return _M_running; }
+
+        int 
+        kill(int signo)
+        { return ::pthread_kill(_M_thread, signo); }
+
     protected: 
         // meaningful only in the thread context -- operator() 
         int
@@ -106,12 +141,19 @@ namespace posix
         setcanceltype(int type, int *oldtype)
         { return ::pthread_setcanceltype(type,oldtype); }
 
+        void 
+        testcancel() 
+        { ::pthread_testcancel(); }
+
+        pthread_t self() const
+        { return ::pthread_self(); }
+
         int 
         psigmask(int how, const sigset_t * __restrict s, sigset_t * __restrict os)
         { return ::pthread_sigmask(how,s,os); }
 
         int
-        getconcurrency()
+        getconcurrency() const
         { return ::pthread_getconcurrency(); }
 
         int
@@ -119,6 +161,8 @@ namespace posix
         { return ::pthread_setconcurrency(new_level); }
 
     };
+
+    //////////// __base_lock ////////////
 
     template <int n>
     class __base_lock
@@ -142,6 +186,7 @@ namespace posix
 
     typedef __base_lock<0> base_lock;
 
+    //////////// scoped_lock ////////////
 
     template <class M, int N=0>
     class scoped_lock : protected base_lock 
@@ -153,30 +198,26 @@ namespace posix
         : _M_cs_old(0),
         _M_mutex(m)
         {
-#ifdef ENABLE_CANCEL
             if ( !base_lock::_M_lock_cnt++ ) {
                 ::pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,&_M_cs_old);
-                // std::clog << pthread_self() << " !going to non cancellable state!\n";
             }
-#endif
             _M_mutex.lock();                
         }
 
         ~scoped_lock()
         {
             _M_mutex.unlock();
-#ifdef ENABLE_CANCEL
             if (!--base_lock::_M_lock_cnt) {
                 ::pthread_setcancelstate(_M_cs_old,NULL);
-                // std::clog << pthread_self() << " !going back to previous state!\n";
             }
-#endif
         }
 
     private:
         int _M_cs_old;
         mutex_type &_M_mutex;
     };
+
+    //////////// scoped_lock(reader) ////////////
 
     template <class M>
     class scoped_lock<M,base_lock::reader> 
@@ -188,30 +229,26 @@ namespace posix
         : _M_cs_old(0),
         _M_mutex(m)
         {
-#ifdef ENABLE_CANCEL
             if ( !base_lock::_M_lock_cnt++ ) {
                 ::pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,&_M_cs_old);
-                // std::clog << pthread_self() << " !going to non cancellable state!\n";
             }
-#endif
             _M_mutex.rdlock();                
         }
 
         ~scoped_lock()
         {
             _M_mutex.unlock();
-#ifdef ENABLE_CANCEL
             if (!--base_lock::_M_lock_cnt) {
                 ::pthread_setcancelstate(_M_cs_old,NULL);
-                // std::clog << pthread_self() << " !going back to previous state!\n";
             }
-#endif
         }
 
     private:
         int _M_cs_old;
         mutex_type &_M_mutex;
     };
+
+    //////////// scoped_lock(writer) ////////////
 
     template <class M>
     class scoped_lock<M,base_lock::writer> 
@@ -223,24 +260,18 @@ namespace posix
         : _M_cs_old(0),
         _M_mutex(m)
         {
-#ifdef ENABLE_CANCEL
             if ( !base_lock::_M_lock_cnt++ ) {
                 ::pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,&_M_cs_old);
-                // std::clog << pthread_self() << " !going to non cancellable state!\n";
             }
-#endif
             _M_mutex.wrlock();                
         }
 
         ~scoped_lock()
         {
             _M_mutex.unlock();
-#ifdef ENABLE_CANCEL
             if (!--base_lock::_M_lock_cnt) {
                 ::pthread_setcancelstate(_M_cs_old,NULL);
-                // std::clog << pthread_self() << " !going back to previous state!\n";
             }
-#endif
         }
 
     private:
@@ -248,9 +279,12 @@ namespace posix
         mutex_type &_M_mutex;
     };
 
+    //////////// mutex ////////////
 
     class mutex
     {
+        friend class cond;
+
     public:
         explicit mutex(pthread_mutexattr_t *attr = NULL) 
         : _M_pm(), _M_state(false)
@@ -262,31 +296,92 @@ namespace posix
             _M_state = true;
         }
 
-        operator bool()
-        { return _M_state; }
-
         ~mutex()
-        { if (pthread_mutex_destroy(&_M_pm) != 0) 
-                std::clog << __PRETTY_FUNCTION__  << " pthread_mutex_destroy error!\n";  }
+        {
+            if (pthread_mutex_destroy(&_M_pm) != 0) 
+                std::clog << __PRETTY_FUNCTION__  << " pthread_mutex_destroy error!\n";  
+        }
 
         bool lock()
-        { if (::pthread_mutex_lock(&_M_pm) !=0) { 
+        { 
+            if (::pthread_mutex_lock(&_M_pm) !=0) { 
                 std::clog << __PRETTY_FUNCTION__  << " pthread_mutex_lock error!\n";
                 return false;
             }
-            return true; }
+            return true; 
+        }
 
         bool unlock()
-        { if ( ::pthread_mutex_unlock(&_M_pm) != 0) {
+        { 
+            if ( ::pthread_mutex_unlock(&_M_pm) != 0) {
                 std::clog << __PRETTY_FUNCTION__  << " pthread_mutex_unlock error!\n";
                 return false;
             }
-            return true; }
+            return true; 
+        }
+
+        operator bool() const
+        { return _M_state; }
 
     private:
         pthread_mutex_t _M_pm;
         bool _M_state;
     };
+
+    //////////// cond ////////////
+
+    class cond
+    { 
+    public:
+        cond(pthread_condattr_t *attr = NULL)
+        : _M_cond(), _M_state(false)
+        {
+            if (pthread_cond_init(&_M_cond, attr) != 0) {
+                std::clog << __PRETTY_FUNCTION__ << " pthread_cond_init error!\n"; 
+                return;
+            }
+            _M_state = true;
+        }
+
+        void signal()
+        { ::pthread_cond_signal(&_M_cond); }
+
+        void broadcast()
+        { ::pthread_cond_broadcast(&_M_cond); }
+
+        void wait(mutex &m) 
+        { ::pthread_cond_wait(&_M_cond, &m._M_pm); }
+
+        int timedwait(mutex &m, const struct timespec *abstime) 
+        {
+            int r = ::pthread_cond_timedwait(&_M_cond, &m._M_pm, abstime);
+            if ( r != 0 ) {
+                 std::clog << __PRETTY_FUNCTION__ << " pthread_cond_timedwait error!\n";
+            }
+            return r;
+        }
+
+        ~cond()
+        { 
+            if (::pthread_cond_destroy(&_M_cond) != 0) {
+                std::clog << __PRETTY_FUNCTION__ << ": pthread_cond_destroy error!\n";
+            }
+        }
+
+        operator bool() const
+        { return _M_state; }
+
+    private:
+        pthread_cond_t  _M_cond;
+        bool            _M_state;
+
+        // non-copyable idiom
+        cond(const cond &);
+        cond & operator=(const cond &);
+
+    };
+
+    //////////// rw_mutex ////////////
 
     class rw_mutex 
     {
@@ -296,12 +391,10 @@ namespace posix
         { 
             if ( pthread_rwlock_init(&_M_pm, attr) != 0 ) { 
                 std::clog << __PRETTY_FUNCTION__  << " pthread_mutex_init error!\n"; 
+                return;
             }
             _M_state = true;
         }
-
-        operator bool()
-        { return _M_state; }
 
         ~rw_mutex() 
         { 
@@ -335,6 +428,9 @@ namespace posix
             }
             return true; 
         }
+
+        operator bool() const
+        { return _M_state; }
 
     private:
         pthread_rwlock_t _M_pm;

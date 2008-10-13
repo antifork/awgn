@@ -12,18 +12,24 @@
 
 using namespace posix;
 
-mutex xxx;
+mutex global_mutex;
+cond  global_cond;
+rw_mutex global_mutex_rw;
 
-class Hello : public posix::pthread {
+class Hello : public posix::thread {
 
 public:
     void *operator()()
     {
-        scoped_lock<mutex> lock(xxx);
+        sleep(1);
 
-        for(int i=0;i<3;i++) {
-            std::cout << pthread_self() << " hello\n";
-            sleep(1);
+        for(int j=0;j<2;j++) {
+            this->testcancel();
+            scoped_lock<mutex> lock(global_mutex);
+            for(int i=0;i<3;i++) {
+                std::cout << "    [" << std::hex << self() << "] hello\n"; 
+                usleep(500000);
+            }
         }
         return NULL;
     }
@@ -34,16 +40,20 @@ public:
     }
 };
 
-class World : public posix::pthread {
+class World : public posix::thread {
 
 public:
     void *operator()()
     {
-        scoped_lock<mutex> lock(xxx);
+        sleep(1);
 
-        for(int i=0;i<3;i++) {
-            std::cout << pthread_self() << " world\n";
-            sleep(1);
+        for(int j=0;j<2;j++) {
+            this->testcancel();
+            scoped_lock<mutex> lock(global_mutex);
+            for(int i=0;i<3;i++) {
+                std::cout << "    [" << std::hex << self() << "] world\n"; 
+                usleep(500000);
+            }
         }
         return NULL;
     }
@@ -54,19 +64,20 @@ public:
     }
 };
 
-rw_mutex yyy;
 
-class Reader : public posix::pthread {
+class Reader : public posix::thread {
 
 public:
     void *operator()()
     {
-        scoped_lock<rw_mutex, base_lock::reader> lock(yyy);
+        {
+            scoped_lock<rw_mutex, base_lock::reader> lock(global_mutex_rw);
 
-        for(int i=0;i<3;i++) {
-            std::cout << pthread_self() << " reader!\n";
-            sleep(1);
+            for(int i=0;i<3;i++) {
+                std::cout << "    [" << std::hex << self() << "] reader!\n"; sleep(1);
+            }
         }
+
         return NULL;
     }
 
@@ -76,16 +87,15 @@ public:
     }
 };
 
-class Writer : public posix::pthread {
+class Writer : public posix::thread {
 
 public:
     void *operator()()
     {
-        scoped_lock<rw_mutex, base_lock::writer> lock(yyy);
+        scoped_lock<rw_mutex, base_lock::writer> lock(global_mutex_rw);
 
         for(int i=0;i<3;i++) {
-            std::cout << pthread_self() << " writer!\n";
-            sleep(1);
+            std::cout << "    [" << std::hex << self() << "] writer!\n"; sleep(1);
         }
         return NULL;
     }
@@ -98,54 +108,130 @@ public:
 };
 
 
+struct WaitCond : public posix::thread {
+
+    void *operator()()
+    {
+        scoped_lock<mutex> lock(global_mutex);
+
+        std::cout << "    [" << std::hex << self() << "] waiting on cond... (" << 
+        std::boolalpha << (bool)global_cond << ")\n"; 
+
+        global_cond.wait(global_mutex);
+
+        std::cout << "    [" << std::hex << self() << "] signaled...\n"; sleep(1);
+        return NULL;
+    } 
+
+    ~WaitCond()
+    {
+        this->cancel();
+    }
+};
+
+
 int main(int argc, char *argv[])
 {
-    std::cout << "[*] basic mutex...\n";
-    Hello *hello = new Hello;
-    World *world = new World;
 
-    hello->start();
-    world->start();
+#define RED     "\E[0;31;1m"
+#define RESET   "\E[0m"
 
-    hello->join();
-    world->join();
-    
-    delete hello;
-    delete world;
+    std::cout << "\n[*]" RED " scoped thread..." RESET "\n";
+    {
+        Hello test;
+        test.start();
+        sleep(1);
+    } // terminate as soon as possible
 
-    std::cout << "[*] reader mutex...\n";
+    std::cout << "\n[*] "RED"basic mutex..."RESET"\n";
+    {
+        Hello *hello = new Hello;
+        World *world = new World;
 
-    Reader *one = new Reader;
-    Reader *two = new Reader;
-    
-    one->start();
-    two->start();
+        hello->start();
+        world->start();
 
-    one->join();
-    two->join();
+        std::cout << "    hello.is_running(): " << std::boolalpha << hello->is_running() << std::endl;
+        std::cout << "    world.is_running(): " << std::boolalpha << world->is_running() << std::endl;
 
-    delete one;
-    delete two;
+        hello->join();
+        world->join();
 
-    std::cout << "[*] reader/writer mutex...\n";
+        std::cout << "    hello.is_running(): " << std::boolalpha << hello->is_running() << std::endl;
+        std::cout << "    world.is_running(): " << std::boolalpha << world->is_running() << std::endl;
 
-    one = new Reader;
-    Writer *three = new Writer;
+        delete hello;
+        delete world;
+    }
 
-    one->start();
-    three->start();
+    std::cout << "\n[*] " RED "reader mutex..." RESET "\n";
+    {
 
-    one->join();
-    three->join();
+        Reader *one = new Reader;
+        Reader *two = new Reader;
 
-    delete one;
-    delete three;
+        one->start();
+        two->start();
 
-    std::cout << "[*] stopping a thread in a critical section (ENABLE_CANCEL)...\n";
-    
-    one = new Reader;
-    one->start();
-    delete one;
-        
+        one->join();
+        two->join();
+
+        delete one;
+        delete two;
+    }
+
+    std::cout << "\n[*] "RED"reader/writer mutex..."RESET"\n";
+    {
+        Reader *one = new Reader;
+        Writer *two = new Writer;
+
+        one->start();
+        two->start();
+
+        one->join();
+        two->join();
+
+        delete one;
+        delete two;
+    }
+
+    std::cout << "\n[*] "RED"stopping a thread in a critical section..."RESET"\n";
+    {
+        Reader *one = new Reader;
+        one->start();
+        delete one;
+    }
+    std::cout << "\n[*] "RED"stopping a detached thread in a critical section..."RESET"\n";
+    {
+        Reader *one = new Reader;
+        one->start();
+        one->detach();
+        delete one;
+    }
+
+
+    std::cout << "\n[*] "RED"wait cond thread..."RESET"\n";
+    {   
+        WaitCond * wc = new WaitCond;
+        wc->start();
+
+        std::cout << "    -> waiting for the thread to wait for conditions to be signaled...\n";
+        sleep(1);
+
+        {
+            scoped_lock<mutex> lock(global_mutex);
+            // global_mutex.lock();  
+
+            std::cout << "    -> signaling...\n";
+            global_cond.signal();
+
+            // global_mutex.unlock();
+        }
+
+        std::cout << "    -> joining the thread...\n";
+        wc->join();
+        delete wc;
+    }
+
     return 0;
 }
