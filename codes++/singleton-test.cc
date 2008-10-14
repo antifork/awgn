@@ -11,39 +11,40 @@
 #include <iostream>
 #include <singleton.hh>
 
-struct hello1: public generic::singleton<hello1> 
+struct hello1: protected generic::singleton<hello1> 
 {
     SINGLETON_CTOR(hello1) {}
 };
 
-class hello2 : public generic::singleton<hello2> 
+
+class hello2 : protected generic::singleton<hello2> 
 {
     int __par1;
     int __par2;
 
 public:
- // hello(const VOID &abc) : generic::singleton<hello>(abc) {}
+
     SINGLETON_CTOR(hello2), __par1(0), __par2(1) {}
 
-    const int par1() const volatile
+    const int par1() const 
     { return __par1; }
 
-    const int par2() const volatile
+    const int par2() const 
     { return __par2; }
 };
 
-class hello3 : public generic::singleton<hello3> {
+class hello3 : protected generic::singleton<hello3, true /* volatile singleton */ > {
 
     int __par1;
     int __par2;
 
 public:
-    MULTITON_CTOR(hello3, int _par1, int _par2), __par1(_par1), __par2(_par2) {}
+    VOLATILE_SINGLETON_CTOR(hello3, int _par1, int _par2 = 0 ), __par1(_par1), __par2(_par2) {}
 
-    const int par1() const volatile
+    const int par1() const volatile 
     { return __par1; }
 
-    const int par2() const volatile
+    const int par2() const volatile 
     { return __par2; }
 };
 
@@ -51,31 +52,41 @@ public:
 int 
 main(int argc, char *argv[])
 {
-    volatile hello1 &ref1 = hello1::instance();
-    volatile hello2 &ref2 = hello2::instance();
+    hello1 &ref1 = hello1::instance();
+    hello2 &ref2 = hello2::instance();
+    volatile hello3 &ref3 = hello3::instance<int,int>(0,1);           // singleton: slot signature <int,int> 
 
     std::cout << "\nsingleton instance (via volatile reference)...\n";
-    std::cout << "\nnote: volatile is a contract. The class writer must honour it,\n";
-    std::cout << "      by writing volatile methods with must be thread-safe.\n\n";
+    std::cout << "note: volatile is a contract. The class writer must honour it,\n";
+    std::cout << "      by writing volatile methods that are thread-safe.\n\n";
 
-    std::cout << "instance @" << &ref1  << '\n';
-    std::cout << "instance @" << &ref2  << '\n';
+    std::cout << "ref1 -> singleton instance @" << std::hex << &ref1  << '\n';
+    std::cout << "ref2 -> singleton instance @" << std::hex << &ref2  << '\n';
+    std::cout << "ref3 -> singleton instance @" << std::hex << &ref3  << '\n';
 
-    volatile hello3 &mul0 = hello3::instance<0>(0,1); // multiton: slot 0
-    volatile hello3 &mul1 = hello3::instance<1>(1,2); // multiton: slot 1
+    volatile hello3 &ref4 = hello3::instance<int>(1);               // singleton: slot <int> 
 
-    std::cout << "\n2 multitons: slot0 and slot1\n";
-    std::cout << "slot0    @" << &mul0 << " par:" << mul0.par1() << '\n';
-    std::cout << "slot1    @" << &mul1 << " par:" << mul1.par1() << '\n';
+    std::cout << "\n1 singleton: slot <int,int> | slot <int>\n";
 
-    std::cout << "\ngetting a reference to multiton slot0...\n";
-    std::cout << "slot0 param:" << hello3::instance<0,int, int>().par1() << std::endl;
+    std::cout << "ref3: slot @" << std::hex << &ref3 << " par:" << std::dec << ref3.par1() << ',' << ref3.par2() << '\n';
+    std::cout << "ref4: slot @" << std::hex << &ref4 << " par:" << std::dec << ref4.par1() << ',' << ref4.par2() << '\n';
 
-    std::cout << "\nmultiton with 2-parameters ctor..\n";
-    volatile hello3 &mulB = hello3::instance<0>(1,2);
+    volatile hello3 & ref5 = hello3::instance<int,int>();
+    volatile hello3 & ref6 = hello3::instance<int>();
 
-    std::cout << "instance @" << &mulB << " par1:" << mulB.par1() << " par2:" << mulB.par2() << '\n';
+    std::cout << "ref5: slot @" << std::hex << &ref5 << " par:" << std::dec << ref5.par1() << ',' << ref5.par2() << '\n';
+    std::cout << "ref6: slot @" << std::hex << &ref6 << " par:" << std::dec << ref6.par1() << ',' << ref6.par2() << '\n';
 
-    // hello1 a;  // <- instances of singleton are not allowed, and non copyable. 
+#ifdef ERR_0
+    hello1 a;  // <- instances of singleton are not allowed 
+#endif
+#ifdef ERR_1
+    hello1 b ( const_cast<const hello1 &>(hello1::instance()) ); // <- instances are not copyable
+#endif
+#ifdef ERR_2
+    hello1 b;
+    b = const_cast<const hello1 &>(hello1::instance()); // <- instances are not copyable
+#endif
 
+    return 0;
 }
