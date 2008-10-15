@@ -11,31 +11,31 @@
 #include <cstdlib>
 #include <misp.hh>
 
-char k_integer[]  ="integer";
-char k_string[]   ="string";
-char k_ip[]       ="ip";
+TYPEMAP_KEY(integer);
+TYPEMAP_KEY(str);
+TYPEMAP_KEY(ip);
 
-typedef TYPEMAP(k_integer, int,
-                k_string,  std::string,
-                k_ip,      std::string) MYSCRIPT;
+typedef TYPEMAP(integer, int,
+                str,     std::string,
+                ip,      std::string) MYSCRIPT;
 
 struct myscript : public more::misp<MYSCRIPT>
 {
     virtual bool grammar(const std::string &key, const std::string &value)
     {
-        if ( key == k_string ) {
-            this->set<k_string>(value);
+        if ( key == str::value() ) {
+            this->get<str>() = value;
             return true;
         }
 
-        if ( key == k_ip ) {
-            this->set<k_ip>(value);
+        if ( key == ip::value() ) {
+            this->get<ip>() = value;
             return true;
         }
 
-        if ( key == k_integer ) {
+        if ( key == integer::value() ) {
             int num = atoi(value.c_str());
-            this->set<k_integer>(num);
+            this->get<integer>() = num;
             return true;
         }
 
@@ -50,13 +50,13 @@ main(int argc, char *argv[])
 {
     myscript abc;
 
-    if ( !abc.parse("./test") ) {
+    if ( !abc.parse("./misp-test.txt") ) {
         return -1;
     }
 
-    std::cout << k_string  << ":" << '"' << abc.get<k_string>()  << '"' << std::endl;
-    std::cout << k_ip      << ":" << '"' << abc.get<k_ip>()      << '"' << std::endl;
-    std::cout << k_integer << ":" <<        abc.get<k_integer>() << std::endl;
+    std::cout << "-> " << str::value()     << ":" << '"' << abc.get<str>()  << '"' << std::endl;
+    std::cout << "-> " << ip::value()      << ":" << '"' << abc.get<ip>()   << '"' << std::endl;
+    std::cout << "-> " << integer::value() << ":" <<     abc.get<integer>() << std::endl;
 
     return 0;
 }

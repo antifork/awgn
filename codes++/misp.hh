@@ -15,12 +15,12 @@
 #include <fstream>
 #include <string>
 #include <cstring>
+#include <tr1/type_traits>
 
 #include <typemap.hh>
 
-
-/////////////////////////////////////////
-//  metaprogrammed init-script parser 
+///////////////////////////////////////////
+//  MISP: Metaprogrammed Init-Script Parser 
 //
 
 namespace more {
@@ -37,69 +37,47 @@ namespace more {
     class misp
     {
     public:
-
-        typedef typename T::type            value_type;
-        typedef misp<typename T::next>      map_type;
+        typedef typename T::type        value_type;
+        typedef misp<typename T::next>  map_type;
 
     private:
-
         value_type   _M_value;
         map_type     _M_map;
-
-        /////////////////////////// GET /////////////////////////////////
 
     public:
 
         misp()
-        : _M_value(),
-        _M_map()
+        : _M_value(), _M_map()
         {}
 
         ~misp()
         {}
 
-        template <char *K>
-        typename mtp::TM::has_type<K, T>::type
-        get() const
+        ///////////////////
+        // compile-time get
+
+        template <typename K>
+        typename std::tr1::add_reference< typename mtp::TM::has_type<K, T>::type>::type
+        get() 
         { 
             return __get<K>(int2Type< mtp::TM::indexof<K, T>::value >()); 
         }
 
-        template <char *K, int n>
-        typename mtp::TM::has_type<K, T>::type
-        __get(int2Type<n>) const
+        template <typename K, int n>
+        typename std::tr1::add_reference<typename mtp::TM::has_type<K, T>::type>::type
+        __get(int2Type<n>) 
         { 
             return _M_map.__get<K>(int2Type<n-1>()); 
         }
 
-        template <char *K>
-        value_type
-        __get(int2Type<0>) const
+        template <typename K>
+        typename std::tr1::add_reference<value_type>::type
+        __get(int2Type<0>) 
         { 
             return _M_value; 
         } 
-
-        /////////////////////////// SET /////////////////////////////////
-
-        template <char *K, typename V>
-        void set(const V &value)
-        {
-            __set<K,V>(value, int2Type<mtp::TM::indexof<K, T>::value >());
-        }
-
-        template <char *K, typename V, int n>
-        void __set(const V &value, int2Type<n>)
-        {
-            _M_map.__set<K>(value, int2Type<n-1>());
-        }    
-
-        template <char *K, typename V>
-        void __set(const V &value, int2Type<0>)
-        { _M_value = value; } 
-
-        /////////////////////////// parse /////////////////////////////////
-
-    public:
+        
+        ////////////////////////////////
 
         bool parse(const std::string &f)
         {
@@ -168,14 +146,12 @@ namespace more {
         }
 
     protected:
-
         virtual bool grammar(const std::string &, const std::string &) { return false; }
 
     };
 
     template <>
     class misp<mtp::TM::null> {};
-
 }
 
 #endif /* _MISP_HH_ */

@@ -84,6 +84,10 @@
 #define TYPEMAP(...)                  XPASTE(TYPEMAP_ ,PP_NARG(__VA_ARGS__)) ( __VA_ARGS__) 
 #endif /* TYPEMAP */
 
+#define TYPEMAP_KEY(k)  struct k { \
+    static const char * value() \
+    { return # k; } \
+};
 
 namespace mtp {
 
@@ -91,9 +95,10 @@ namespace mtp {
 
         struct null {};
 
-        template <char *K, typename V, typename N>
+        template <typename K, typename V, typename N>
         struct typemap 
-        {   
+        {  
+            typedef K key; 
             typedef V type;
             typedef N next; 
         };
@@ -101,13 +106,13 @@ namespace mtp {
         // has_type<key, typemap>::type
         //
 
-        template <char *K, typename M> struct has_type; 
-        template <char *K, typename T, typename N>
+        template <typename K, typename M> struct has_type; 
+        template <typename K, typename T, typename N>
         struct has_type<K, typemap<K, T, N> >
         {
             typedef T type;
         }; 
-        template <char *K, char *H, typename T, typename N>
+        template <typename K, typename H, typename T, typename N>
         struct has_type<K, typemap<H,T,N> >
         {
             typedef typename has_type<K,N>::type type;
@@ -116,19 +121,19 @@ namespace mtp {
         // append<key, type_value, typemap>::type
         //
 
-        template <char *K, typename V, typename N> struct append;
-        template <char *K, typename V>
+        template <typename K, typename V, typename N> struct append;
+        template <typename K, typename V>
         struct append<K, V, null>
         {
             typedef typemap<K,V,null> type;
         };
 
-        template <char *K, typename V, typename U,typename N>
+        template <typename K, typename V, typename U,typename N>
         struct append<K, V, typemap<K,U,N> >
         {
             // fail to compile: key is already present
         };
-        template <char *K, char *H, typename V, typename U, typename N>
+        template <typename K, typename H, typename V, typename U, typename N>
         struct append<K, V, typemap<H,U,N> >
         {
             typedef typemap<H,U, typename append<K,V,N >::type> type;
@@ -143,7 +148,7 @@ namespace mtp {
         {
             enum { value = 0 };
         };
-        template <char *K, typename V, typename N>
+        template <typename K, typename V, typename N>
         struct size<typemap<K,V,N> >
         {
             enum { value = 1 + size<N>::value };
@@ -152,19 +157,18 @@ namespace mtp {
         // indexof<key>::value
         //
 
-        template <char *K, typename M> struct indexof;
-
-        template <char *K>
+        template <typename K, typename M> struct indexof;
+        template <typename K>
         struct indexof<K, null>
         { 
             enum { value = -1 };
         };
-        template <char *K, typename V, typename N>
+        template <typename K, typename V, typename N>
         struct indexof<K, typemap<K, V, N> >
         {
             enum { value = 0 };
         };
-        template <char *K, char *H, typename V, typename N>
+        template <typename K, typename H, typename V, typename N>
         struct indexof<K, typemap<H, V, N> >
         {
             enum { value = indexof<K,N>::value == -1 ? -1 : 1 + indexof<K,N>::value  };
