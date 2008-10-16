@@ -37,10 +37,12 @@ namespace more {
     class misp
     {
     public:
+        typedef typename T::key         key_type;
         typedef typename T::type        value_type;
         typedef misp<typename T::next>  map_type;
 
     private:
+        key_type     _M_key;
         value_type   _M_value;
         map_type     _M_map;
 
@@ -57,14 +59,14 @@ namespace more {
         // compile-time get
 
         template <typename K>
-        typename std::tr1::add_reference< typename mtp::TM::has_type<K, T>::type>::type
+        typename std::tr1::add_reference< typename mtp::TM::get<K, T>::type>::type
         get() 
         { 
             return __get<K>(int2Type< mtp::TM::indexof<K, T>::value >()); 
         }
 
         template <typename K, int n>
-        typename std::tr1::add_reference<typename mtp::TM::has_type<K, T>::type>::type
+        typename std::tr1::add_reference<typename mtp::TM::get<K, T>::type>::type
         __get(int2Type<n>) 
         { 
             return _M_map.__get<K>(int2Type<n-1>()); 

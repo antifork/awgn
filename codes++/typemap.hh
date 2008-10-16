@@ -84,6 +84,7 @@
 #define TYPEMAP(...)                  XPASTE(TYPEMAP_ ,PP_NARG(__VA_ARGS__)) ( __VA_ARGS__) 
 #endif /* TYPEMAP */
 
+
 #define TYPEMAP_KEY(k)  struct k { \
     static const char * value() \
     { return # k; } \
@@ -103,19 +104,19 @@ namespace mtp {
             typedef N next; 
         };
 
-        // has_type<key, typemap>::type
+        // get<key, typemap>::type
         //
 
-        template <typename K, typename M> struct has_type; 
+        template <typename K, typename M> struct get; 
         template <typename K, typename T, typename N>
-        struct has_type<K, typemap<K, T, N> >
+        struct get<K, typemap<K, T, N> >
         {
             typedef T type;
         }; 
         template <typename K, typename H, typename T, typename N>
-        struct has_type<K, typemap<H,T,N> >
+        struct get<K, typemap<H,T,N> >
         {
-            typedef typename has_type<K,N>::type type;
+            typedef typename get<K,N>::type type;
         };
 
         // append<key, type_value, typemap>::type
