@@ -9,6 +9,7 @@
  */
 
 #include <typemap.hh>
+#include <typeinfo>
 
 TYPEMAP_KEY(name);
 TYPEMAP_KEY(nickname);
@@ -31,15 +32,22 @@ main(int argc, char *argv[])
 
     mtp::TM::get<size, map_1>::type x = 1;
     mtp::TM::get<size, map_2>::type c = 2;
-    mtp::TM::get<age,  map_2>::type d= 3;
+    mtp::TM::get<age,  map_2>::type d = 3;
 
     std::cout << "size<map_1>::value  = " << mtp::TM::size<map_1>::value << std::endl;
     std::cout << "size<map_2>::value  = " << mtp::TM::size<map_2>::value << std::endl;
 
     std::cout << "indexof<size,map_2> = " << mtp::TM::indexof<size, map_2>::value << std::endl;
-    std::cout << "indexof<age, map_2> = "  << mtp::TM::indexof<age, map_2>::value << std::endl;
+    std::cout << "indexof<age, map_2> = " << mtp::TM::indexof<age, map_2>::value << std::endl;
     std::cout << "indexof<name,map_2> = " << mtp::TM::indexof<name, map_2>::value << std::endl;
 
+    std::cout << "get_key<0, map_2> = " << typeid(mtp::TM::get_key<0, map_2>::type).name() << std::endl; 
+    std::cout << "get_key<1, map_2> = " << typeid(mtp::TM::get_key<1, map_2>::type).name() << std::endl; 
+    std::cout << "get_key<2, map_2> = " << typeid(mtp::TM::get_key<2, map_2>::type).name() << std::endl; 
+
+    std::cout << "key[0] = " << ( mtp::TM::get_key<0, map_2>::type::value() ? : "NULL" ) << std::endl;
+    std::cout << "key[1] = " << ( mtp::TM::get_key<1, map_2>::type::value() ? : "NULL" ) << std::endl;
+    std::cout << "key[2] = " << ( mtp::TM::get_key<2, map_2>::type::value() ? : "NULL" ) << std::endl;
     return 0;
 }
  
