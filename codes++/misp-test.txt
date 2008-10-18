@@ -1,12 +1,11 @@
 #
 # METAPROGRAMMED INIT-SCRIPT PARSER TEST
 #
-# this is comment
 #
 
-integer = 69    # integer value
+integer = 45    # integer value
 
-str = "this is a string"
+str = " this is a string" 
 
-ip = 127.0.0.1
+ip=127.0.0.1
 

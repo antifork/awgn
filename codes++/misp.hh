@@ -13,19 +13,16 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
-#include <cstring>
 #include <tr1/type_traits>
 
 #include <typemap.hh>
 
 ///////////////////////////////////////////
 //  MISP: Metaprogrammed Init-Script Parser 
-//
 
 namespace more {
-
-    // int2Type
 
     template <int n>
     struct int2Type
@@ -33,20 +30,56 @@ namespace more {
         enum { value = n };
     };
 
+    ////////////////////////////////////////////////////////////////////////////////////
+    // overloaded misp_parse_elem functions must be provided to parse user-defined types
+
+    template <typename E>
+    static bool misp_parse_elem(std::istream &in, E &elem)
+    { in >> elem; 
+        return true; }
+
+    static bool misp_parse_elem(std::istream &in, std::string &elem)
+    { 
+        in >> elem;
+        if (in.fail()) {
+            return false;
+        }
+
+        if (elem[0] == '"') {
+            char c;
+            in >> std::noskipws;
+            while ( in >> c && c != '"' ) {
+                if ( c == '\\') {
+                    in >> c;
+                    if (!in)
+                        break;
+                }
+                elem.push_back(c);
+            }
+            in >> std::skipws;
+            elem.erase(0,1);
+
+            if (c != '"') {
+                std::clog << "parse: error at string '" << elem << ": missing quotation.\n";
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     template <typename T>
-    class misp
+    struct misp
     {
     public:
+
         typedef typename T::key         key_type;
         typedef typename T::type        value_type;
         typedef misp<typename T::next>  map_type;
 
-    private:
         key_type     _M_key;
         value_type   _M_value;
         map_type     _M_map;
-
-    public:
 
         misp()
         : _M_value(), _M_map()
@@ -55,7 +88,8 @@ namespace more {
         ~misp()
         {}
 
-        ///////////////////
+    public:
+        //////////////////////////////////////////////////////////////////////////
         // compile-time get
 
         template <typename K>
@@ -78,78 +112,91 @@ namespace more {
         { 
             return _M_value; 
         } 
-        
-        ////////////////////////////////
+       
+    protected:
+        //////////////////////////////////////////////////////////////////////////
+        // run-time parser 
+
+        bool parse(std::istream &in, const std::string &key)
+        { return __parse(in, key, *this); }
+
+        template <typename U>
+        static bool __parse(std::istream &in, const std::string &key, misp<U> &m)
+        {
+            if (key == U::key::value()) {
+                if (!misp_parse_elem(in,m._M_value) || in.fail() ) {
+                    std::clog << "parse: error at key[" << U::key::value() << "]: unexpected argument.\n";
+                    return false;
+                }
+                return true;
+            }
+            else return __parse(in, key, m._M_map);
+        }
+        static bool __parse(std::istream &in, const std::string &k, misp<mtp::TM::null> &)
+        {
+            std::clog << "parse: error at key[" << k << "]: key not found!\n";
+            return false;
+        }
+       
+    public:
 
         bool parse(const std::string &f)
         {
             std::ifstream sc(f.c_str());
             if (!sc) {
-                std::clog << __FUNCTION__ << ": couldn't open file " << f << " for parsing.\n";
+                std::clog << "parse: couldn't open file " << f << " for parsing.\n";
                 return false;
             }
 
             std::string line;
             for(int n = 1; std::getline(sc, line); n++) {
 
-                const char * p = line.c_str();
-                // skip spaces in set
-                //
-                p += strspn(p, " \f\n\r\t\v");
+                std::stringstream sline(line);
+                std::string key;
 
-                // skip comment and empty lines..
-                //
-                if (p[0] == '#' || p[0] == '\0')
+                // parse key...
+                sline >> std::noskipws;
+                sline >> std::ws;
+
+                char c('\0');
+                while ( sline >> c && c != '=' && !isspace(c)) {
+                    key.push_back(c);
+                }
+
+                sline >> std::skipws;
+
+                // std::cout << "KEY{"  << key << "}\n";
+
+                // skip comments/empty lines
+                if (key.empty() || key[0] == '#')
                     continue;
 
-                // std::cout << "[" << p << "]" << std::endl;
-
-                char key[80] = { 0 }, value[80]= { 0 };
-
-                if ( sscanf(p, "%s", key) != 1 ) {
-                    std::clog << __FUNCTION__ << ": error at line " << n << std::endl;
-                    return false;
-                }
-
-                p += strlen(key);
-                p += strspn(p, " \t");
-
-                if ( *p++ != '=' ) {
-                    std::clog << __FUNCTION__ << ": error at line " << n << std::endl;
-                    return false;
-                }
-
-                p += strspn(p, " \t");
-
-                if ( sscanf(p, "%s", value) != 1 ) {
-                    std::clog << __FUNCTION__ << ": error at line " << n << std::endl;
-                    return false;
-                }
-
-                if  ( value[0] == '"' && value[1] == '"' ) // empty string
-                {
-                    value[0] = '\0';
-                }
-                else
-                    if ( value[0] == '"' && sscanf(p, "\"%[^\"]\"", value) != 1 ) {
-                        std::clog << __FUNCTION__ << ": error at line " << n << std::endl;
+                // parse '='
+                if ( c != '=') {
+                    char eq('\0'); sline >> eq;
+                    // std::cout << "EQ{" << eq << "}\n";
+                    if ( eq != '=' ) {
+                        std::clog << f << ": parse error at key[" << key << "]: missing '='\n";
                         return false;
                     }
+                }
 
-                // std::clog << "---> key:" << key << " value:'" << value << "'\n";
+                sline >> std::ws;
 
-                if ( !this->grammar(key,value) ) {
-                    std::clog << __FUNCTION__ << ": error at line " << n << " [ key:" << key << " value:" << value << " ]\n"; 
+                // parse value... 
+                if ( !parse(sline, key) )
+                    return false;
+           
+                std::string garbage; sline >> garbage;
+
+                if (!garbage.empty() && garbage[0] != '#') {
+                    std::clog << f << ": parse error at key[" << key << "]: garbage tailing...\n";
                     return false;
                 }
             }   
 
             return true;
         }
-
-    protected:
-        virtual bool grammar(const std::string &, const std::string &) { return false; }
-
     };
 
     template <>

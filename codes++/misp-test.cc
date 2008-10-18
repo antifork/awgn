@@ -15,35 +15,12 @@ TYPEMAP_KEY(integer);
 TYPEMAP_KEY(str);
 TYPEMAP_KEY(ip);
 
-typedef TYPEMAP(integer, int,
+typedef TYPEMAP(integer, unsigned int,
                 str,     std::string,
                 ip,      std::string) MYSCRIPT;
 
 struct myscript : public more::misp<MYSCRIPT>
-{
-    virtual bool grammar(const std::string &key, const std::string &value)
-    {
-        if ( key == str::value() ) {
-            this->get<str>() = value;
-            return true;
-        }
-
-        if ( key == ip::value() ) {
-            this->get<ip>() = value;
-            return true;
-        }
-
-        if ( key == integer::value() ) {
-            int num = atoi(value.c_str());
-            this->get<integer>() = num;
-            return true;
-        }
-
-        return false;
-    }
-
-};
-
+{};
 
 int
 main(int argc, char *argv[])
@@ -54,9 +31,9 @@ main(int argc, char *argv[])
         return -1;
     }
 
-    std::cout << "-> " << str::value()     << ":" << '"' << abc.get<str>()  << '"' << std::endl;
-    std::cout << "-> " << ip::value()      << ":" << '"' << abc.get<ip>()   << '"' << std::endl;
-    std::cout << "-> " << integer::value() << ":" <<     abc.get<integer>() << std::endl;
+    std::cout << "-> " << str::value() << "    :" << '\'' << abc.get<str>()  << '\'' << std::endl;
+    std::cout << "-> " << ip::value() << "     :" << '\'' << abc.get<ip>()   << '\'' << std::endl;
+    std::cout << "-> " << integer::value() << ":" << abc.get<integer>() << std::endl;
 
     return 0;
 }
