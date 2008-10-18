@@ -36,9 +36,6 @@ main(int argc, char *argv[])
     std::cout << "    0 <= " << table::get<0>() << std::endl;
     std::cout << "    1 <= " << table::get<1>() << std::endl;
 
-    // std::cout << "    0 <= " << table::get_(more::enumap_tag<0>()) << std::endl;
-    // std::cout << "    1 <= " << table::get_(more::enumap_tag<1>()) << std::endl;
-
     std::cout << "\ndirect map:\n";
     table::direct_map::iterator it = table::direct.begin();
     for(; it != table::direct.end(); ++it)
