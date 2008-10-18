@@ -15,7 +15,7 @@ TYPEMAP_KEY(integer);
 TYPEMAP_KEY(str);
 TYPEMAP_KEY(ip);
 
-typedef TYPEMAP(integer, unsigned int,
+typedef TYPEMAP(integer, int,
                 str,     std::string,
                 ip,      std::string) MYSCRIPT;
 
@@ -27,13 +27,13 @@ main(int argc, char *argv[])
 {
     myscript abc;
 
-    if ( !abc.parse("./misp-test.txt") ) {
+    if ( !abc.parse("misp-test.txt") ) {
         return -1;
     }
 
-    std::cout << "-> " << str::value() << "    :" << '\'' << abc.get<str>()  << '\'' << std::endl;
-    std::cout << "-> " << ip::value() << "     :" << '\'' << abc.get<ip>()   << '\'' << std::endl;
-    std::cout << "-> " << integer::value() << ":" << abc.get<integer>() << std::endl;
+    std::cout << "-> " << str::value() << "     :" << '\'' << abc.get<str>()  << '\'' << std::endl;
+    std::cout << "-> " << ip::value() << "      :" << '\'' << abc.get<ip>()   << '\'' << std::endl;
+    std::cout << "-> " << integer::value() << " :" <<         abc.get<integer>() << std::endl;
 
     return 0;
 }

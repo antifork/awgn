@@ -117,34 +117,34 @@ namespace more {
         //////////////////////////////////////////////////////////////////////////
         // run-time parser 
 
-        bool parse(std::istream &in, const std::string &key)
-        { return __parse(in, key, *this); }
+        bool _parse(std::istream &in, const std::string &file, const std::string &key)
+        { return __parse(in, file, key, *this); }
 
         template <typename U>
-        static bool __parse(std::istream &in, const std::string &key, misp<U> &m)
+        static bool __parse(std::istream &in, const std::string &file, const std::string &key, misp<U> &m)
         {
             if (key == U::key::value()) {
                 if (!misp_parse_elem(in,m._M_value) || in.fail() ) {
-                    std::clog << "parse: error at key[" << U::key::value() << "]: unexpected argument.\n";
+                    std::clog << file << ": parse error: key[" << U::key::value() << "] unexpected argument";
                     return false;
                 }
                 return true;
             }
-            else return __parse(in, key, m._M_map);
+            else return __parse(in, file, key, m._M_map);
         }
-        static bool __parse(std::istream &in, const std::string &k, misp<mtp::TM::null> &)
+        static bool __parse(std::istream &in, const std::string &file, const std::string &k, misp<mtp::TM::null> &)
         {
-            std::clog << "parse: error at key[" << k << "]: key not found!\n";
+            std::clog << file << ": parse error: key[" << k << "] not found";
             return false;
         }
        
     public:
 
-        bool parse(const std::string &f)
+        bool parse(const std::string &file)
         {
-            std::ifstream sc(f.c_str());
+            std::ifstream sc(file.c_str());
             if (!sc) {
-                std::clog << "parse: couldn't open file " << f << " for parsing.\n";
+                std::clog << file << ": parse error: no such file\n";
                 return false;
             }
 
@@ -164,7 +164,6 @@ namespace more {
                 }
 
                 sline >> std::skipws;
-
                 // std::cout << "KEY{"  << key << "}\n";
 
                 // skip comments/empty lines
@@ -176,7 +175,7 @@ namespace more {
                     char eq('\0'); sline >> eq;
                     // std::cout << "EQ{" << eq << "}\n";
                     if ( eq != '=' ) {
-                        std::clog << f << ": parse error at key[" << key << "]: missing '='\n";
+                        std::clog << file << ": parse error: key[" << key << "] missing '=' (line "<< n << ")\n";
                         return false;
                     }
                 }
@@ -184,13 +183,15 @@ namespace more {
                 sline >> std::ws;
 
                 // parse value... 
-                if ( !parse(sline, key) )
+                if ( !_parse(sline,file, key) ) {
+                    std::clog << " (line " << n << ")\n";
                     return false;
-           
+                }
+
                 std::string garbage; sline >> garbage;
 
                 if (!garbage.empty() && garbage[0] != '#') {
-                    std::clog << f << ": parse error at key[" << key << "]: garbage tailing...\n";
+                    std::clog << file << ": parse error: key[" << key << "] trailing garbage (line " << n << ")\n";
                     return false;
                 }
             }   

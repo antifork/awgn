@@ -1,11 +1,14 @@
 #
-# METAPROGRAMMED INIT-SCRIPT PARSER TEST
+# MISP: init script test
 #
 #
 
-integer = 45    # integer value
+#key
+
+integer = 1234 # integer value
 
 str = " this is a string" 
 
 ip=127.0.0.1
+
 
