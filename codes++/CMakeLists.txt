@@ -1,3 +1,5 @@
+include_directories(.)
+
 add_executable(tuple-test tuple-test.cc)
 add_executable(syslog-test syslog-test.cc syslog.cc)
 add_executable(factory-test factory-test.cc)
@@ -33,6 +35,8 @@ add_executable(proxy-test proxy-test.cc)
 add_executable(buffer-test buffer-test.cc)
 add_executable(concepts-test concepts-test.cc)
 add_executable(enumap-test enumap-test.cc)
+add_executable(misp-test misp-test.cc)
+add_executable(typemap-test typemap-test.cc)
 
 target_link_libraries(atomic_test -pthread)
 target_link_libraries(fast_deque-test -pthread)
