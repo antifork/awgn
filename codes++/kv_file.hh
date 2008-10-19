@@ -25,7 +25,7 @@
 namespace more {
 
     template <int n>
-    struct int2Type
+    struct kv_int2type
     {
         enum { value = n };
     };
@@ -104,16 +104,16 @@ namespace more {
         template <typename K>
         typename std::tr1::add_reference< typename mtp::TM::get<K, T>::type>::type
         get() 
-        { return __get<K>(int2Type< mtp::TM::indexof<K, T>::value >()); }
+        { return __get<K>(kv_int2type< mtp::TM::indexof<K, T>::value >()); }
 
         template <typename K, int n>
         typename std::tr1::add_reference<typename mtp::TM::get<K, T>::type>::type
-        __get(int2Type<n>) 
-        { return _M_map.__get<K>(int2Type<n-1>()); }
+        __get(kv_int2type<n>) 
+        { return _M_map.__get<K>(kv_int2type<n-1>()); }
 
         template <typename K>
         typename std::tr1::add_reference<value_type>::type
-        __get(int2Type<0>) 
+        __get(kv_int2type<0>) 
         { return _M_value; } 
        
     protected:
