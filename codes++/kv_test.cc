@@ -9,7 +9,7 @@
  */
 
 #include <cstdlib>
-#include <kvc_file.hh>
+#include <kv_file.hh>
 
 TYPEMAP_KEY(number_0);
 TYPEMAP_KEY(number_1);
@@ -29,7 +29,7 @@ typedef TYPEMAP(number_0,  int,
                 string_0,  std::string,
                 string_1,  std::string) MYSCRIPT;
 
-struct myscript : public more::kvc_file<MYSCRIPT>
+struct myscript : public more::kv_file<MYSCRIPT>
 {};
 
 int
@@ -37,7 +37,7 @@ main(int argc, char *argv[])
 {
     myscript abc;
 
-    if ( !abc.parse("kvc_test.txt", true /* strict */ ) ) {
+    if ( !abc.parse("kv_test.txt", true /* strict */ ) ) {
         return -1;
     }
 

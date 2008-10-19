@@ -8,8 +8,8 @@
  * ----------------------------------------------------------------------------
  */
 
-#ifndef _KVC_FILE_HH_
-#define _KVC_FILE_HH_ 
+#ifndef _KV_FILE_HH_
+#define _KV_FILE_HH_ 
 
 #include <iostream>
 #include <fstream>
@@ -20,7 +20,7 @@
 #include <typemap.hh>
 
 ///////////////////////////////////////////
-//  kvc: key-value config file parser 
+//  kv: key-value config file parser 
 
 namespace more {
 
@@ -31,16 +31,16 @@ namespace more {
     };
 
     ////////////////////////////////////////////////////////////////////////////////////
-    // overloaded kvc_parse_elem functions must be provided to parse user-defined types
+    // overloaded kv_parse_elem functions must be provided to parse user-defined types
 
     template <typename E>
-    static bool kvc_parse_elem(std::istream &in, E &elem)
+    static bool kv_parse_elem(std::istream &in, E &elem)
     { 
        in >> elem;
         return true; 
     }
 
-    static bool kvc_parse_elem(std::istream &in, bool &elem)
+    static bool kv_parse_elem(std::istream &in, bool &elem)
     {
         in >> std::noboolalpha;
         if (!(in >> elem)) {
@@ -50,7 +50,7 @@ namespace more {
         return true;
     }
 
-    static bool kvc_parse_elem(std::istream &in, std::string &elem)
+    static bool kv_parse_elem(std::istream &in, std::string &elem)
     { 
         if (! (in >> elem) ) {
             return false;
@@ -78,23 +78,23 @@ namespace more {
     }
 
     template <typename T>
-    struct kvc_file
+    struct kv_file
     {
     public:
 
         typedef typename T::key         key_type;
         typedef typename T::type        value_type;
-        typedef kvc_file<typename T::next>  map_type;
+        typedef kv_file<typename T::next>  map_type;
 
         key_type     _M_key;
         value_type   _M_value;
         map_type     _M_map;
 
-        kvc_file()
+        kv_file()
         : _M_value(), _M_map()
         {}
 
-        ~kvc_file()
+        ~kv_file()
         {}
 
     public:
@@ -124,10 +124,10 @@ namespace more {
         { return __parse(in, file, key, strict, *this); }
 
         template <typename U>
-        static bool __parse(std::istream &in, const std::string &file, const std::string &key, bool strict, kvc_file<U> &m)
+        static bool __parse(std::istream &in, const std::string &file, const std::string &key, bool strict, kv_file<U> &m)
         {
             if (key == U::key::value()) {
-                if (!kvc_parse_elem(in,m._M_value) || in.fail() ) {
+                if (!kv_parse_elem(in,m._M_value) || in.fail() ) {
                     std::clog << file << ": parse error: key[" << U::key::value() << "] unexpected argument";
                     return false;
                 }
@@ -135,7 +135,7 @@ namespace more {
             }
             else return __parse(in, file, key, strict, m._M_map);
         }
-        static bool __parse(std::istream &in, const std::string &file, const std::string &k, bool strict, kvc_file<mtp::TM::null> &)
+        static bool __parse(std::istream &in, const std::string &file, const std::string &k, bool strict, kv_file<mtp::TM::null> &)
         {
             if (strict)
                 std::clog << file << ": parse error: key[" << k << "] unknown";
@@ -213,7 +213,7 @@ namespace more {
     };
 
     template <>
-    class kvc_file<mtp::TM::null> {};
+    class kv_file<mtp::TM::null> {};
 }
 
-#endif /* _KVC_FILE_HH_ */
+#endif /* _KV_FILE_HH_ */
