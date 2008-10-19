@@ -1,0 +1,22 @@
+############################################################
+# key-value config file
+#
+
+# integer: the base is determined by the leading characters: 
+#          0x => std::hex, 0 => std::oct, std::dec otherwise 
+#
+
+number_0 = 10     
+number_1 = 0x10     
+number_2 = 010     
+
+# strings: use quotation " to include spaces, use \" to include
+#          quotation
+
+string_0 = hello
+string_1 = "hello world" 
+
+boolean_0 = false  
+boolean_1 = 1  
+
+# unknown = true
