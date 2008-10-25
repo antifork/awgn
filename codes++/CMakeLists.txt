@@ -37,6 +37,7 @@ add_executable(concepts-test concepts-test.cc)
 add_executable(enumap-test enumap-test.cc)
 add_executable(kv-test kv_test.cc)
 add_executable(typemap-test typemap-test.cc)
+add_executable(mutant-test mutant-test.cc)
 
 target_link_libraries(atomic_test -pthread)
 target_link_libraries(fast_deque-test -pthread)

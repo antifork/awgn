@@ -15,22 +15,22 @@
 namespace more
 {
     // compile time assert 
-    template <bool> struct mutabl_assert;
+    template <bool> struct mutant_assert;
     template <>
-    struct mutabl_assert<true>
+    struct mutant_assert<true>
     {
         enum { value = true };
     };
 
-    struct mutabl
+    struct mutant
     {
-        virtual ~mutabl() {}
+        virtual ~mutant() {}
 
         template <typename T>
         void turn_into(const T & exemplar)
         {
-            mutabl_assert< std::tr1::is_polymorphic<T>::value > is_polymorphic_concept __attribute__ ((unused));
-            mutabl_assert< std::tr1::is_base_of<mutabl, T>::value > is_base_concept __attribute__((unused));
+            mutant_assert< std::tr1::is_polymorphic<T>::value > is_polymorphic_concept __attribute__ ((unused));
+            mutant_assert< std::tr1::is_base_of<mutant, T>::value > is_base_concept __attribute__((unused));
             *(void **)this = *(void **)& exemplar;
         }
     };
