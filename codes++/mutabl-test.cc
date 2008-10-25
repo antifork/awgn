@@ -65,9 +65,7 @@ main(int argc, char *argv[])
 
     b->hello();
 
-    { 
-        b->turn_into(der2());
-    }
+    b->turn_into(der2());
 
     fun(b);
 
