@@ -8,8 +8,8 @@
  * ----------------------------------------------------------------------------
  */
 
-#ifndef _MUTABL_HH_
-#define _MUTABL_HH_ 
+#ifndef _MUTANT_HH_
+#define _MUTANT_HH_ 
 
 #include <tr1/type_traits>
 namespace more
@@ -37,4 +37,4 @@ namespace more
 
 } // namespace more
 
-#endif /* _MUTABL_HH_ */
+#endif /* _MUTANT_HH_ */
