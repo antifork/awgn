@@ -27,7 +27,7 @@
 static inline
 void free_dirent(struct dirent **d, int n)
 {
-    assert(n>0);
+    assert(n>=0);
     int i;
     for (i=0; i< n; i++)
         free(d[i]);
