@@ -11,8 +11,6 @@
 #ifndef STATIC_ASSERT_HH
 #define STATIC_ASSERT_HH
 
-#include <macro_template.h>
-
 namespace more
 {
     // CTassert ala Loki
@@ -25,9 +23,9 @@ namespace more
 }
 
 #ifndef __GXX_EXPERIMENTAL_CXX0X__
-#define static_assert(v,...) more::CTassert<(v)> XTOKEN(__VA_ARGS__) __attribute__((unused))
+#define static_assert(v,tok) more::CTassert<(v)> tok __attribute__((unused))
 #else
-#define static_assert(v,...) static_assert((v), XSTR(__VA_ARGS__))
+#define static_assert(v,tok) static_assert((v), #tok)
 #endif
 
 #include <cassert>

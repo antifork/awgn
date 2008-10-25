@@ -105,9 +105,9 @@ namespace more {
           _M_fd(-1)
         {
             static_assert( F & (MAP_PRIVATE|MAP_SHARED), 
-                           flags, contained, neither, map_private, or, map_shared);
+                           flags_contains_neither_map_private_or_map_shared);
             static_assert( !(F & (MAP_PRIVATE|MAP_SHARED)) || is_pow2<F & (MAP_PRIVATE|MAP_SHARED)>::value, 
-                           flags, contained, both, map_private, and ,map_shared);
+                           flags_contains_both_map_private_and_map_shared);
 
             if (pathname) {
                 _M_fd = ::open(pathname, mapping_traits<P>::file_mode);
