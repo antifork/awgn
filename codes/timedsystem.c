@@ -43,14 +43,25 @@ int timedsystem(const char *filename, char * const argv[], char * const envp[], 
 
     if ( sigtimedwait(&set, &info, &timeout) == SIGCHLD )
     {
+        // free the resource...
+        wait(NULL);
         signal(SIGCHLD,SIG_DFL);
         sigprocmask(SIG_UNBLOCK, &set, NULL);
 
-        if (WIFEXITED(info.si_status))
-            return info.si_status;
-        else 
-            return -1;
+        if (info.si_code == CLD_EXITED) {
+            return __W_EXITCODE(info.si_status,0);
+        }
+        if (info.si_code == CLD_KILLED) {
+            return __W_EXITCODE(0, info.si_status);
+        }
+        if (info.si_code == CLD_STOPPED) {
+            return __W_STOPCODE(info.si_status);
+        }
+        return -1;
     }
+
+    // timeout
+    //
 
     signal(SIGCHLD,SIG_DFL);
     sigprocmask(SIG_UNBLOCK, &set, NULL);
