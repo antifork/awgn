@@ -1,13 +1,3 @@
-/* $Id$ */
-/*
- * ----------------------------------------------------------------------------
- * "THE BEER-WARE LICENSE" (Revision 42):
- * <bonelli@antifork.org> wrote this file. As long as you retain this notice you
- * can do whatever you want with this stuff. If we meet some day, and you think
- * this stuff is worth it, you can buy me a beer in return. Nicola Bonelli 
- * ----------------------------------------------------------------------------
- */
-
 #ifndef _ENUMAP_HH_
 #define _ENUMAP_HH_ 
 
@@ -24,9 +14,19 @@
 #endif 
 #ifndef enumap_init_
 #define enumap_init_(ctor, n) \
-    ctor() { more::enumap_line<__COUNTER__+2, __COUNTER__+n>::init(this); }
+    ctor() \
+    { more::enumap_line<__LINE__+1, __LINE__+n>::init(this); }
+
 #define enumap_entry(s,v) \
-    enum { s = v }; static inline const char *_get(more::enumap_tag<v>) { return #s; }; void _set(more::enumap_tag<__COUNTER__>) { direct[ #s ] = v; reverse[v ] = #s; }
+    enum { s = v }; \
+    \
+    static inline const char *\
+    _get(more::enumap_tag<v>) \
+    { return #s; }; \
+    \
+    void _set(more::enumap_tag<__LINE__>) \
+    { direct[ #s ] = v; reverse[v ] = #s; }
+
 #endif
 
 namespace more 
@@ -51,29 +51,29 @@ namespace more
             return _ref_; }
 
         static bool has(const std::string &a)
-        { static const Q & r __attribute__((unused)) = instance(); 
+        { static const Q & r __attribute__((used)) = instance(); 
             return direct.find(a) != direct.end(); }
 
         static bool has(const int a)
-        { static const Q & r __attribute__((unused)) = instance(); 
+        { static const Q & r __attribute__((used)) = instance(); 
             return reverse.find(a) != reverse.end(); }
 
         static int eval(const std::string &a)
-        { static const Q & r __attribute__((unused)) = instance(); 
+        { static const Q & r __attribute__((used)) = instance(); 
             direct_map::iterator it = direct.find(a);
             if (it == direct.end()) {
-                std::clog << __PRETTY_FUNCTION__  << ": unknown value (" << a << ")\n";
-                exit(1);
+                std::clog << __PRETTY_FUNCTION__  << ": unknown value (" << a << ")" << std::endl;
+                return int(); 
             }
             return it->second; }
 
-        static std::string &
+        static std::string 
         eval(const int a) 
-        { static const Q & r __attribute__((unused)) = instance(); 
+        { static const Q & r __attribute__((used)) = instance(); 
             reverse_map::iterator it = reverse.find(a);
             if (it == reverse.end()) {
-                std::clog << __PRETTY_FUNCTION__  << ": unknown value (" << a << ")\n";
-                exit(1);
+                std::clog << __PRETTY_FUNCTION__  << ": unknown value [" << a << "]" << std::endl;
+                return std::string(); 
             }
             return it->second; }
 
