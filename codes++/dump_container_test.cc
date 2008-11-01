@@ -10,6 +10,7 @@
 
 #include <dump_container.hh>
 #include <vector>
+#include <list>
 #include <iostream>
 
 int 
@@ -23,17 +24,18 @@ main(int argc, char *argv[])
     v1.push_back(1);
     v1.push_back(2);
 
-    std::cout << more::dump_separator(',');
+    more::dump::sep(std::cout, '.');   // set the char separator
+
     std::cout << "vector<int> :" << v1 << std::endl;
 
-    std::vector<unsigned char> l1;
+    std::list<std::pair<int,int> > l1;
 
-    l1.push_back('A');
-    l1.push_back('B');
-    l1.push_back('C');
+    l1.push_back( std::make_pair(0,0) );
+    l1.push_back( std::make_pair(1,1) );
+    l1.push_back( std::make_pair(2,2) );
 
-    std::cout << more::dump_separator();
+    more::dump::sep(std::cout);    // remove separator
+
     std::cout << "list<char>  :" << l1 << std::endl;
-
     return 0;
 }

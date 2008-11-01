@@ -18,34 +18,25 @@
 
 namespace more {
 
-    struct dump_container 
+    // construction-on-the-first idiom allows to shared a sep_index  
+    // between different compilation units 
+    //
+
+    struct dump 
     {
-        static char & 
-        instance()
+        static int sep_index()
         {
-            static __thread char sep;
-            return sep;
-        }
+            static int index = std::ios_base::xalloc();
+            return index;
+        }    
 
         static std::ostream &
-        sep(std::ostream &out, bool v)
+        sep(std::ostream &out, char sep = '\0')
         {
-            if (v && instance() )
-                out << instance();
+            out.iword(dump::sep_index()) = static_cast<int>(sep);
             return out;
         }
 
-    };
-
-    // specify the separator in use for the current thread...
-    //
-
-    struct dump_separator 
-    {
-        char _M_s;
-        explicit dump_separator(const char _sep = char())
-        : _M_s(_sep)
-        {}
     };
 
     // printable mangling traits
@@ -98,24 +89,20 @@ namespace more {
 namespace std {
     
     // dumper
-    //
 
     template <typename T>
     typename mtp::enable_if< traits::is_container<T>::value && !tr1::is_same<T, std::string>::value, std::ostream>::type &
     operator<<(std::ostream &out, const T &v)
     {
         typename T::const_iterator it = v.begin();
-        for(; it != v.end()  ; ++it, more::dump_container::sep(out, it != v.end()) )
-            out << more::dump_type_mangling(*it);
+        for(; it != v.end();) {
+            out << more::dump_type_mangling(*it); 
+            if ( ++it != v.end() && out.iword(more::dump::sep_index()) ) {
+                out << static_cast<char>(out.iword(more::dump::sep_index()));   
+            } 
+        }
         return out;
     };
-
-    inline std::ostream &
-    operator<< (std::ostream &out, const more::dump_separator &r)
-    {
-        more::dump_container::instance() = r._M_s;
-        return out;
-    }
 
     template <typename U, typename V>
     inline std::ostream &
