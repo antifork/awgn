@@ -41,7 +41,7 @@ main(int argc, char *argv[])
 
     more::logprio_default(std::clog, more::logstreambuf::CRIT);
 
-    std::clog << __LOG_FUNCTION__ << ": default level (CRIT) " << std::endl;    // with flog->priority() set to ALERT this message won't be displayed
+    std::clog << __LOG_FUNCTION__ << ": default level (CRIT) " << std::endl;    // with log->priority() set to ALERT this message won't be displayed
 
     return 0;
 }
