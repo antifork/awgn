@@ -18,7 +18,7 @@
 
 namespace more {
 
-    // construction-on-the-first idiom allows to shared a sep_index  
+    // construction-on-the-first idiom allows to share a unique sep_index  
     // between different compilation units 
     //
 
