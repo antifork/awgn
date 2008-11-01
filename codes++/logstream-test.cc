@@ -20,7 +20,13 @@ main(int argc, char *argv[])
 
     std::clog.rdbuf(log);
 
+    // logprio_default() set the default priority for the current ostream
+    //
+
     more::logprio_default(std::clog, more::logstreambuf::ALERT);
+
+    // more::logprio() set a temporary priority for the current ostream until a std::endl is streamed 
+    //
 
     more::logprio(std::clog, more::logstreambuf::EMERG)   << __LOG_FUNCTION__ << ": LOG_EMERG  : hello world!" << std::endl; 
     more::logprio(std::clog, more::logstreambuf::ALERT)   << __LOG_FUNCTION__ << ": LOG_ALERT  : hello world!" << std::endl;
