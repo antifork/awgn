@@ -39,10 +39,12 @@ namespace more {
         void lock(volatile int &sl)
         {
             int spinlock = __sync_fetch_and_add(&sl, 1L << 16);
-            unsigned short ticket = (spinlock >> 16) & 0xffff;    
-            while ( (sl & 0xffff )  != ticket) {
+            unsigned short ticket = (spinlock >> 16) & 0xffff;
+            busywait:
+            if ( (sl & 0xffff )  != ticket) {
                 sched_yield();
-            }            
+                goto busywait;
+            }
         }
 
         static 
