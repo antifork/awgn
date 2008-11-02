@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id */
 /*
  * ----------------------------------------------------------------------------
  * "THE BEER-WARE LICENSE" (Revision 42):
@@ -8,17 +8,18 @@
  * ----------------------------------------------------------------------------
  */
 
-#include <mtstream.hh>
+#include <iostream>
+#include <tsafestream.hh>
 #include <pthread.h>
 
 void * thread(void *)
 {
     for(int i = 0; i < 10 ; i++) 
     {
-        std::cout << more::mtstream::lock() << "[" << std::hex << pthread_self() << "] ";
+        std::cout << more::tsafestream::lock() << "[" << std::hex << pthread_self() << "] ";
         std::cout << "hello world! " << std::dec << i << std::endl;
         usleep(100000);
-        std::cout << more::mtstream::unlock(); 
+        std::cout << more::tsafestream::unlock(); 
     }
 
     return NULL;
@@ -30,12 +31,15 @@ main(int argc, char *argv[])
 {
     pthread_t t1;
     pthread_t t2;
+    pthread_t t3;
 
     pthread_create(&t1, NULL, thread, NULL);
     pthread_create(&t2, NULL, thread, NULL);
+    pthread_create(&t3, NULL, thread, NULL);
 
     pthread_join(t1, NULL);
     pthread_join(t2, NULL);
+    pthread_join(t3, NULL);
 
     return 0;
 }
