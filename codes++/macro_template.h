@@ -125,7 +125,7 @@
   {                                                   \
   }
   
-  MT_REPEAT_STATEMENT(aCLASS,5);
+  MT_REPEAT_STATEMENT(aFunction,5);
 
 */
 
