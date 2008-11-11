@@ -64,7 +64,8 @@ namespace more {
                 _M_leveltmp = -1;
 
             if (current <= _M_level) {
-                return _M_out->sputc(c);
+                _M_out->sputc(c);
+                return ( _M_out->pubsync() == -1 ? EOF : c );
             }
             return c;
         }
