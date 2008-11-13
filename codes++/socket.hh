@@ -13,10 +13,12 @@
 
 #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
+#include <sys/uio.h>
 #include <errno.h>
 #include <err.h>
 
 #include <sockaddress.hh>
+#include <tr1/array>
 
 namespace more {
 
@@ -48,9 +50,23 @@ namespace more {
         send(const void *buf, size_t len, int flags) 
         { return _log("send", ::send(_M_fd, buf, len, flags)); }
 
+        template <std::size_t N>
+        int send(const std::tr1::array<iovec,N> &iov, int flags)
+        { 
+            const msghdr msg = { NULL, 0, const_cast<iovec *>(&iov.front()), N, NULL, 0, 0 };    
+            return _log("sendmsg", ::sendmsg(_M_fd, &msg, flags)); 
+        }
+
         int 
         recv(void *buf, size_t len, int flags) 
         { return _log("recv", ::recv(_M_fd, buf, len, flags)); }
+
+        template <std::size_t N>
+        int recv(std::tr1::array<iovec,N> &iov, int flags)
+        { 
+            msghdr msg = { NULL, 0, &iov.front(), N, NULL, 0, 0 };    
+            return _log("recvmsg", ::recvmsg(_M_fd, &msg, flags)); 
+        }
 
         int 
         sendto(const void *buf, size_t len, int flags, const sockaddress<FAMILY> &to) 
