@@ -11,10 +11,12 @@
 #ifndef PROXY_HH
 #define PROXY_HH
 
-namespace generic 
+#include <tr1/functional>
+
+namespace more 
 {
     //
-    // to be used in place of pure typedef... 
+    // to be used in place of typedef... 
     // define USE_EXPLICIT to enforce typechecking
     //
     // usage: typedef proxy<int, 0> my_int;
@@ -99,15 +101,6 @@ namespace generic
     //
 
     template <typename T, int N = 0>
-    struct reference 
-    {
-        T & _M_ref;
-        reference(T &ref)
-        : _M_ref(ref)
-        {}
-    };
-
-    template <typename T, int N = 0>
     class ref_proxy {
 
         T   _M_storage;
@@ -119,9 +112,9 @@ namespace generic
         _M_value(_M_storage)
         {}
 
-        explicit ref_proxy (reference<T,N> pv)
+        explicit ref_proxy (std::tr1::reference_wrapper<T> pv)
         : _M_storage(),
-        _M_value(pv._M_ref)
+        _M_value(pv.get())
         {}
 
         ref_proxy(const ref_proxy &rhs)
@@ -142,7 +135,6 @@ namespace generic
         { return _M_value; }
 
     };
-
 }
 
 #endif /* PROXY_HH */
