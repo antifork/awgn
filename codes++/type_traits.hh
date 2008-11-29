@@ -55,8 +55,8 @@ namespace more
     struct is_class_or_union : public integral_constant<bool, __is_class_or_union_helper<T>::value>
     {};
 
-    // has member helper (using SFINAE... Vandevoorde/Josuttis)
-    #define __has_member_helper(abc) \
+    // has member type helper (using SFINAE... Vandevoorde/Josuttis)
+    #define __has_member_type_helper(abc) \
     template <typename T>   \
     class __has_ ## abc ## _helper : public __sfinae_types   \
     {   \
@@ -67,9 +67,9 @@ namespace more
         enum { value = sizeof(test<T>(0)) == sizeof(__one) };   \
     }
 
-    __has_member_helper(value_type);
-    __has_member_helper(type);
-    __has_member_helper(iterator);
+    __has_member_type_helper(value_type);
+    __has_member_type_helper(type);
+    __has_member_type_helper(iterator);
 
     template <typename T>
     struct has_iterator : public integral_constant<bool, __has_iterator_helper<T>::value>

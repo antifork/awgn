@@ -15,11 +15,15 @@
 
 #include "type_traits.hh"
 
+#define RED     "\E[0;31;1m"
+#define BLACK   "\E[0;29;1m"
+#define RESET   "\E[0m"
+
 std::string verdict( false_type )
-{ return "[false]"; }
+{ return "[" RED "false" RESET "]"; }
 
 std::string verdict( true_type )
-{ return "[true]"; }
+{ return "[" BLACK "true" RESET "]"; }
 
 template <typename T>
 struct identity 
