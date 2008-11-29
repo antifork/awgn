@@ -55,7 +55,7 @@ namespace more
     struct is_class_or_union : public integral_constant<bool, __is_class_or_union_helper<T>::value>
     {};
 
-    // has value_type (using SFINAE... Vandevoorde/Josuttis)
+    // has member helper (using SFINAE... Vandevoorde/Josuttis)
     #define __has_member_helper(abc) \
     template <typename T>   \
     class __has_ ## abc ## _helper : public __sfinae_types   \
