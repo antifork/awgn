@@ -19,20 +19,6 @@ using std::tr1::true_type; using std::tr1::false_type;
 
 namespace more 
 {
-    // traits support 
-    //
-
-    template <bool v, typename U, typename V>
-    struct __select
-    {
-        typedef U type;
-    };
-    template <typename U, typename V>
-    struct __select<false, U, V>
-    {
-        typedef V type;
-    };
-
     // For use in __is_convertible_simple.
     struct __sfinae_types
     {
@@ -85,7 +71,7 @@ namespace more
                                                          __has_value_type_helper<T>::value >
     {};
 
-    // is_tuple (using SFINAE... Vandevoorde/Josuttis)
+    // is_tuple 
     template <typename T>
     class __is_tuple_helper : public __sfinae_types
     {
@@ -100,11 +86,11 @@ namespace more
     struct is_tuple : public integral_constant<bool, __is_tuple_helper<T>::value>
     {};
 
-    // is_metafunction (using SFINAE... Vandevoorde/Josuttis)
+    // is_metafunction 
     template <typename T>
     class __is_metafunction_helper : public __sfinae_types
     {
-        template <typename C> static __one test_value( typename __select<C::value,__two,__one>::type * );
+        template <typename C> static __one test_value(integral_constant<bool,C::value> *);
         template <typename C> static __two test_value(...);
 
     public:
