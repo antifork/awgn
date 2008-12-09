@@ -34,6 +34,14 @@ public:
         return NULL;
     }
 
+    Hello()
+    : posix::thread()
+    {}
+
+    Hello(std::tr1::shared_ptr<thread_attr> a)
+    : posix::thread(a)
+    {}
+
     ~Hello()
     {
         this->cancel();        
@@ -140,8 +148,19 @@ int main(int argc, char *argv[])
     {
         Hello test;
         test.start();
-        sleep(1);
+        sleep(2);
     } // terminate as soon as possible
+
+    std::cout << "\n[*]" RED " scoped thread (custom attr)..." RESET "\n";
+    {
+        std::tr1::shared_ptr<posix::thread_attr> a(new posix::thread_attr);
+        a->setstacksize(1000000);
+
+        Hello test(a);
+        test.start();
+        sleep(2);
+    } // terminate as soon as possible
+
 
     std::cout << "\n[*] "RED"basic mutex..."RESET"\n";
     {

@@ -12,6 +12,7 @@
 #define PTHREADPP_HH
 
 #include <iostream>
+#include <tr1/memory>
 
 #include <pthread.h>
 #include <signal.h>
@@ -20,10 +21,84 @@
 
 namespace posix 
 {
+    using std::tr1::shared_ptr;
+
+    class thread_attr
+    {
+    public:
+        thread_attr()
+        : _M_value()
+        { ::pthread_attr_init(&_M_value); }
+
+        ~thread_attr()
+        { /* ::pthread_attr_destroy(&_M_value); */ }
+
+        int setdetachstate(int detachstate)
+        { return ::pthread_attr_setdetachstate(&_M_value, detachstate); }
+
+        int getdetachstate(int *detachstate) const
+        { return ::pthread_attr_getdetachstate(&_M_value, detachstate); }
+
+        int setschedpolicy(int policy)
+        { return ::pthread_attr_setschedpolicy(&_M_value, policy); }
+
+        int getschedpolicy(int *policy) const
+        { return ::pthread_attr_getschedpolicy(&_M_value, policy); }
+
+        int setschedparam(const struct sched_param *param)
+        { return ::pthread_attr_setschedparam(&_M_value, param); }
+        
+        int getschedparam(struct sched_param *param) const
+        { return ::pthread_attr_getschedparam(&_M_value, param); }
+
+        int setinheritsched(int inherit)
+        { return ::pthread_attr_setinheritsched(&_M_value, inherit); }
+
+        int getinheritsched(int *inherit) const
+        { return ::pthread_attr_getinheritsched(&_M_value, inherit); }
+
+        int setscope(int scope)
+        { return ::pthread_attr_setscope(&_M_value, scope); }
+
+        int getscope(int *scope) const
+        { return ::pthread_attr_getscope(&_M_value, scope); }
+
+        int setguardsize(size_t guardsize)
+        { return ::pthread_attr_setguardsize(&_M_value, guardsize); }
+
+        int getguardsize(size_t *guardsize) const
+        { return ::pthread_attr_getguardsize(&_M_value, guardsize); }
+
+        /* stack */
+
+        int setstack(void *stackaddr, size_t stacksize)
+        { return ::pthread_attr_setstack(&_M_value, stackaddr, stacksize); }
+
+        int getstack(void **stackaddr, size_t *stacksize) const
+        { return ::pthread_attr_getstack(&_M_value, stackaddr, stacksize); }
+
+        int setstacksize(size_t stacksize)
+        { return ::pthread_attr_setstacksize(&_M_value, stacksize); }
+
+        int getstacksize(size_t *stacksize) const
+        { return ::pthread_attr_getstacksize(&_M_value, stacksize); }
+
+        pthread_attr_t *
+        operator &()
+        { return &_M_value; }
+
+        const pthread_attr_t *
+        operator &() const
+        { return &_M_value; }
+
+    private:
+        pthread_attr_t  _M_value;
+    };
+
     class thread 
     {
         pthread_t       _M_thread;
-        pthread_attr_t *_M_attr;
+        shared_ptr<thread_attr> _M_attr;
 
         volatile bool   _M_running;
 
@@ -31,7 +106,7 @@ namespace posix
         thread &operator=(const thread &);    // noncopyable
 
     public: 
-        explicit thread(pthread_attr_t *a = NULL) 
+        explicit thread(shared_ptr<thread_attr> a = shared_ptr<thread_attr>(new thread_attr))
         : _M_thread(),
           _M_attr(a),
           _M_running(false)
@@ -64,7 +139,7 @@ namespace posix
 
         bool start() 
         {
-            if (::pthread_create(&_M_thread, _M_attr, start_routine, this ) != 0) {
+            if (::pthread_create(&_M_thread, &(*_M_attr), start_routine, this ) != 0) {
                 std::clog << __PRETTY_FUNCTION__  << " pthread_create error!\n";
                 return false;
             }
