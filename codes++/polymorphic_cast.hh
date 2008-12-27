@@ -20,9 +20,9 @@ namespace more {
     // polymorphic_downcast for std::tr1::shared_ptr
 
     template <typename R, typename T>
-    inline std::tr1::shared_ptr<R> polymorphic_pointer_downcast(T &p)
+    inline std::tr1::shared_ptr<R> polymorphic_pointer_downcast(std::tr1::shared_ptr<T> & p)
     {
-        assert( !!std::tr1::dynamic_pointer_cast<R>(p) );
+        assert( std::tr1::dynamic_pointer_cast<R>(p).get() == p.get() );
         return std::tr1::static_pointer_cast<R>(p);
     }
 
