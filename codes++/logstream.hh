@@ -34,17 +34,17 @@ namespace more {
                WARNING, NOTICE, INFO, DEBUG };
 
         logstreambuf(std::streambuf *out)
-        : _M_level(EMERG), _M_levelmsg(EMERG), _M_leveltmp(-1),  _M_out(out)
+        : _M_priority(EMERG), _M_leveldefault(EMERG), _M_level(-1),  _M_out(out)
         {}
 
         void priority(int n)
+        { _M_priority = n; }
+
+        void loglevel_default(int n)
+        { _M_leveldefault = n; }
+
+        void loglevel(int n)
         { _M_level = n; }
-
-        void logprio_default(int n)
-        { _M_levelmsg = n; }
-
-        void logprio(int n)
-        { _M_leveltmp = n; }
 
         static int iword_index()
         { static int index = std::ios_base::xalloc();
@@ -55,7 +55,7 @@ namespace more {
         virtual std::streamsize
         xsputn (const char *s, std::streamsize n)
         {
-            if ( _M_current() <= _M_level) {
+            if ( currentLevel() <= _M_priority) {
                 return _M_out->sputn(s,n);
             }
             return n; 
@@ -64,9 +64,9 @@ namespace more {
         virtual int_type
         overflow (int_type c)
         {
-            if (_M_current() <= _M_level) {
+            if (currentLevel() <= _M_priority) {
                 if (c == '\n')
-                    _M_leveltmp = -1;
+                    _M_level = -1;
                 return _M_out->sputc(c);
             }
             return c;
@@ -74,35 +74,36 @@ namespace more {
 
         int sync()
         {
-            if (_M_current() <= _M_level)
+            if (currentLevel() <= _M_priority)
                 return  _M_out->pubsync();
             return 0;
         }
 
     private:        
         
-        int _M_current() const 
-        { return _M_leveltmp != -1 ? _M_leveltmp : _M_levelmsg; }
+        int currentLevel() const 
+        { return _M_level != -1 ? _M_level : _M_leveldefault; }
 
+        int _M_priority;
+
+        int _M_leveldefault;
         int _M_level;
-        int _M_levelmsg;
-        int _M_leveltmp;
-        std::streambuf *_M_out;
 
+        std::streambuf *_M_out;
     };
 
-    static inline std::ostream &logprio(std::ostream &out, int n = logstreambuf::EMERG)
+    static inline std::ostream &loglevel(std::ostream &out, int n = logstreambuf::EMERG)
     {
         logstreambuf * lb = dynamic_cast<logstreambuf *>(out.rdbuf());
         if(lb) 
-            lb->logprio(n);
+            lb->loglevel(n);
         return out;
     }
-    static inline std::ostream &logprio_default(std::ostream &out, int n = logstreambuf::EMERG)
+    static inline std::ostream &loglevel_default(std::ostream &out, int n = logstreambuf::EMERG)
     {
         logstreambuf * lb = dynamic_cast<logstreambuf *>(out.rdbuf());
         if(lb) 
-            lb->logprio_default(n);
+            lb->loglevel_default(n);
         return out;
     }
 
