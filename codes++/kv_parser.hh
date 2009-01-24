@@ -98,10 +98,9 @@ namespace more {
     struct kv_parser
     {
     public:
-
-        typedef typename T::key         key_type;
-        typedef typename T::type        value_type;
-        typedef kv_parser<typename T::next>  map_type;
+        typedef typename T::key key_type;
+        typedef typename T::type value_type;
+        typedef kv_parser<typename T::next> map_type;
 
         key_type     _M_key;
         value_type   _M_value;

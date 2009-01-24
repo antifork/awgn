@@ -22,8 +22,7 @@ typedef TYPEMAP(unsigned_int, unsigned int,
                 booleans,     std::vector<bool>,
                 strings,      std::vector<std::string>) SCRIPT;
 
-struct script : public more::kv_parser<SCRIPT>
-{};
+struct script : public more::kv_parser<SCRIPT> {};
 
 int
 main(int argc, char *argv[])
