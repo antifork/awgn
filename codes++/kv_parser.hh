@@ -15,11 +15,12 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <vector>
 #include <tr1/type_traits>
 
 #include <typemap.hh>
 
-///////////////////////////////////////////
+/////////////////////////////////////
 //  kv: key-value config file parser 
 
 namespace more {
@@ -36,30 +37,28 @@ namespace more {
     template <typename E>
     static bool kv_parse_elem(std::istream &in, E &elem)
     { 
-       in >> elem;
-        return true; 
+       return (in >> elem);
     }
-
     static bool kv_parse_elem(std::istream &in, bool &elem)
     {
         in >> std::noboolalpha;
         if (!(in >> elem)) {
             in.clear();
-            in >> std::boolalpha >> elem;
+            return (in >> std::boolalpha >> elem);
         }
         return true;
     }
-
     static bool kv_parse_elem(std::istream &in, std::string &elem)
-    { 
-        if (! (in >> elem) ) {
-            return false;
-        }
+    {
+        char c;
 
-        if (elem[0] == '"') {
-            char c;
-            in >> std::noskipws;
-            while ( in >> c && c != '"' ) {
+        if ( !(in >> c) ) {
+            return false;
+        }    
+        in >> std::noskipws;    
+
+        if ( c == '"' ) {   // quoted string
+            while (in >> c && c != '"') {
                 if ( c == '\\') {
                     if ( !(in >> c) )
                         break;
@@ -67,34 +66,52 @@ namespace more {
                 elem.push_back(c);
             }
             in >> std::skipws;
-            elem.erase(0,1);
-
             if (c != '"') {
                 std::clog << "parse: error at string '" << elem << ": missing quotation.\n";
                 return false;
             }
         }
+        else {              // simple string
+            elem.push_back(c); 
+            std::string tmp;
+            if ( !(in >> tmp) ) 
+                return false;
+            elem.append(tmp);
+            in >> std::skipws;
+            return true;
+        }
+
         return true;
+    }
+    template <typename E>
+    static bool kv_parse_elem(std::istream &in, std::vector<E> &elems)
+    {
+        E tmp;
+        if ( kv_parse_elem(in,tmp) ) {
+            elems.push_back(tmp);
+            return true;
+        }
+        return false;
     }
 
     template <typename T>
-    struct kv_file
+    struct kv_parser
     {
     public:
 
         typedef typename T::key         key_type;
         typedef typename T::type        value_type;
-        typedef kv_file<typename T::next>  map_type;
+        typedef kv_parser<typename T::next>  map_type;
 
         key_type     _M_key;
         value_type   _M_value;
         map_type     _M_map;
 
-        kv_file()
-        : _M_value(), _M_map()
+        kv_parser()
+        : _M_key(), _M_value(), _M_map()
         {}
 
-        ~kv_file()
+        virtual ~kv_parser()
         {}
 
     public:
@@ -124,7 +141,7 @@ namespace more {
         { return __parse(in, file, key, strict, *this); }
 
         template <typename U>
-        static bool __parse(std::istream &in, const std::string &file, const std::string &key, bool strict, kv_file<U> &m)
+        static bool __parse(std::istream &in, const std::string &file, const std::string &key, bool strict, kv_parser<U> &m)
         {
             if (key == U::key::value()) {
                 if (!kv_parse_elem(in,m._M_value) || in.fail() ) {
@@ -135,7 +152,7 @@ namespace more {
             }
             else return __parse(in, file, key, strict, m._M_map);
         }
-        static bool __parse(std::istream &in, const std::string &file, const std::string &k, bool strict, kv_file<mtp::TM::null> &)
+        static bool __parse(std::istream &in, const std::string &file, const std::string &k, bool strict, kv_parser<mtp::TM::null> &)
         {
             if (strict)
                 std::clog << file << ": parse error: key[" << k << "] unknown";
@@ -213,7 +230,7 @@ namespace more {
     };
 
     template <>
-    class kv_file<mtp::TM::null> {};
+    class kv_parser<mtp::TM::null> {};
 }
 
 #endif /* _KV_FILE_HH_ */
